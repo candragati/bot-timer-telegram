@@ -1,7 +1,8 @@
 # bot-timer-telegram
 >telegram bot timer
 
-
+[![](https://img.shields.io/badge/Telegram-Account-blue.svg)](https://t.me/srabatsrobot)
+![](https://img.shields.io/badge/Python-3-green.svg)
 
 *pengembangan dari file timer.py pada folder example python-telegram-bot*
 
