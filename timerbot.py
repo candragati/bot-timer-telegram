@@ -99,8 +99,9 @@ def hitung(bot,update,args,job_queue, chat_data,due):
 
     # Add job to queue
     pesan = ' '.join(update.message.text.split(" ")[2:])
+    filterpesan = re.sub("[\`<>:\"/\\|*]",'',pesan)
     nama =  (update.message.from_user.username)
-    teks = [pesan, nama]
+    teks = [filterpesan, nama]
     job = job_queue.run_once(alarm, due, context=chat_id, name = teks)
 
     chat_data['job'] = job
