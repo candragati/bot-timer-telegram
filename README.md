@@ -22,9 +22,13 @@
 
 **`/set 13:00:00 oke`** = pada pukul 13:00:00 bot menulis 'oke'
 
-**`/set 2018-12-11 01:02:03 oke`** = pada tanggal 11 desember 2019, jam 01:02:03 bot menulis 'oke'
+**`/set 2018-12-11 01:02:03 oke`** = pada tanggal 11 desember 2018, jam 01:02:03 bot menulis 'oke'
 
 ## todo 
  - [x] penambahan timer dengan format jam
  - [x] penambahan timer dengan format tanggal
  - [ ] pembuatan database
+
+
+#### change log
+- 02-11-2018 : fix bug markdown. thanks @MuhShalah007
