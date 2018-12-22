@@ -222,9 +222,9 @@ class bot_timer():
                         else:
                             status = (self.kamus("sholat_lewat"))
                             jadwal.append('%s %s %s'%(tahajud,'tahajud',status))
-                            agenda_sholat =''.join('%s \n'%jadwal[i] for i in range(len(jadwal)))
-                            update.message.reply_text(str(self.kamus("sholat_jadwal"))%(nama,tanggal,agenda_sholat))
-                            break
+                        agenda_sholat =''.join('%s \n'%jadwal[i] for i in range(len(jadwal)))
+                        update.message.reply_text(str(self.kamus("sholat_jadwal"))%(nama,tanggal,agenda_sholat))
+                        break
                 else:
                     update.message.reply_text(self.kamus("kota_tidak_ketemu"))
             else:
