@@ -176,7 +176,6 @@ class bot_timer():
             cek = "SELECT waktu FROM daftar_timer WHERE kota = '%s' AND DATE(waktu) = '%s' AND chat_id = '%s'"%(nama,tanggal,chat_id)
             bar, jum = self.eksekusi(cek)
             if jum == 0:                
-                
                 url = "https://api.banghasan.com/sholat/format/json/kota"
                 r = requests.get(url)
                 kota_all  =  r.json()['kota']
@@ -187,6 +186,8 @@ class bot_timer():
                         r = requests.get(url)
                         sholat_all =  r.json()['jadwal']['data']
                         jadwal = []
+                        t = ""
+                        m = ""
                         for k,v in sholat_all.items():
                             if k != 'tanggal':
                                 waktu = '%s %s:00'%(tanggal,v)
@@ -194,22 +195,36 @@ class bot_timer():
                                     keterangan = "waktu"
                                 else:
                                     keterangan = "sholat"
-                                
+
+                                if k == 'terbit':t = datetime.datetime.strptime(v,'%H:%M')
+                                if k == 'maghrib':m = datetime.datetime.strptime(v,"%H:%M")
                                 if hari == "Fri" and k == "dzuhur":                                    
                                     sholat = "jumat"
                                 else:
                                     sholat = k                                
                                 if jam < v:                                    
                                     status = ""
-                                    sql = "INSERT INTO daftar_timer (waktu, chat_id, chat_type, user_id, user_name, pesan, done, sholat, kota) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s')"%(waktu, chat_id, chat_type, user_id, user_name, keterangan, 0,sholat,nama)                            
+                                    sql = "INSERT INTO daftar_timer (waktu, chat_id, chat_type, user_id, user_name, pesan, done, sholat, kota) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s')"%(
+                                            waktu, chat_id, chat_type, user_id, user_name, keterangan, 0,sholat,nama)                            
                                     self.cur.execute(sql)
                                     self.db.commit()
                                 else:
                                     status = (self.kamus("sholat_lewat"))
-                                jadwal.append('%s %s %s'%(v,sholat,status))                        
-                        agenda_sholat =''.join('%s \n'%jadwal[i] for i in range(len(jadwal)))
-                        update.message.reply_text(str(self.kamus("sholat_jadwal"))%(nama,tanggal,agenda_sholat))
-                        break
+                                jadwal.append('%s %s %s'%(v,sholat,status))
+                        tahajud = (t-((m-t)/3)).strftime("%H:%M")
+                        if jam < tahajud:
+                            status = ""
+                            waktu_tahajud = '%s %s:00'%(tanggal,tahajud)
+                            sql = "INSERT INTO daftar_timer (waktu, chat_id, chat_type, user_id, user_name, pesan, done, sholat, kota) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s')"%(
+                                   waktu_tahajud, chat_id, chat_type, user_id, user_name, "sholat", 0,"tahajud",nama)                            
+                            self.cur.execute(sql)
+                            self.db.commit()
+                        else:
+                            status = (self.kamus("sholat_lewat"))
+                            jadwal.append('%s %s %s'%(tahajud,'tahajud',status))
+                            agenda_sholat =''.join('%s \n'%jadwal[i] for i in range(len(jadwal)))
+                            update.message.reply_text(str(self.kamus("sholat_jadwal"))%(nama,tanggal,agenda_sholat))
+                            break
                 else:
                     update.message.reply_text(self.kamus("kota_tidak_ketemu"))
             else:
