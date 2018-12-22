@@ -42,6 +42,7 @@ _cek daftar nama2 kota yang tersedia di https://api.banghasan.com/sholat/format/
 
 
 #### change log
+- 22-12-2018 : tambahan waktu sholat tahajud
 - 30-11-2018 : hari jum'at, sholat dzuhur berubah menjadi sholat jumat
 - 25-11-2018 : khusus hari minggu, bot akan menggunakan bahasa inggris (mengikuti rules pada group @KodingTeh)
 - 18-11-2018 : random footnote untuk jadwal sholat
