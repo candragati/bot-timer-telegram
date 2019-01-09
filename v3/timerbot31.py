@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class bot_timer():
     def __init__(self):
         self.koneksiDatabase()
-        updater = Updater("609147123:AAGxNzS2-GTvJKiTiU-HuAHkMqOruI9Teiw")
+        updater = Updater("<YOUR TOKEN HERE>")
         dp = updater.dispatcher
         dp.add_handler(CommandHandler("start", self.start))
         dp.add_handler(CommandHandler("afk", self.set_afk))
