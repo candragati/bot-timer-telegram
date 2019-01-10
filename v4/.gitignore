@@ -1,0 +1,4 @@
+*.pyc
+*.lock
+__pycache__
+token.txt
