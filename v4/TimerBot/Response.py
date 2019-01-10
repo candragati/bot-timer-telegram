@@ -25,7 +25,10 @@ class Response():
 			ri = self.getRiText()
 
 			try:
-				getattr(__import__("TimerBot.Responses.%s" % (ri[0]), fromlist=[""]), ri[1])(
+				getattr(__import__(
+					"TimerBot.Responses.%s" % (ri[0]), 
+					fromlist=[""]
+				), ri[1])(
 					self.Bot,
 					bot,
 					update,
