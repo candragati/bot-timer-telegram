@@ -14,6 +14,7 @@ import time
 import threading
 import requests
 import random
+from config import Config
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 class bot_timer():
     def __init__(self):
         self.koneksiDatabase()
-        updater = Updater("609147123:AAGxNzS2-GTvJKiTiU-HuAHkMqOruI9Teiw")
+        updater = Updater(Config.TOKEN)
         dp = updater.dispatcher
         dp.add_handler(CommandHandler("start", self.start))
         dp.add_handler(CommandHandler("afk", self.set_afk))
