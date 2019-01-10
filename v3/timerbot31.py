@@ -14,7 +14,8 @@ import time
 import threading
 import requests
 import random
-from config import Config
+from config import *
+from modul import me,bio
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
@@ -27,10 +28,10 @@ class bot_timer():
         dp = updater.dispatcher
         dp.add_handler(CommandHandler("start", self.start))
         dp.add_handler(CommandHandler("afk", self.set_afk))
-        dp.add_handler(CommandHandler("setbio", self.set_bio))
-        dp.add_handler(CommandHandler("bio", self.bio))
-        dp.add_handler(CommandHandler("setme", self.set_me))
-        dp.add_handler(CommandHandler("me", self.me))
+        dp.add_handler(CommandHandler("setbio", bio.set_bio))
+        dp.add_handler(CommandHandler("bio", bio.bio))
+        dp.add_handler(CommandHandler("setme", me.set_me))
+        dp.add_handler(CommandHandler("me", me.me))
         dp.add_handler(CommandHandler("qotd", self.qotd, pass_args = True))
         dp.add_handler(CommandHandler("dqotd", self.dqotd, pass_args = True))
         dp.add_handler(CommandHandler("rqotd", self.rqotd))
@@ -117,81 +118,6 @@ class bot_timer():
                 update.message.reply_text("%s sekarang AFK"%user_name)
             except Exception as e:
                 update.message.reply_text("ketik /afk <alasan anda>\n%s"%e)
-
-
-    def set_me(self,bot,update):
-        m = update.effective_message            
-        teks =  m.text.split(None,1)
-        if len(teks) == 2:    
-            try:    
-                chat_id = str(update.message["chat"]["id"])
-                chat_type = update.message["chat"]["type"]
-                user_id = str(update.message.from_user.id)
-                user_name = update.message.from_user.username
-                cek = "SELECT user_name,teks FROM me WHERE chat_id='%s' AND user_id='%s'"%(chat_id, user_id)
-                bar, jum = self.eksekusi(cek)
-                if jum == 0:            
-                    sql = "INSERT INTO me (chat_id, chat_type, user_id, user_name, teks) VALUES (?,?,?,?,?)"
-                    self.cur.execute(sql,(chat_id, chat_type, user_id, user_name, teks[1]))
-                else:
-                    sql = "UPDATE me SET teks = ? WHERE chat_id = ? AND user_id = ?"
-                    self.cur.execute(sql,(teks[1],chat_id,user_id))
-                self.db.commit() 
-                update.message.reply_text("info anda di perbaharui")
-            except:
-                update.message.reply_text("Gak bisa set info")
-
-
-    def me(self,bot,update):
-        chat_id = update.message["chat"]["id"]
-        user_id = update.message.from_user.id
-        sql = "SELECT user_name,teks FROM me WHERE chat_id='%s' AND user_id='%s'"%(chat_id, user_id)
-        bar, jum = self.eksekusi(sql)
-        if jum == 0:            
-            update.message.reply_text("Kamu belum set info.")
-        else:
-            update.effective_message.reply_text("*{}*:\n{}".format(bar[0][0], escape_markdown(bar[0][1])),parse_mode=ParseMode.MARKDOWN)
-            
-
-    def set_bio(self,bot,update):
-        m = update.effective_message
-        r_user_name   =  m.reply_to_message.from_user.username
-        r_user_id     =  str(m.reply_to_message.from_user.id)
-        user_id = str(update.message.from_user.id)
-        teks =  m.text.split(None,1)
-        if r_user_id == user_id:
-            update.message.reply_text("Gak bisa update bio punya sendiri")
-        elif len(teks) == 2:
-            try:
-                chat_id = str(update.message["chat"]["id"])
-                chat_type = update.message["chat"]["type"]
-                cek = "SELECT user_name,teks FROM bio WHERE chat_id='%s' AND user_id='%s'"%(chat_id, r_user_id)
-                bar, jum = self.eksekusi(cek)
-                if jum == 0:            
-                    sql = "INSERT INTO bio (chat_id, chat_type, user_id, user_name, teks) VALUES (?,?,?,?,?)"
-                    self.cur.execute(sql,(chat_id, chat_type, r_user_id, r_user_name, teks[1]))
-                else:
-                    sql = "UPDATE bio SET teks = ? WHERE chat_id = ? AND user_id = ?"
-                    self.cur.execute(sql,(teks[1],chat_id,r_user_id))
-                self.db.commit()
-                update.message.reply_text("Memperbarui bio nya @%s"%r_user_name)
-            except:
-                update.message.reply_text("Gak bisa simpan bio")
-
-    def bio(self,bot,update):
-        m = update.effective_message
-        try:
-            user_id     =  m.reply_to_message.from_user.id   
-            user_name   =  m.reply_to_message.from_user.username  
-            chat_id = update.message["chat"]["id"]        
-            sql = "SELECT user_name,teks FROM bio WHERE chat_id='%s' AND user_id='%s'"%(chat_id, user_id)
-            bar, jum = self.eksekusi(sql)
-            if jum == 0:            
-                update.message.reply_text("Gak ada member yang sudi menulis tentang @%s."%user_name)
-            else:
-                update.effective_message.reply_text("*{}*:\n{}".format(bar[0][0], escape_markdown(bar[0][1])),parse_mode=ParseMode.MARKDOWN)
-        except Exception as e:
-            update.message.reply_text("reply lalu ketik /bio\n%s"%e)
                 
     def qotd(self,bot,update, args):
         chat_id = update.message["chat"]["id"]                
