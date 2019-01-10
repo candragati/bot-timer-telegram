@@ -4,7 +4,7 @@ db = sqlite3.connect("database", check_same_thread = False)
 cur = db.cursor()
 
 class Config():
-    TOKEN = "609147123:AAGxNzS2-GTvJKiTiU-HuAHkMqOruI9Teiw"
+    TOKEN = "YOUR TOKEN"
 
 def eksekusi(sql):
     cur.execute(sql)
