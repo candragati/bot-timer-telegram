@@ -17,4 +17,3 @@ class Language():
 			return random.choice(rv)
 		else:
 			return rv
-
