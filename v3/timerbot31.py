@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class bot_timer():
     def __init__(self):
         self.koneksiDatabase()
-        updater = Updater("<YOUR TOKEN HERE>")
+        updater = Updater("<YOUR TOKEN>")
         dp = updater.dispatcher
         dp.add_handler(CommandHandler("start", self.start))
         dp.add_handler(CommandHandler("afk", self.set_afk))
@@ -38,14 +38,15 @@ class bot_timer():
                                       pass_job_queue=True,
                                       pass_chat_data=True))
         dp.add_handler(CommandHandler("hitung", self.timer,pass_chat_data = True, pass_job_queue = True, pass_args = True))
-        dp.add_handler(MessageHandler(Filters.text, self.echo))
+        dp.add_handler(MessageHandler(Filters.text, self.echo_afk))
         dp.add_error_handler(self.error)
         # Start the Bot
         updater.start_polling()
         updater.idle()
 
-    def echo(self,bot, update):
-        chat_id = update.message["chat"]["id"]        
+    def echo_afk(self,bot, update):
+        #sudah nongol
+        chat_id = update.message["chat"]["id"]
         from_user_name = update.message.from_user.username
         from_user_id = update.message.from_user.id
         cek = "SELECT user_name FROM afk WHERE chat_id='%s' AND user_id='%s' AND hapus = 0"%(chat_id, from_user_id)
@@ -57,8 +58,9 @@ class bot_timer():
             self.cur.execute(sql)
             self.db.commit()
             update.message.reply_text("%s sudah nongol lagi"%from_user_name)
-
-        message = update.effective_message  # type: Optional[Message]
+    
+        # Dari mention
+        message = update.effective_message
         entities = message.parse_entities([MessageEntity.TEXT_MENTION, MessageEntity.MENTION])
         if message.entities and entities:
             for ent in entities:
@@ -68,7 +70,6 @@ class bot_timer():
                 elif ent.type == MessageEntity.MENTION:
                     user_id = (message.text[ent.offset:ent.offset + ent.length])
                     if not user_id:
-                        # Should never happen, since for a user to become AFK they must have spoken. Maybe changed username?
                         return
                     mention = user_id.replace("@","")
                     cek = "SELECT user_name,teks FROM afk WHERE chat_id='%s' AND user_name='%s' AND hapus = 0"%(chat_id, mention)
@@ -80,14 +81,23 @@ class bot_timer():
                 else:
                     return
 
+        # Dari reply
+        try:
+            r_user_name   =  message.reply_to_message.from_user.username
+            cek = "SELECT user_name,teks FROM afk WHERE chat_id='%s' AND user_name='%s' AND hapus = 0"%(chat_id, r_user_name)
+            bar, jum = self.eksekusi(cek)
+            if jum == 0:
+                pass
+            else:
+                update.message.reply_text("%s gak online, dia lagi %s"%(bar[0][0],bar[0][1]))
+        except:
+            pass
+
     def set_afk(self,bot,update):
         m = update.effective_message            
-        teks =  (m.text.replace("/afk ","")) 
-        if teks == "/afk" or teks == "":
-            update.message.reply_text("ketik /afk <alasan anda>")
-        else:
+        teks =  m.text.split(None,1)
+        if len(teks) == 2:        
             try:
-                print (teks)
                 chat_id = update.message["chat"]["id"]
                 chat_type = update.message["chat"]["type"]
                 user_id = update.message.from_user.id
@@ -96,36 +106,38 @@ class bot_timer():
                 bar, jum = self.eksekusi(cek)
                 if jum == 0:            
                     sql = "INSERT INTO afk (chat_id, chat_type, user_id, user_name, teks,hapus) VALUES ('%s','%s','%s','%s','%s','%s')"%(
-                            chat_id, chat_type, user_id, user_name, teks,0)            
+                            chat_id, chat_type, user_id, user_name, teks[1],0)            
                 else:
-                    sql = "UPDATE afk SET teks = '%s', hapus = 0 WHERE chat_id = '%s' AND user_id = '%s'"%(teks,chat_id,user_id)
+                    sql = "UPDATE afk SET teks = '%s', hapus = 0 WHERE chat_id = '%s' AND user_id = '%s'"%(teks[1],chat_id,user_id)
                 self.cur.execute(sql)
                 self.db.commit()
                 update.message.reply_text("%s sekarang AFK"%user_name)
-            except:
-                update.message.reply_text("ketik /afk <alasan anda>")
+            except Exception as e:
+                update.message.reply_text("ketik /afk <alasan anda>\n%s"%e)
 
 
     def set_me(self,bot,update):
         m = update.effective_message            
-        teks =  (m.text.replace("/setme ","")) 
-        if teks == "/setme" or teks == "":
-            update.message.reply_text("ketik /setme <info anda>")
-        else:
-            chat_id = update.message["chat"]["id"]
-            chat_type = update.message["chat"]["type"]
-            user_id = update.message.from_user.id
-            user_name = update.message.from_user.username
-            cek = "SELECT user_name,teks FROM me WHERE chat_id='%s' AND user_id='%s'"%(chat_id, user_id)
-            bar, jum = self.eksekusi(cek)
-            if jum == 0:            
-                sql = "INSERT INTO me (chat_id, chat_type, user_id, user_name, teks) VALUES ('%s','%s','%s','%s','%s')"%(
-                        chat_id, chat_type, user_id, user_name, teks)            
-            else:
-                sql = "UPDATE me SET teks = '%s' WHERE chat_id = '%s' AND user_id = '%s'"%(teks,chat_id,user_id)
-            self.cur.execute(sql)
-            self.db.commit()
-            update.message.reply_text("info anda di perbaharui")
+        teks =  m.text.split(None,1)
+        if len(teks) == 2:    
+            try:    
+                chat_id = update.message["chat"]["id"]
+                chat_type = update.message["chat"]["type"]
+                user_id = update.message.from_user.id
+                user_name = update.message.from_user.username
+                cek = "SELECT user_name,teks FROM me WHERE chat_id='%s' AND user_id='%s'"%(chat_id, user_id)
+                bar, jum = self.eksekusi(cek)
+                if jum == 0:            
+                    sql = "INSERT INTO me (chat_id, chat_type, user_id, user_name, teks) VALUES ('%s','%s','%s','%s','%s')"%(
+                            chat_id, chat_type, user_id, user_name, teks[1])            
+                else:
+                    sql = "UPDATE me SET teks = '%s' WHERE chat_id = '%s' AND user_id = '%s'"%(teks[1],chat_id,user_id)
+                self.cur.execute(sql)
+                self.db.commit() 
+                update.message.reply_text("info anda di perbaharui")
+            except:
+                update.message.reply_text("Gak bisa set info")
+
 
     def me(self,bot,update):
         chat_id = update.message["chat"]["id"]
@@ -133,7 +145,7 @@ class bot_timer():
         sql = "SELECT user_name,teks FROM me WHERE chat_id='%s' AND user_id='%s'"%(chat_id, user_id)
         bar, jum = self.eksekusi(sql)
         if jum == 0:            
-            update.message.reply_text("Anda belum /setme")
+            update.message.reply_text("Kamu belum set info.")
         else:
             update.message.reply_html("<b>{}</b>\n{}".format(bar[0][0],bar[0][1]))
 
@@ -142,24 +154,25 @@ class bot_timer():
         r_user_name   =  m.reply_to_message.from_user.username
         r_user_id     =  m.reply_to_message.from_user.id   
         user_id = update.message.from_user.id        
-        teks =  (m.text.replace("/setbio ","")) 
-        if teks == "/setbio" or teks == "":
-            update.message.reply_text("reply lalu ketik /setbio <target>")
-        elif r_user_id == user_id:
+        teks =  m.text.split(None,1)
+        if r_user_id == user_id:
             update.message.reply_text("Gak bisa update bio punya sendiri")
-        else:
-            chat_id = update.message["chat"]["id"]
-            chat_type = update.message["chat"]["type"]
-            cek = "SELECT user_name,teks FROM bio WHERE chat_id='%s' AND user_id='%s'"%(chat_id, r_user_id)
-            bar, jum = self.eksekusi(cek)
-            if jum == 0:            
-                sql = "INSERT INTO bio (chat_id, chat_type, user_id, user_name, teks) VALUES ('%s','%s','%s','%s','%s')"%(
-                        chat_id, chat_type, r_user_id, r_user_name, teks)
-            else:
-                sql = "UPDATE bio SET teks = '%s' WHERE chat_id = '%s' AND user_id = '%s'"%(teks,chat_id,r_user_id)
-            self.cur.execute(sql)
-            self.db.commit()
-            update.message.reply_text("Memperbarui bio nya @%s"%r_user_name)
+        elif len(teks) == 2:
+            try:
+                chat_id = update.message["chat"]["id"]
+                chat_type = update.message["chat"]["type"]
+                cek = "SELECT user_name,teks FROM bio WHERE chat_id='%s' AND user_id='%s'"%(chat_id, r_user_id)
+                bar, jum = self.eksekusi(cek)
+                if jum == 0:            
+                    sql = "INSERT INTO bio (chat_id, chat_type, user_id, user_name, teks) VALUES ('%s','%s','%s','%s','%s')"%(
+                            chat_id, chat_type, r_user_id, r_user_name, teks[1])
+                else:
+                    sql = "UPDATE bio SET teks = '%s' WHERE chat_id = '%s' AND user_id = '%s'"%(teks[1],chat_id,r_user_id)
+                self.cur.execute(sql)
+                self.db.commit()
+                update.message.reply_text("Memperbarui bio nya @%s"%r_user_name)
+            except:
+                update.message.reply_text("Gak bisa simpan bio")
 
     def bio(self,bot,update):
         m = update.effective_message
