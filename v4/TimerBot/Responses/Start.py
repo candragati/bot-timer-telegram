@@ -1,9 +1,6 @@
 
-class Start():
-	def __init__(self, Bot, bot, update):
-		self.Bot = Bot
-		self.bot = bot
-		self.update = update
-	
+from TimerBot.Response import ResponseFoundation
+
+class Start(ResponseFoundation):
 	def run(self):
-		self.update.reply_text();
+		self.update.message.reply_text(self.lang.get("Start", "ok"))

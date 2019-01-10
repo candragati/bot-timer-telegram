@@ -2,7 +2,7 @@
 import random
 import importlib
 
-class Lang():
+class Language():
 	def __init__(self, lang, fallback="En"):
 		self.lang = lang
 		self.fallback = fallback
@@ -17,3 +17,4 @@ class Lang():
 			return random.choice(rv)
 		else:
 			return rv
+
