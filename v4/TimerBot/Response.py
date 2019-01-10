@@ -9,5 +9,12 @@ class Response():
 		self.Bot.dp.add_handler(CommandHandler("start", self.start))
 
 	def start(self, bot, update):
-		print("start", update);
-		__import__("TimerBot.Responses.Start").Start(self.Bot, bot, update).run()
+		print(update)
+		try:
+			__import__("TimerBot.Responses.Start", fromlist=[""]).Start(
+				self.Bot,
+				bot,
+				update
+			).run()
+		except Exception as e:
+			print("An error occured: %s " % (e))

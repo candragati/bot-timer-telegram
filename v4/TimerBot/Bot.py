@@ -1,7 +1,7 @@
 
 import sqlite3
 from TimerBot.Response import Response
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import Updater
 
 class Bot():
 	def __init__(self, token):

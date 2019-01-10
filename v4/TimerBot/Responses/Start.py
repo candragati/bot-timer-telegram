@@ -5,5 +5,5 @@ class Start():
 		self.bot = bot
 		self.update = update
 	
-	def run():
-		print(self.update)
+	def run(self):
+		self.update.reply_text();

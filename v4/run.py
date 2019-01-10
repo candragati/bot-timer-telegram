@@ -5,5 +5,5 @@ from TimerBot.Bot import Bot
 with open("token.txt") as token:
     token = token.readlines()[0].strip()
 
-bot = Bot(token)
-bot.run()
+Bot(token).run()
+
