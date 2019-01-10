@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
-from TimerBot import *
+from TimerBot.Bot import Bot
 
-Bot().run()
+with open("token.txt") as token:
+    token = token.readlines()[0].strip()
+
+bot = Bot(token)
+bot.run()
