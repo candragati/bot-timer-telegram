@@ -1,5 +1,6 @@
 
 import os
+import sys
 from TimerBot.Db import Db
 from telegram.ext import Updater
 from TimerBot.Response import Response
@@ -18,6 +19,7 @@ class Bot():
 			del timerDaemonPid
 			print("Running timer daemon...")
 			TimerDaemon(self).run()
+			sys.exit(0)
 
 		telegramDaemonPid = os.fork()
 		if telegramDaemonPid == 0:
@@ -31,6 +33,7 @@ class Bot():
 
 			self.updater.start_polling()
 			self.updater.idle()
+			sys.exit(0)
 
 		status = 0
 		os.wait()
