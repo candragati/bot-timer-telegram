@@ -28,23 +28,34 @@ class SetTimer(ResponseFoundation):
             else:
                 error = True
             if not error:
+                textd = self.rd[1].strip()
+                add = datetime.fromtimestamp(unixtime + add).strftime("%Y-%m-%d %H:%M:%S")
+                unixtime = datetime.fromtimestamp(unixtime).strftime("%Y-%m-%d %H:%M:%S")
                 self.Db.cur.execute(
                     "INSERT INTO `timer` (`user_id`, `chat_id`, `text`, `dispatched`, `due_date`, `created_at`) VALUES (%s, %s, %s, %s, %s, %s);",
                     (
                         self.update["message"]["from_user"]["id"],
                         self.update["message"]["chat"]["id"],
-                        self.rd[1].strip(),
+                        textd,
                         0,
-                        datetime.fromtimestamp(unixtime + add).strftime("%Y-%m-%d %H:%M:%S"),
-                        datetime.fromtimestamp(unixtime).strftime("%Y-%m-%d %H:%M:%S")
+                        add,
+                        unixtime
                     )
                 )
                 self.Db.commit()
 
-                r = self.lang.get("Timer", "set_timer.ok")
+                r = self.lang.get("Timer", "set_timer.ok",
+                    {
+                        ":text": textd,
+                        ":created_at": unixtime,
+                        ":due_date": add
+                    }
+                )
+                del textd, unixtime, add
             else:
                 r = self.lang.get("Timer", "set_timer.error_unit_format") % (me)
 
+            del me, error
         else:
             r = self.lang.get("Timer", "set_timer.help")
 
