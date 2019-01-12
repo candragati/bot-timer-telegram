@@ -25,7 +25,6 @@ class Response():
 	def res(self, bot, update):
 		global RiList
 		try:
-			print(update)
 			for i in RiList:
 				me = []
 				try:

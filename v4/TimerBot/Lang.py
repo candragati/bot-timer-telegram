@@ -20,5 +20,5 @@ class Language():
 
 	def bindd(self, strd, bind={}):
 		for i in bind:
-			strd = strd.replace(i, bind[i])
+			strd = strd.replace(str(i), str(bind[i]))
 		return strd
