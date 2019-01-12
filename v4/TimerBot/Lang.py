@@ -7,13 +7,18 @@ class Language():
 		self.lang = lang
 		self.fallback = fallback
 	
-	def get(self, block, key):
+	def get(self, block, key, bind={}):
 		me = __import__(
 			"TimerBot.Languages.%s.%s" % (self.lang, block),
 			fromlist=[""]
 		)
 		rv = me.rv()[key]
 		if isinstance(rv, list):
-			return random.choice(rv)
+			return self.bindd(random.choice(rv), bind)
 		else:
-			return rv
+			return self.bindd(rv, bind)
+
+	def bindd(self, strd, bind={}):
+		for i in bind:
+			strd = strd.replace(i, bind[i])
+		return strd
