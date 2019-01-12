@@ -1,0 +1,10 @@
+{
+	"bot_token": "256536278:AAEzctwGrHkr_AWlHfRjWGekTkEpjIvbMg1",
+	"database": {
+		"host": "127.0.0.1",
+		"port": "9999",
+		"username": "root",
+		"password": "",
+		"db_name": "botdb"
+	}
+}
