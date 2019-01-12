@@ -1,6 +1,9 @@
+*.o
+*.so
+*.swo
+*.swp
+*.tmp
 *.pyc
 *.lock
 __pycache__
-token.txt
-database
-config.json
+/config.json
