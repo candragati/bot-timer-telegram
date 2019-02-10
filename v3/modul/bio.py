@@ -2,6 +2,7 @@ from telegram import Bot, Update
 from telegram import ParseMode
 from telegram.utils.helpers import escape_markdown
 from config import *
+from modul.kamus import kamus
 
 def set_bio(bot:Bot,update:Update):
     m = update.effective_message
