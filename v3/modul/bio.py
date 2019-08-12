@@ -33,13 +33,13 @@ def bio(bot:Bot,update:Update):
     m = update.effective_message
     try:
         user_id     =  m.reply_to_message.from_user.id   
-        user_name   =  m.reply_to_message.from_user.username  
+        user_name   = bot.get_chat(user_id).username
         chat_id = update.message["chat"]["id"]        
-        sql = "SELECT user_name,teks FROM bio WHERE chat_id='%s' AND user_id='%s'"%(chat_id, user_id)
+        sql = "SELECT teks FROM bio WHERE chat_id='%s' AND user_id='%s'"%(chat_id, user_id)
         bar, jum = eksekusi(sql)
         if jum == 0:            
             update.message.reply_text("Gak ada member yang sudi menulis tentang @%s."%user_name)
         else:
-            update.effective_message.reply_text("*{}*:\n{}".format(bar[0][0], escape_markdown(bar[0][1])),parse_mode=ParseMode.MARKDOWN)
+            update.effective_message.reply_text("*{}*:\n{}".format(user_name, escape_markdown(bar[0][0])),parse_mode=ParseMode.MARKDOWN)
     except Exception as e:
         update.message.reply_text("reply lalu ketik /bio\n%s"%e)

@@ -83,10 +83,25 @@ def kamus(teks):
                 "en":  ["Ready to count\nuse /set <second> <message> for timer"]
             },
 
-            "cmd_help":   {
+            "cmd_help_timer":   {
                 "id":  ["/set <detik> <pesan> untuk timer\n/set sholat <kota> untuk set jadwal sholat\n/agenda untuk liat timer yang belum dieksekusi\n\ns atau d = untuk detik\nm = untuk menit\nh atau j = untuk jam"],
                 "en":  ["/set <second> <message> for timer\n/set sholat <city> for set the schedule of prayers\n/agenda to see current timer\n\ns or d = for second\nm = for minute\nh or j = for hour"]
             },
+
+            "cmd_help":   {
+                "id":  ["/help_qotd untuk bantuan mengenai quote\n/help_timer untuk bantuan mengenai timer\n/help_jadwal_sholat untuk bantuan mengenai jadwal sholat"],
+                "en":  ["/help_qotd for information about quote\n/help_timer for information about timer\n/help_jadwal_sholat for information about moslem prayer schedule"]
+            },
+
+            "cmd_help_qotd":   {
+                "id":  ["/qotd untuk simpan quote dari reply\n/sqotd untuk statistik quote\n/sqotd member, untuk top quote dari member\n/sqotd @username, untuk melihat top quote dari @username\n/rqotd untuk random quote\n/xqotd ,untuk export quote ke format .xlsx"],
+                "en":  ["/qotd save quote from reply chat\n/sqotd , statistics for quote\n/sqotd member, view top quote from all member\n/sqotd @username, view top quote from @username\n/rqotd for random quote\n/xqotd ,export quote to .xlsx"]
+            },
+
+            "cmd_help_jadwal_sholat":   {
+                "id":  ["/set sholat nama_kota , untuk set sholat wilayah nama_kota"],
+                "en":  ["/set sholat city_name , set schedule prayer from city_name"]
+            },            
 
             "cmd_error":   {
                 "id":  ["perintah: /set <detik> <pesan>"],
