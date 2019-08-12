@@ -3,6 +3,7 @@
 # Wed Jan  9 20:55:01 2019 set bio, afk, dan me
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram import MessageEntity
+from config import Config as c
 import logging
 import datetime
 import re
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 class bot_timer():
     def __init__(self):
         self.koneksiDatabase()
-        updater = Updater("766936881:AAEQntPMrDkr_AElJ9R3WGlkTzENjIRyM2A")
+        updater = Updater(c.TOKEN)
         dp = updater.dispatcher
         dp.add_handler(CommandHandler("start", self.start))
         dp.add_handler(CommandHandler("afk", self.set_afk))
@@ -219,23 +220,45 @@ class bot_timer():
             except Exception as e:            
                 update.message.reply_text('%s\n%s'%(self.kamus("quote_mogok"),e))
         elif str(args[0]).isdigit():
-            sql = "SELECT quote, user_name, nomor FROM qotd WHERE chat_id = '%s' AND nomor = '%s'"%(chat_id, args[0])
+            sql = "SELECT quote, user_id, user_name, nomor FROM qotd WHERE chat_id = '%s' AND nomor = '%s'"%(chat_id, args[0])
             bar, jum = self.eksekusi(sql)
             if jum == 0:
                 update.message.reply_text(self.kamus("quote_not_found"))
             else:
-                update.message.reply_html("<i>{}</i>\n\n@{}:{}".format(bar[0][0],bar[0][1],bar[0][2]))
+                args = bar[0][1], bar[0][2] 
+                username = self.getUsername(bot, update, args)
+                update.message.reply_html("<i>{}</i>\n\n{}:{}".format(bar[0][0], username,bar[0][3]))
         else:
             update.message.reply_text("Silahkan reply atau forward chat yang akan di quote")
 
     def rqotd(self,bot,update):
         chat_id = update.message["chat"]["id"]
         quote = []
-        sql = "SELECT quote, user_name,nomor FROM qotd WHERE chat_id = '%s' AND hapus = 0"%chat_id
+        sql = "SELECT quote, user_id, user_name,nomor FROM qotd WHERE chat_id = '%s' AND hapus = 0"%chat_id
         bar, jum = self.eksekusi(sql)
         for i in range(jum):
-            quote.append("<i>{}</i>\n\n@{}:{}".format(bar[i][0],bar[i][1],bar[i][2]))        
+            args = bar[i][1], bar[i][2]
+            username = self.getUsername(bot, update, args)
+            quote.append("<i>{}</i>\n\n{}:{}".format(bar[i][0], username,bar[i][3]))        
         update.message.reply_html(random.choice(quote))
+
+    def getUsername(self,bot, update, args):
+        alt = '<a href="tg://user?id='+args[0]+'">@'+ args[1] +'</a>'
+        if len(args) == 0:
+            return "@" + args[1]
+        else:
+            chat_id = update.message["chat"]["id"]
+            try:
+                e = bot.getChatMember(chat_id, args[0])
+                return "@" + e['user']['username'] if 'username' in e['user'] else alt
+            except:
+                pass
+            try:
+                f =  bot.getChatMember(args[0], args[0])
+                return "@" + f['user']['username'] if 'username' in f['user'] else alt
+            except:
+                pass
+            return alt
 
     def dqotd(self,bot, update, args):
         chat_id = update.message["chat"]["id"]
