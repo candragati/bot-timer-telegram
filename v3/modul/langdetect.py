@@ -75,17 +75,16 @@ def echo(bot:Bot,update:Update):
     if jum == 0:
         pass
     else:                
-        try:   
-            try:
-                message = re.sub(r"(?:\@|https?\://)\S+", "", message.text.encode('ascii', 'ignore').decode('ascii'))
-                message = re.sub(r'".*?"', "", message)
-                message = re.sub(r'/.*', "", message)
-                message = re.sub(r"\b[A-Z\.]{2,}s?\b", "", message)
-            except:
-                if update.message["caption"] ==None:
-                    message = "this is caption"
-                else:
-                    message = update.message["caption"]
+        try:
+            if not message.caption:
+                return
+            text = message.text.encode('ascii', 'ignore').decode('ascii') or message.caption.encode('ascii', 'ignore').decode('ascii')
+            if not text:
+                return
+            message = re.sub(r"(?:\@|https?\://)\S+", "", text)
+            message = re.sub(r'".*?"', "", text)
+            message = re.sub(r'/.*', "", text)
+            message = re.sub(r"\b[A-Z\.]{2,}s?\b", "", text)
             translator = Translator()
             a           = translator.detect(message).lang            
             sekarang    = datetime.datetime.now()
