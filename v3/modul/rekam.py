@@ -179,7 +179,7 @@ def isi(bot:Bot,update:Update):
             reply_id = message.reply_to_message.message_id        
 
         # detect media
-        sticker     =  message.sticker        
+        sticker     = message.sticker        
         photo       = message.photo
         video       = message.animation
         if len(photo) != 0:

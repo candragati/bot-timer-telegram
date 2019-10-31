@@ -47,11 +47,13 @@ def check_age(bot:Bot,update:Update):
     cek_new_member = "SELECT age FROM new_members WHERE chat_id = '%s' AND user_id = '%s' AND done = 0 and age = 0"%(chat_id, user_id)
     bar, jum = eksekusi( cek_new_member)
     if jum == 0:
-        pass
+        pass        
     else:
         age =  (re.sub("\D", "", message))
         if age == "":
             update.message.reply_text("ASL PLS!")
+        elif len(age) > 2:
+            update.message.reply_text("You must answer correctly")
         else:            
             if int(age) >= 17:
                 try:

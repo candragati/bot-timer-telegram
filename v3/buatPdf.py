@@ -180,3 +180,6 @@ def buatPdf(chat_id):
         story.append(t1)
         story.append(Spacer(0.1 * cm, .5 * cm))
     doc.build(story)
+
+# buatPdf(-1001162202776) # koding Teh
+# buatPdf(-1001337729941) # backup darurat

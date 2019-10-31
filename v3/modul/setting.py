@@ -44,3 +44,21 @@ def setting(bot:Bot,update:Update,args):
     else:
         update.message.reply_text("user biasa kayak kamu gak bisa suruh-suruh aku")
             
+
+def getUsername(bot:Bot, update:Update, args):
+    alt = '<a href="tg://user?id='+args[0]+'">@'+ args[1] +'</a>'
+    if len(args) == 0:
+        return "@" + args[1]
+    else:
+        chat_id = update.message["chat"]["id"]
+        try:
+            e = bot.getChatMember(chat_id, args[0])
+            return "@" + e['user']['username'] if 'username' in e['user'] else alt
+        except:
+            pass
+        try:
+            f =  bot.getChatMember(args[0], args[0])
+            return "@" + f['user']['username'] if 'username' in f['user'] else alt
+        except:
+            pass
+        return alt

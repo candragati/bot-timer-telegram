@@ -4,3 +4,5 @@ v3/__pycache__/*
 v3/__pycache__
 v3/modul/__pycache__/*
 v3/modul/__pycache__
+v3/gambar
+v3/*.pdf

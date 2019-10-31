@@ -12,6 +12,7 @@ from openpyxl.styles import Alignment, Font
 # from openpyxl.styles import Side, Border
 from datetime import datetime
 import threading
+from modul.setting import getUsername
 
 lock = threading.Lock()
 
@@ -55,9 +56,11 @@ def qotd(bot:Bot,update:Update,args):
             update.message.reply_text(kamus("quote_not_found"))
         else:
             # user_name = bot.get_chat(bar[0][1]).username
-            user_name = bar[0][3]
+            # user_name = bar[0][3]
+            args = bar[0][1],bar[0][3]
+            user_name = getUsername(bot, update,args)
             # print (bot.get_chat(bar[0][1]))
-            teks = "<i>{}</i>\n\n@{}:{}".format(html.escape(bar[0][0]),user_name,bar[0][2])
+            teks = "<i>{}</i>\n\n{}:{}".format(html.escape(bar[0][0]),user_name,bar[0][2])
             try:
                 m_id     =  update.message["reply_to_message"]["message_id"]
                 bot.send_message(chat_id=update.message.chat_id,reply_to_message_id=m_id, text = teks, parse_mode=ParseMode.HTML)
@@ -181,8 +184,10 @@ def sqotd(bot:Bot,update:Update,args):
         tampil      = ''.join('%sx %s\n'%(bar[i][0],bar[i][2]) for i in range(jum))
     else:
         user_name   = str(args[0]).replace('@','')        
-        hitung      = "SELECT user_id,nomor,hit,user_name FROM qotd WHERE chat_id = %s AND user_name = '%s' ORDER BY cast(hit as integer) DESC limit 5"%(chat_id,user_name)
-        bar, jum    = eksekusi(hitung)
+        hitung      = "SELECT user_id,nomor,hit,user_name FROM qotd WHERE chat_id = ? AND user_name = ? ORDER BY cast(hit as integer) DESC limit 5"
+        cur.execute(hitung,(chat_id,user_name))
+        bar =  (cur.fetchall())
+        jum =  (len(bar))
         if jum == 0:
             teks    = ""
             tampil  = "Silahkan mensyen member disini"

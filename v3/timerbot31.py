@@ -11,8 +11,9 @@ import time
 import threading
 import requests
 from config import *
-from modul import me,bio,afk,qotd,langdetect,setting,berita,rekam,asl,bantuan
+from modul import me,bio,afk,qotd,langdetect,setting,berita,rekam,asl,bantuan,media
 from modul.kamus import kamus
+from modul.setting import getUsername
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -43,7 +44,9 @@ class bot_timer():
         dp.add_handler(CommandHandler("help_qotd",          bantuan.help_qotd))
         dp.add_handler(CommandHandler("help_timer",         bantuan.help_timer))
         dp.add_handler(CommandHandler("help_jadwal_sholat", bantuan.help_jadwal_sholat))
-        dp.add_handler(CommandHandler("agenda",             self.agenda))        
+        dp.add_handler(CommandHandler("agenda",             self.agenda))
+        dp.add_handler(CommandHandler("media",              media.media,    pass_args = True))
+        dp.add_handler(CommandHandler("smedia",             media.smedia,   pass_args = True))
         dp.add_handler(CommandHandler("set",                self.set_timer,
                                       pass_args         =   True,
                                       pass_job_queue    =   True,
@@ -55,11 +58,12 @@ class bot_timer():
         
         
         dp.add_handler(MessageHandler(Filters.status_update.new_chat_members, asl.asl))
-        dp.add_handler(MessageHandler(Filters.text, asl.check_age),group = 5)
         dp.add_handler(MessageHandler(Filters.entity(MessageEntity.MENTION) | Filters.entity(MessageEntity.TEXT_MENTION) ,afk.reply_afk),group = 1)
         dp.add_handler(MessageHandler(Filters.all, langdetect.echo,edited_updates=True),group = 2)
         dp.add_handler(MessageHandler(Filters.text|Filters.video | Filters.photo | Filters.document | Filters.forwarded | Filters.sticker, rekam.isi,edited_updates=True), group = 3)
         dp.add_handler(MessageHandler(~Filters.command & Filters.group, afk.sudah_nongol), group = 4)
+        dp.add_handler(MessageHandler(Filters.text, asl.check_age),group = 5)
+        # dp.add_handler(MessageHandler(~Filters.text , media.media), group = 6)
         dp.add_error_handler(self.error)
         # Start the Bot
         updater.start_polling()

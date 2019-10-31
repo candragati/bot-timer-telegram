@@ -99,9 +99,6 @@ def hitung(bot,update,args,job_queue, chat_data,due):
         return
 
     # Add job to queue
-    print (update)
-    print (time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(1541113710)), update.message.chat.title, update.message.text,update.message.from_user.username)
-
     pesan = ' '.join(update.message.text.split(" ")[2:])
     match = re.match(r'^[A-Za-z0-9 ?!&,.:]*$', pesan )
     if match :
