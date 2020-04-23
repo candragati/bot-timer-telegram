@@ -1,23 +1,16 @@
-from telegram import Bot, Update
-from telegram import ParseMode,User
-from telegram import MessageEntity
-from telegram.utils.helpers import escape_markdown
+
 from config import *
-import random
-import os
-import html
-from modul.kamus import kamus
-from openpyxl import Workbook
-from openpyxl.styles import Alignment, Font
 # from openpyxl.styles import Side, Border
-from datetime import datetime
 import threading
-from modul.setting import getUsername
 import re
+from modul.buatPdfMedia import buatPdf
+import pprint
+import datetime
 
 lock = threading.Lock()
 
-def smedia(bot:Bot,update:Update,args):     
+def smedia(update,context):     
+    args = context.args
     chat_id = update.message["chat"]["id"]   
     chat_type = update.message["chat"]["type"]             
     message         = update.effective_message.reply_to_message
@@ -36,9 +29,9 @@ def smedia(bot:Bot,update:Update,args):
             voice       = message.voice
             video_note  = message.video_note
             contact     = message.contact
-            location    = message.location
-            venue       = message.venue
-            invoice     = message.invoice
+            # location    = message.location
+            # venue       = message.venue
+            # invoice     = message.invoice
             keyword     = ' '.join(args)            
             if audio is not None:
                 media       = audio['file_id']   
@@ -101,7 +94,9 @@ def smedia(bot:Bot,update:Update,args):
         except Exception as e:            
             update.message.reply_text('Gagal simpan media\n%s %s'%(e,cek))
 
-def media(bot:Bot,update:Update,args): 
+def media(update,context): 
+    bot     = context.bot
+    args    = context.args
     chat_id = update.message["chat"]["id"]                    
     
     cek_done = "SELECT done FROM rekam WHERE chat_id = '%s' AND done = 0"%(chat_id)
@@ -119,7 +114,7 @@ def media(bot:Bot,update:Update,args):
         if jum == 0:
             update.message.reply_text('media tidak ketemu')
         else:
-            # detect media'
+            # detect media' 
             
             media = {
             "audio"       : "bot.send_audio",
@@ -138,14 +133,37 @@ def media(bot:Bot,update:Update,args):
 
             perintah = media[bar[0][0]]
             if bar[0][0] == "contact":
-                vcard = bar[0][1]
-                FN =  re.findall('FN:(.*)',vcard)
-                PHONE =  re.findall('MOBILE:(.*)',vcard)
-                media_id = "phone_number = '%s', first_name = '%s'"%(PHONE[0], FN[0])
+                vcard       = bar[0][1]
+                FN          =  re.findall('FN:(.*)',vcard)
+                PHONE       =  re.findall('MOBILE:(.*)',vcard)
+                media_id    = "phone_number = '%s', first_name = '%s'"%(PHONE[0], FN[0])
             else:
-                media_id = "'%s'"%bar[0][1]
+                media_id    = "'%s'"%bar[0][1]
             try:
-                m_id     =  update.message["reply_to_message"]["message_id"]
+                m_id        =  update.message["reply_to_message"]["message_id"]
                 exec ("%s('%s',%s,reply_to_message_id=%s)"%(perintah,chat_id,media_id,m_id))
             except:
                 exec ("%s('%s',%s)"%(perintah,chat_id,media_id))
+
+def xmedia(update,context):
+    bot = context.bot
+    chat_id         = update.message["chat"]["id"]    
+    # message         = update.effective_message  # type: Optional[Message]   
+    to_chat_id      = -1001337729941 
+    # message_id      = message.reply_to_message.message_id
+    # r               = message.reply_to_message
+    # date            = r.date
+    # from_user       = r.from_user.username
+    message_id      = 6648
+    message         = (bot.forward_message(to_chat_id, chat_id, message_id).to_dict())
+    pprint.pprint (message)
+    chat_id         = message['chat']['id']
+    message_id      = message['message_id']
+    from_user_name  = message['forward_from']['username']
+    from_user_id    = message['forward_from']['id']
+    date            = datetime.datetime.fromtimestamp(message['date'])
+    msg_text        = message['text']
+
+    # print (chat_id, message_id, from_user_name, from_user_id, date, msg_text)
+    
+    # pprint.pprint (update.message.messages.getHistory())

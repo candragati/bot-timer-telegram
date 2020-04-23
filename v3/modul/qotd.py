@@ -1,10 +1,7 @@
-from telegram import Bot, Update
-from telegram import ParseMode,User
-from telegram import MessageEntity
-from telegram.utils.helpers import escape_markdown
+
+from telegram import ParseMode
 from config import *
 import random
-import os
 import html
 from modul.kamus import kamus
 from openpyxl import Workbook
@@ -16,14 +13,24 @@ from modul.setting import getUsername
 
 lock = threading.Lock()
 
-def qotd(bot:Bot,update:Update,args): 
-    chat_id = update.message["chat"]["id"]                
-    if len(args)==0:
+def qotd(update,context,acak=None):
+    bot     = context.bot    
+    args    = context.args    
+    if acak == None and len(args) == 0:
+        quote_id = None
+    elif acak != None:
+        quote_id = acak[0]
+    elif str(args[0]).isdigit():
+        quote_id = args[0]    
+     
+    
+    chat_id = update.message["chat"]["id"]
+    if quote_id == None:
         m = update.effective_message            
         try:
-            waktu = str(m.reply_to_message.date.strftime('%Y-%m-%d %H:%M:%S'))
-            quote =  m.reply_to_message.text.replace("'","''")
-            cek = "SELECT nomor FROM qotd WHERE quote = '%s'"%(quote)
+            waktu   = str(m.reply_to_message.date.strftime('%Y-%m-%d %H:%M:%S'))
+            quote   = m.reply_to_message.text.replace("'","''")
+            cek     = "SELECT nomor FROM qotd WHERE quote = '%s' AND chat_id = '%s'"%(quote,chat_id)
             barC,jumC = eksekusi(cek)
             if jumC >= 1:
                 update.message.reply_text(str(kamus("qotd_dobel"))%(barC[0][0]))
@@ -34,8 +41,8 @@ def qotd(bot:Bot,update:Update,args):
                 except:                        
                     user_name   =  m.reply_to_message.from_user.username
                     user_id     =  m.reply_to_message.from_user.id
-                chat_type = update.message["chat"]["type"]
-                hitung = "SELECT quote FROM qotd WHERE chat_id = '%s'"%(chat_id)
+                chat_type   = update.message["chat"]["type"]
+                hitung      = "SELECT quote FROM qotd WHERE chat_id = '%s'"%(chat_id)
                 bar, jum = eksekusi(hitung)            
                 jum = jum+1
                 try:
@@ -48,21 +55,22 @@ def qotd(bot:Bot,update:Update,args):
                     lock.release()
                 update.message.reply_text(str(kamus("quote_simpan"))%(jum,jum,jum))
         except Exception as e:            
-            update.message.reply_text('%s\n%s'%(kamus("quote_mogok"),e))
-    elif str(args[0]).isdigit():
-        sql = "SELECT quote, user_id, nomor,user_name FROM qotd WHERE chat_id = '%s' AND nomor = '%s'"%(chat_id, args[0])
+            update.message.reply_text(str(kamus("qotd_mogok")))
+
+    elif quote_id!=None:
+        sql = "SELECT quote, user_id, nomor,user_name FROM qotd WHERE chat_id = '%s' AND nomor = '%s'"%(chat_id, quote_id)
         bar, jum = eksekusi(sql)
         if jum == 0:
             update.message.reply_text(kamus("quote_not_found"))
         else:
             # user_name = bot.get_chat(bar[0][1]).username
             # user_name = bar[0][3]
-            args = bar[0][1],bar[0][3]
-            user_name = getUsername(bot, update,args)
             # print (bot.get_chat(bar[0][1]))
-            teks = "<i>{}</i>\n\n{}:{}".format(html.escape(bar[0][0]),user_name,bar[0][2])
+            args        = bar[0][1],bar[0][3]
+            user_name   = getUsername(update,context,args)
+            teks        = "<i>{}</i>\n\n{}:{}".format(html.escape(bar[0][0]),user_name,bar[0][2])
             try:
-                m_id     =  update.message["reply_to_message"]["message_id"]
+                m_id    = update.message["reply_to_message"]["message_id"]
                 bot.send_message(chat_id=update.message.chat_id,reply_to_message_id=m_id, text = teks, parse_mode=ParseMode.HTML)
             except:
                 update.message.reply_html(teks)
@@ -76,18 +84,19 @@ def qotd(bot:Bot,update:Update,args):
     else:
         update.message.reply_text("Silahkan reply atau forward chat yang akan di quote")
 
-def rqotd(bot:Bot,update:Update):
+def rqotd(update,context):
     chat_id     = update.message["chat"]["id"]
     quote       = []
     acak        = []
     sql         = "SELECT nomor FROM qotd WHERE chat_id = '%s' AND hapus = 0"%chat_id
     bar, jum    = eksekusi(sql)
     for i in range(jum):
-        quote.append(bar[i][0])        
-    acak.append('%s'%random.choice(quote)    )
-    qotd(bot,update,acak)
+        quote.append(bar[i][0])
+    acak.append('%s'%random.choice(quote))
+    qotd(update,context,acak)
 
-def dqotd(bot:Bot,update:Update,args):
+def dqotd(update,context):
+    args = context.args
     chat_id = update.message["chat"]["id"]
     if len(args) == 0:
         update.message.reply_text(kamus("quote_kurang"))
@@ -108,30 +117,27 @@ def dqotd(bot:Bot,update:Update,args):
     else:
         update.message.reply_text(kamus("quote_kurang"))
 
-def xqotd(bot:Bot,update:Update,args):
+def xqotd(update,context):    
+    bot     = context.bot
     chat_id = update.message["chat"]["id"]
-    m = update.effective_message   
-    user = update.effective_user  # type: Optional[User]
-    
+    user    = update.effective_user    
     h = (
             ("ID"),
             ("WAKTU"),
             ("USERNAME"),
             ("QUOTE"),
             )
-    sekarang = datetime.now()
-    hari = datetime.strftime(sekarang.date(),"%Y-%m-%d")
-
-    simpan = "Export.xlsx"
-        
-    wb=Workbook()
-    ws1 = wb.active
-    ws1['A1'] = "Export QOTD"
+    sekarang    = datetime.now()
+    hari        = datetime.strftime(sekarang.date(),"%Y-%m-%d")
+    simpan      = "Export.xlsx"        
+    wb          = Workbook()
+    ws1         = wb.active
+    ws1['A1']   = "Export QOTD"
     ws1['A1'].style = 'Title'
     # ws1['A1'].alignment = Alignment(horizontal = 'center')
     # ws1.merge_cells('A1:%s1'%chr(64+len(h)))
 
-    ws1['A2'] = "Periode %s"%hari
+    ws1['A2']   = "Periode %s"%hari
     ws1['A2'].style = 'Headline 4'
     
     for col in range(len(h)):                
@@ -168,7 +174,9 @@ def xqotd(bot:Bot,update:Update,args):
     else:
         update.message.reply_text("Berhasil Export.\nCek PM...")
 
-def sqotd(bot:Bot,update:Update,args):
+def sqotd(update,context):
+    bot     = context.bot
+    args    = context.args
     chat_id = update.message["chat"]["id"]
     if len(args)==0:
         hitung      = "SELECT user_id,nomor,hit,user_name FROM qotd WHERE chat_id = %s ORDER BY cast(hit as integer) DESC limit 5"%(chat_id)

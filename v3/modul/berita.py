@@ -1,17 +1,12 @@
-from telegram import Bot, Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-from telegram import ParseMode
-from telegram.utils.helpers import escape_markdown
+
 from config import *
-from modul.kamus import kamus
-from telegram import MessageEntity
 import requests
 
 kategori_en = ["business","entertainment","general","health","science","sports","technology"]
 kategori_id = ["bisnis","hiburan","umum","kesehatan","sains","olahraga","teknologi"]
 
-def berita(bot:Bot,update:Update,args):    
-    b =  args    
+def berita(update,context):    
+    b =  context.args
     if len(b) == 0:
         jenis = "top-headlines?country=id&"
     else:

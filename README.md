@@ -41,6 +41,15 @@ _cek daftar nama2 kota yang tersedia di https://api.banghasan.com/sholat/format/
  - [ ] repeated timer
 
 
+## requirements
+python-telegram-bot
+emoji
+openpyxl
+googletrans
+reportlab
+python-bidi
+arabic_reshaper
+
 #### change log
 - 22-12-2018 : tambahan waktu sholat tahajud
 - 30-11-2018 : hari jum'at, sholat dzuhur berubah menjadi sholat jumat
@@ -50,3 +59,4 @@ _cek daftar nama2 kota yang tersedia di https://api.banghasan.com/sholat/format/
 - 15-11-2018 : tambah fitur agenda
 - 13-11-2018 : timerbot versi 3 mulai menggunakan database sqlite
 - 02-11-2018 : fix bug markdown. thanks @MuhShalah007
+

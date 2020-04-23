@@ -1,16 +1,14 @@
-from telegram import Bot, Update
-from telegram import ParseMode
-from telegram.utils.helpers import escape_markdown
+
 from config import *
-from modul.kamus import kamus
-from telegram import MessageEntity
 import calendar
 
-def setting(bot:Bot,update:Update,args):
-    chat_id = update.message["chat"]["id"]
-    chat_type = update.message["chat"]["type"]
-    chat = update.effective_chat
-    user_id = update.message.from_user.id
+def setting(update,context):
+    bot         = context.bot
+    args        = context.args
+    chat_id     = update.message["chat"]["id"]
+    chat_type   = update.message["chat"]["type"]
+    chat        = update.effective_chat
+    user_id     = update.message.from_user.id
     user_member = chat.get_member(user_id)
     if user_member.status == 'administrator' or user_member.status == 'creator':
         if len(args)==0:
@@ -27,8 +25,8 @@ def setting(bot:Bot,update:Update,args):
                     sql = "SELECT english_day FROM setting WHERE chat_id = '%s'"%chat_id
                     bar, jum = eksekusi(sql)
                     english_day = args[1].title()
-                    index_day = hari.index(english_day)
-                    day_name = calendar.day_name[index_day]
+                    index_day   = hari.index(english_day)
+                    day_name    = calendar.day_name[index_day]
                     if jum == 0:
                         sql = "INSERT INTO setting (chat_id, chat_type,english_day) VALUES (?,?,?)"
                         cur.execute(sql,(chat_id,chat_type,english_day))
@@ -45,7 +43,8 @@ def setting(bot:Bot,update:Update,args):
         update.message.reply_text("user biasa kayak kamu gak bisa suruh-suruh aku")
             
 
-def getUsername(bot:Bot, update:Update, args):
+def getUsername(update,context,args):
+    bot = context.bot    
     alt = '<a href="tg://user?id='+args[0]+'">@'+ args[1] +'</a>'
     if len(args) == 0:
         return "@" + args[1]

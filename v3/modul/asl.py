@@ -1,15 +1,16 @@
-from telegram.ext import MessageHandler, Filters
-from telegram import Bot, Update
+# 
+# from telegram.ext import Updater
 from config import *
 import datetime
 import re
 import threading
-import pprint
+import requests
+# import pprint
 
 lock = threading.Lock()
-def asl(bot:Bot,update:Update):    
+del_msg = []    
+def asl(update,context):    
     new_members = update.message.new_chat_members
-    sekarang    = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()+datetime.timedelta(seconds = 0, hours=0))
     waktu       = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()+datetime.timedelta(seconds=600,hours=0))
     chat_id     = update.message["chat"]["id"]
     chat_type   = update.message["chat"]["type"]
@@ -38,22 +39,30 @@ def asl(bot:Bot,update:Update):
                 lock.release()
             update.message.reply_text("Hei @%s! \nASL plz, Or you will be banned in 10 minutes."%member.username)
 
-def check_age(bot:Bot,update:Update):
+def check_age(update,context):
     # pprint.pprint (update)
-    message = update.message.text   
-    chat_id     = update.message["chat"]["id"]
-    user_id = str(update.message.from_user.id)
-    pesan = "banned %s"%user_id
-    cek_new_member = "SELECT age FROM new_members WHERE chat_id = '%s' AND user_id = '%s' AND done = 0 and age = 0"%(chat_id, user_id)
+    bot = context.bot
+    if update.message == None:
+        return
+    message         = update.message.text   
+    chat_id         = update.message["chat"]["id"]
+    user_id         = str(update.message.from_user.id)
+    pesan           = "banned %s"%user_id
+    cek_new_member  = "SELECT age FROM new_members WHERE chat_id = '%s' AND user_id = '%s' AND done = 0 and age = 0"%(chat_id, user_id)
     bar, jum = eksekusi( cek_new_member)
     if jum == 0:
         pass        
     else:
+        rpl_x = ""
         age =  (re.sub("\D", "", message))
         if age == "":
-            update.message.reply_text("ASL PLS!")
-        elif len(age) > 2:
-            update.message.reply_text("You must answer correctly")
+            rpl_x = update.message.reply_text("ASL PLS!").to_dict()            
+            del_msg.insert(0,update.message.message_id)
+            del_msg.insert(0,rpl_x["message_id"])            
+        elif len(age) > 2:                                    
+            rpl_x = update.message.reply_text("You must answer correctly").to_dict()
+            del_msg.insert(0,update.message.message_id)
+            del_msg.insert(0,rpl_x["message_id"])            
         else:            
             if int(age) >= 17:
                 try:
@@ -71,13 +80,30 @@ def check_age(bot:Bot,update:Update):
                     db.commit()
                 finally:
                     lock.release()
-                update.message.reply_text("Welcome to the group")
+
+                
+                update.message.reply_text("Welcome to the group!")                
+                for i in range(len(del_msg)):                    
+                    bot.delete_message(chat_id = chat_id, message_id =  del_msg[i])                    
             else:
-                update.message.reply_text("You are not allowed to join the group")
-            
-
-
-
+                rpl_x = update.message.reply_text("You are not allowed to join the group").to_dict()                
+                del_msg.insert(0,update.message.message_id)
+                del_msg.insert(0,rpl_x["message_id"])            
+        
+        if rpl_x != "":
+            # # Template queue for delete unused messages.
+            # # Description: Set queue to delete 2 messages.
+            #
+            # # 1. delete_message from bot itself.
+            # chat_id = chat_id # from var above
+            # messsage_id = rpl_x["message_id"]
+            #
+            # # 2. delete_message from user (unqualified ASL reply).
+            # chat_id = chat_id # from var above
+            # message_id = update.message.message_id
+            #
+            #
+            pass
 
 # dp = Config.dp
 # dp.add_handler(MessageHandler(Filters.status_update.new_chat_members, asl))
