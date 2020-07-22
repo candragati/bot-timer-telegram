@@ -11,7 +11,7 @@ import time
 import threading
 import requests
 from config import *
-from modul import me,bio,afk,qotd,langdetect,setting,berita,rekam,asl,bantuan,media, reputasi, kawalCorona
+from modul import me,bio,afk,qotd,langdetect,setting,berita,rekam,asl,bantuan,media, reputasi, kawalCorona,umedia
 from modul.kamus import kamus
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
@@ -46,7 +46,9 @@ class bot_timer():
         dp.add_handler(CommandHandler("agenda",             self.agenda))
         dp.add_handler(CommandHandler("media",              media.media,    pass_args = True))
         dp.add_handler(CommandHandler("smedia",             media.smedia,   pass_args = True))
-        # dp.add_handler(CommandHandler("xmedia",             media.xmedia))
+        dp.add_handler(CommandHandler("xmedia",             media.xmedia))
+        # dp.add_handler(CommandHandler("umedia",             umedia.echo))
+        # dp.add_handler(CommandHandler("usmedia",             umedia.smedia))
         dp.add_handler(CommandHandler("set",                self.set_timer,
                                       pass_args         =   True,
                                       pass_job_queue    =   True,
@@ -59,6 +61,7 @@ class bot_timer():
         dp.add_handler(CommandHandler("rb",                 reputasi.reputasi_bad))
         # dp.add_handler(CommandHandler("itungin",            kalkulus.itungin))
         dp.add_handler(CommandHandler("cor",        kawalCorona.cor))
+        dp.add_handler(CommandHandler("corstat",        kawalCorona.corGraph, pass_args = True))
         
         
         dp.add_handler(MessageHandler(Filters.status_update.new_chat_members, asl.asl))
@@ -75,7 +78,7 @@ class bot_timer():
 
     def start(self,update,context):
         try:
-            z = self.t1.isAlive()
+            z = self.t1.is_alive()
         except:            
             self.t1 = threading.Thread(target=self.timer, args=(update,context))
             self.t1.start()        
@@ -98,7 +101,7 @@ class bot_timer():
 
     def jadwal_sholat(self,update,context, kota):
         try:
-            z           = self.t1.isAlive()
+            z           = self.t1.is_alive()
             nama        = kota            
             sekarang    = datetime.datetime.now()
             tanggal     =  sekarang.strftime('%Y-%m-%d')
@@ -202,7 +205,7 @@ class bot_timer():
 
     def hitung(self,update,context,args,due):
         try:
-            z       = self.t1.isAlive()
+            z       = self.t1.is_alive()
             chat_id = update.message.chat_id
             if due <= 0:
                 update.message.reply_text(kamus("jadwal_lewat"))                
@@ -228,7 +231,7 @@ class bot_timer():
 
     def agenda(self,update,context):
         try:
-            z       = self.t1.isAlive()
+            z       = self.t1.is_alive()
             user_id = update.message.from_user.id
             chat_id = update.message["chat"]["id"]
             sql     = "SELECT waktu, pesan, sholat, kota FROM daftar_timer WHERE user_id = '%s' AND chat_id = '%s' AND done = 0"%(user_id, chat_id)
@@ -291,8 +294,11 @@ class bot_timer():
                         else:
                             try:                    
                                 total_lama = barCor[i][3]+barCor[i][4]+barCor[i][5]
-                                chat_id = barCor[i][2]                    
-                                kode, tampil,positif,sembuh,meninggal  = kawalCorona.stat_corona(update,context,barCor[i][1],chat_id)
+                                chat_id     = barCor[i][2]
+                                provinsi    = barCor[i][1]
+                                          
+                                kode, tampil,positif,sembuh,meninggal  = kawalCorona.stat_corona(update,context,provinsi,chat_id)
+                                pesan = kawalCorona.corGraph(update,context,provinsi,chat_id)                                
                                 total_baru = int(positif)+int(sembuh)+int(meninggal)
                                 if int(positif) - barCor[i][3]>0:
                                     selisih_positif = "+%s"%(int(positif)-barCor[i][3])
@@ -309,15 +315,23 @@ class bot_timer():
                                 else:
                                     selisih_meninggal = "-%s"%(barCor[i][5]-int(meninggal))
 
-                                tampil.append("\nData sebelumnya %s\n``` Positif\t\t: %s\t\t%s\n Sembuh\t\t\t: %s\t\t%s\n Meninggal: %s\t\t%s```"%(barCor[i][0], barCor[i][3], selisih_positif,barCor[i][4],selisih_sembuh,barCor[i][5],selisih_meninggal))
+                                tampil.append("``` Data sebelumnya %s\n Positif\t\t: %s\t\t%s\n Sembuh\t\t\t: %s\t\t%s\n Meninggal: %s\t\t%s```"%(barCor[i][0], barCor[i][3], selisih_positif,barCor[i][4],selisih_sembuh,barCor[i][5],selisih_meninggal))
                                 if total_lama != total_baru:
                                     tampil = (''.join('%s \n'%tampil[j] for j in range(len(tampil))))
-                                    bot.send_message(text = tampil,chat_id = chat_id,parse_mode=ParseMode.MARKDOWN)
+                                    if pesan:
+                                        filename = "%s%s"%(provinsi,chat_id)
+                                        file = open("%s.png"%filename,"rb")
+                                        context.bot.sendPhoto(chat_id=chat_id, photo=file, caption=tampil, parse_mode = ParseMode.MARKDOWN)
+                                    else:
+                                        bot.send_message(text = tampil,chat_id = chat_id,parse_mode=ParseMode.MARKDOWN)
+                                    sekarang    = '{:%Y-%m-%d %H:%M:%S}'.format(sekarang)
+                                    sqlStat = "INSERT INTO kawalCorona (tanggal, chat_id,area,positif,sembuh,meninggal) VALUES (?,?,?,?,?,?)"
+                                    argStat = (sekarang,chat_id,provinsi, positif, sembuh, meninggal)
+                                    cur.execute(sqlStat, argStat)
+                                    db.commit()
+
                             except:
                                 pass
-                        
-                        
-
                 bar, jum = eksekusi(sql)
                 if jum == 0:
                     pass
@@ -347,11 +361,14 @@ class bot_timer():
                             if (bar[i][1].split()[0])=="banned":                                
                                 try:
                                     user_id = (bar[i][1].split()[1])
-                                    bot.send_sticker(chat_id, 'CAADBQADSQ4AAs_rwQcgxkK2JzKWwhYE')  # banhammer marie sticker
                                     bot.kick_chat_member(chat_id, user_id)
                                     pesan = ("banned @%s"%(bar[i][3]))
                                 except:
-                                    pesan = ("%s - @%s"%(bar[i][1],bar[i][3]))    
+                                    pesan = ("ane gagal %s - @%s"%(bar[i][1],bar[i][3]))                                        
+                                    bot.send_sticker(chat_id, 'CAACAgUAAxkBAAIVY18FFska2MmU5E4nPNco6m0RTRQhAALaAAM_5Bom20PZpUJeLM8aBA')  # banhammer marie sticker
+                                    done = "UPDATE new_members SET done = 1, age = '%s' WHERE chat_id = '%s' AND user_id = '%s'"%(0,chat_id,user_id)
+                                    cur.execute(done)
+                                    db.commit()
                             else:
                                 pesan = ("%s - @%s"%(bar[i][1],bar[i][3]))
                         bot.send_message(text = pesan,chat_id = chat_id)
