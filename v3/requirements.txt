@@ -1,0 +1,8 @@
+python-telegram-bot
+openpyxl
+reportlab
+python-bidi
+arabic_reshaper
+emojipy
+svglib
+pygal

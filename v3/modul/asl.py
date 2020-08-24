@@ -20,7 +20,7 @@ def asl(update,context):
         if user_id == Config.BOT_ID:
             pass
         else:
-            user_name= member.username
+            user_name= member.username if member.username else member.first_name
             pesan = "banned %s"%user_id
             try:
                 lock.acquire(True)
@@ -37,7 +37,7 @@ def asl(update,context):
                 db.commit()
             finally:
                 lock.release()
-            update.message.reply_text("Hei @%s! \nASL plz, Or you will be banned in 10 minutes."%member.username)
+            update.message.reply_text("Hei %s! \nASL plz, Or you will be banned in 10 minutes."%(user_name)
 
 def check_age(update,context):
     # pprint.pprint (update)
