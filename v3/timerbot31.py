@@ -11,7 +11,8 @@ import time
 import threading
 import requests
 from config import *
-from modul import me,bio,afk,qotd,langdetect,setting,berita,rekam,asl,bantuan,media, reputasi, kawalCorona,umedia
+from modul import me,bio,afk,qotd,langdetect,setting,berita,rekam,asl,bantuan,media, reputasi, kawalCorona
+# ,umedia
 from modul.kamus import kamus
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
@@ -65,7 +66,7 @@ class bot_timer():
         
         
         dp.add_handler(MessageHandler(Filters.status_update.new_chat_members, asl.asl))
-        dp.add_handler(MessageHandler(Filters.entity(MessageEntity.MENTION) | Filters.entity(MessageEntity.TEXT_MENTION) ,afk.reply_afk),group = 1)
+        dp.add_handler(MessageHandler(Filters.entity(MessageEntity.MENTION) | Filters.entity(MessageEntity.TEXT_MENTION) | Filters.reply ,afk.reply_afk),group = 1)
         dp.add_handler(MessageHandler(Filters.all, langdetect.echo),group = 2)
         dp.add_handler(MessageHandler(Filters.text|Filters.video | Filters.photo | Filters.document | Filters.forwarded | Filters.sticker, rekam.isi), group = 3)
         dp.add_handler(MessageHandler(~Filters.command & Filters.group, afk.sudah_nongol), group = 4)
