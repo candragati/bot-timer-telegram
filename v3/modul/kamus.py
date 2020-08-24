@@ -66,7 +66,20 @@ def kamus(teks):
                     "Ya Allah, yang Maha membulak-balikkan hati, tetapkanlah hatiku di atas agamaMu",
                     "Barangsiapa bertakwa kepada Allah, niscaya Dia akan mengadakan baginya jalan keluar, dan memberinya rizki dari arah yang tidak disangka-sangkanya\n(QS Ath-Thalaq:2-3)",
                     "Setiap anak Adam bersalah. Dan sebaik-baiknya orang yang bersalah adalah orang-orang yang bertaubat",
-                    "Orang yang ikhlas itu seperti orang yang berjalan di atas pasir. Kita tidak mendengar suaranya, namun melihat bekasnya.\n(Ibnu Mas'ud)"
+                    "Orang yang ikhlas itu seperti orang yang berjalan di atas pasir. Kita tidak mendengar suaranya, namun melihat bekasnya.\n(Ibnu Mas'ud)",
+                    "Bila kau tak mau merasakan lelahnya belajar, maka kau akan menanggung pahitnya kebodohan (Imam Syafi'i)",
+                    "Jangan cintai orang yg tidak mencintai Allah, kalau Allah saja ia tinggalkan, apalagi kamu (Imam Syafi'i)",
+                    "Barangsiapa yang menginginkan husnul khatimah, hendaklah ia selalu bersangka baik dengan manusia (Imam Syafi'i)",
+                    "Doa disaat tahajud adalah umpama panah yang tepat mengenai sasaran (Imam Syafi'i)",
+                    "Ilmu itu bukan yang dihafal tetapi yang memberi manfaat (Imam Syafi'i)",
+                    "Siapa yang menasehatimu secara sembunyi-sembunyi, maka ia benar-benar menasehatimu. Siapa yang menasehatimu di khalayak ramai, dia sebenarnya menghinamu (Imam Syafi'i)",
+                    "Berapa banyak manusia yang masih hidup dalam kelalaian, sedangkan kain kafan sedang di tenun (Imam Syafi'i)",
+                    "Jadikan akhirat dihatimu, dunia ditanganmu dan kematian dipelupuk matamu (Imam Syafi'i)",
+                    "Berkatalah sekehendakmu untuk menghina kehormatanku, diamku dari orang hina adalah suatu jawaban. Bukanlah artinya aku tidak mempunyai jawaban, tetapi tidak pantas bagi singa meladeni anjing (Imam Syafi'i)",
+                    "Amalan yang paling berat diamalkan Ada 3 (tiga). 1. Dermawan saat yang dimiliki sedikit. 2. Menghindari maksiat saat sunyi tiada siapa-siapa. 3. Menyampaikan kata-kata yang benar dihadapan orang diharap atau ditakuti (Imam Syafi'i)",
+                    "Orang yang hebat adalah orang yang memiliki kemampuan menyembunyikan kemeralatannya, sehingga orang lain menyangka bahwa dia berkecukupan karena dia tidak pernah meminta (Imam Syafi'i)",
+                    "Orang yang hebat adalah orang yang memiliki kemampuan menyembunyikan amarah, sehingga orang lain mengira bahwa ia merasa ridha (Imam Syafi'i)",
+                    "Orang yang hebat adalah orang yang memiliki kemampuan menyembunyikan kesusahan, sehingga orang lain mengira bahwa ia selalu senang (Imam Syafi'i)."
                     ],
                 "en":  [
                     "Don't wait for six strong men to take you to the mosque",                    

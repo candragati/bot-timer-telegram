@@ -2,10 +2,10 @@
 from config import *
 # from openpyxl.styles import Side, Border
 import threading
-import re
+import re,os
 from modul.buatPdfMedia import buatPdf
 import pprint
-import datetime
+from datetime import *
 
 lock = threading.Lock()
 
@@ -36,30 +36,58 @@ def smedia(update,context):
             if audio is not None:
                 media       = audio['file_id']   
                 tipe        = "audio"
+                image_size  = "0x0"
+                thumb_id    = ""
             elif document is not None:            
                 media       = document['file_id']
-                tipe        = "document"
+                thumb_id    = document['thumb']['file_id']
+                tipe        = "document"                
+                width       = document['thumb']['width']
+                height      = document['thumb']['height']
+                image_size  = "%sx%s"%(width,height)
             elif animation is not None:            
                 media       = animation['file_id']
+                thumb_id    = animation['thumb']['file_id']
                 tipe        = "animation"
+                width       = animation['thumb']['width']
+                height      = animation['thumb']['height']
+                image_size  = "%sx%s"%(width,height)
             elif len(photo) != 0:            
                 media       = photo[0]['file_id']
+                thumb_id    = photo[-1].file_id
                 tipe        = "photo"
+                width       = photo[-1].width
+                height      = photo[-1].height
+                image_size  = "%sx%s"%(width,height)
             elif sticker is not None:            
                 media       = sticker['file_id']
+                thumb_id    = sticker['thumb']['file_id']
                 tipe        = "sticker"
+                width       = sticker['thumb']['width']
+                height      = sticker['thumb']['height']
+                image_size  = "%sx%s"%(width,height)
             elif video is not None:            
                 media       = video['file_id']
+                thumb_id    = video['thumb']['file_id']
                 tipe        = "video"
+                width       = video['thumb']['width']
+                height      = video['thumb']['height']
+                image_size  = "%sx%s"%(width,height)
             elif voice is not None:            
                 media       = voice['file_id']
                 tipe        = "voice"
+                image_size  = "0x0"
+                thumb_id    = ""
             elif video_note is not None:            
                 media       = video_note['file_id']
                 tipe        = "video_note"
+                image_size  = "0x0"
+                thumb_id    = ""
             elif contact is not None:            
                 media       = contact['vcard']
                 tipe        = "contact"
+                image_size  = "0x0"
+                thumb_id    = ""
             else:
                 update.message.reply_text("Tipe Media tidak dikenal")
                 return
@@ -74,7 +102,8 @@ def smedia(update,context):
             #     tipe        = "invoice"
 
             cek = "SELECT media_keyword FROM media WHERE chat_id = ? AND media_keyword = ?"
-            cur.execute(cek,(chat_id,keyword))            
+            cur.execute(cek,(chat_id,keyword))
+            db.commit()
             jumC =  (len(cur.fetchall()))            
             if jumC >= 1:
                 update.message.reply_text('Double keyword')
@@ -85,14 +114,14 @@ def smedia(update,context):
                 jum = jum+1
                 try:
                     lock.acquire(True)
-                    sql = "INSERT INTO media (nomor,waktu, chat_id, chat_type, media_tipe, media_keyword, media_id) VALUES (?,?,?,?,?,?,?)"
-                    cur.execute(sql,(jum,waktu, chat_id, chat_type, tipe, keyword, media))
+                    sql = "INSERT INTO media (nomor,waktu, chat_id, chat_type, media_tipe, media_keyword, media_id, thumb_id, image_size) VALUES (?,?,?,?,?,?,?,?,?)"
+                    cur.execute(sql,(jum,waktu, chat_id, chat_type, tipe, keyword, media, thumb_id, image_size))
                     db.commit()
                 finally:
                     lock.release()
                 update.message.reply_text("media berhasil di simpan dengan keyword %s"%keyword)
         except Exception as e:            
-            update.message.reply_text('Gagal simpan media\n%s %s'%(e,cek))
+            update.message.reply_text('Gagal simpan media\n%s'%(e))
 
 def media(update,context): 
     bot     = context.bot
@@ -108,7 +137,8 @@ def media(update,context):
     else:
         keyword = ' '.join(args)
         sql = "SELECT media_tipe, media_id FROM media WHERE chat_id = ? AND media_keyword = ?"
-        cur.execute(sql,(chat_id,keyword))            
+        cur.execute(sql,(chat_id,keyword))   
+        db.commit()         
         bar =  (cur.fetchall())
         jum =  (len(bar))
         if jum == 0:
@@ -146,24 +176,35 @@ def media(update,context):
                 exec ("%s('%s',%s)"%(perintah,chat_id,media_id))
 
 def xmedia(update,context):
-    bot = context.bot
-    chat_id         = update.message["chat"]["id"]    
-    # message         = update.effective_message  # type: Optional[Message]   
-    to_chat_id      = -1001337729941 
-    # message_id      = message.reply_to_message.message_id
-    # r               = message.reply_to_message
-    # date            = r.date
-    # from_user       = r.from_user.username
-    message_id      = 6648
-    message         = (bot.forward_message(to_chat_id, chat_id, message_id).to_dict())
-    pprint.pprint (message)
-    chat_id         = message['chat']['id']
-    message_id      = message['message_id']
-    from_user_name  = message['forward_from']['username']
-    from_user_id    = message['forward_from']['id']
-    date            = datetime.datetime.fromtimestamp(message['date'])
-    msg_text        = message['text']
+    bot             = context.bot
+    args            = context.args
+    message         = update.effective_message  # type: Optional[Message]    
+    chat_id         = message.chat.id
+    sql = "SELECT nomor,waktu, media_tipe, media_keyword,thumb_id  FROM media WHERE chat_id = '%s'"%(chat_id)
+    barR, jumR = eksekusi(sql)
+    
+    for i in range(jumR):        
+        nomor       = barR[i][0]
+        waktu       = barR[i][1]
+        waktu       = datetime.strptime(waktu,"%Y-%m-%d %H:%M:%S")
+        m_tipe      = barR[i][2]
+        m_keyword   = barR[i][3]
+        m_id        = barR[i][4]
+        
+        if os.path.isfile('gambar/%s'%m_id):
+            pass
+        else:
+            try:
+                media_file  = bot.get_file(m_id)
+                media_file.download('gambar/%s'%m_id)
+            except:
+                pass
+        
 
+    buatPdf(chat_id)
+    namafile    = "media%s.pdf"%(abs(chat_id))
+    file = open(namafile,"rb")
+    bot.send_document(chat_id, file)
     # print (chat_id, message_id, from_user_name, from_user_id, date, msg_text)
     
     # pprint.pprint (update.message.messages.getHistory())

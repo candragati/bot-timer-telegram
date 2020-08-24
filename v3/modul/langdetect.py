@@ -26,8 +26,10 @@ teks = (
 
 lock = threading.Lock()
 def echo(update,context): 
-    # pprint.pprint (update.message.to_dict())
+    
+
     bot             = context.bot
+    
     chat            = update.effective_chat  # type: Optional[Chat]
     # user            = update.effective_user  # type: Optional[User]
     message         = update.effective_message  # type: Optional[Message]    
@@ -38,9 +40,83 @@ def echo(update,context):
     from_user_id    = message.from_user.id    
     member          = chat.get_member(from_user_id)
     # date            = message.date
+    # try:
+    #     message         = update.effective_message.reply_to_message  # type: Optional[Message]    
+    #     audio       = message.audio
+    #     document    = message.document
+    #     animation   = message.animation
+    #     photo       = message.photo
+    #     sticker     = message.sticker        
+    #     video       = message.video
+    #     voice       = message.voice
+    #     video_note  = message.video_note
+    #     contact     = message.contact
+    #     pprint.pprint(message.to_dict())
+        
+    #     if audio is not None:
+    #         media       = audio['file_id']   
+    #         tipe        = "audio"
+    #         image_size  = "0x0"
+    #         thumb_id    = ""
+    #     elif document is not None:            
+    #         media       = document['file_id']
+    #         thumb_id    = document['thumb']['file_id']
+    #         tipe        = "document"
+    #         width       = animation['thumb']['width']
+    #         height      = animation['thumb']['height']
+    #         image_size  = "%sx%s"%(width,height)
+    #     elif animation is not None:            
+    #         media       = animation['file_id']
+    #         thumb_id    = animation['thumb']['file_id']
+    #         tipe        = "animation"
+    #         width       = animation['thumb']['width']
+    #         height      = animation['thumb']['height']
+    #         image_size  = "%sx%s"%(width,height)
+    #     elif len(photo) != 0:            
+    #         media       = photo[0]['file_id']
+    #         thumb_id    = photo[-1].file_id
+    #         tipe        = "photo"
+    #         width       = photo[-1].width
+    #         height      = photo[-1].height
+    #         image_size  = "%sx%s"%(width,height)
+    #     elif sticker is not None:            
+    #         media       = sticker['file_id']
+    #         thumb_id    = sticker['thumb']['file_id']
+    #         tipe        = "sticker"
+    #         width       = sticker['thumb']['width']
+    #         height      = sticker['thumb']['height']
+    #         image_size  = "%sx%s"%(width,height)
+    #     elif video is not None:            
+    #         media       = video['file_id']
+    #         thumb_id    = video['thumb']['file_id']
+    #         tipe        = "video"
+    #         width       = video['thumb']['width']
+    #         height      = video['thumb']['height']
+    #         image_size  = "%sx%s"%(width,height)
+    #     elif voice is not None:            
+    #         media       = voice['file_id']
+    #         tipe        = "voice"
+    #         image_size  = "0x0"
+    #         thumb_id    = ""
+    #     elif video_note is not None:            
+    #         media       = video_note['file_id']
+    #         tipe        = "video_note"
+    #     elif contact is not None:            
+    #         media       = contact['vcard']
+    #         tipe        = "contact"
+    #         image_size  = "0x0"
+    #         thumb_id    = ""
+    #     keyword = update.effective_message.text
+    #     print (tipe,keyword)
+    #     # pprint.pprint (update.message.to_dict())
+    #     sqlUpdate = "UPDATE media SET thumb_id = ?, image_size = ? WHERE media_keyword = ? AND chat_id = '-1001162202776'"
+    #     cur.execute(sqlUpdate, (thumb_id, image_size, keyword))
+    #     db.commit()
+    # except Exception as e:
+    #     print (e)
     
-    try:
-        lock.acquire(True)
+    lock.acquire(True)
+    try:        
         sql             = "SELECT english_day FROM setting WHERE chat_id = '%s'"%chat_id
         bar, jum        = eksekusi(sql)
         if jum == 0:

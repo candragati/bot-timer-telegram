@@ -11,7 +11,21 @@ from datetime import datetime
 import threading
 from modul.setting import getUsername
 
+
 lock = threading.Lock()
+dequote = [
+    "Quote tidak dapat ditongolkan karena berpotensi merusak akhlak",
+    "kata-kata quote ini berisi konten radikal",
+    "Quote ini dilarang muncul",
+    "Silahkan pilih id quote yang lain aja",
+    "Tidak boleh dilihat oleh umat",
+    "Rakyat perlu quote segar supaya bisa bahagia",
+    "User pembuat quote ini dalam pantauan",
+    "sang pembuat quote perlu edukasi akhlak",
+    "Quote ini diblokir",
+    "Isi quote di hide. Kalo penasaran, itu urusan anda",
+    "Mulutmu harimau mu. Jinakkan supaya tidak menyakiti orang"
+    ]
 
 def qotd(update,context,acak=None):
     bot     = context.bot    
@@ -58,7 +72,7 @@ def qotd(update,context,acak=None):
             update.message.reply_text(str(kamus("qotd_mogok")))
 
     elif quote_id!=None:
-        sql = "SELECT quote, user_id, nomor,user_name FROM qotd WHERE chat_id = '%s' AND nomor = '%s'"%(chat_id, quote_id)
+        sql = "SELECT quote, user_id, nomor,user_name, hapus FROM qotd WHERE chat_id = '%s' AND nomor = '%s'"%(chat_id, quote_id)
         bar, jum = eksekusi(sql)
         if jum == 0:
             update.message.reply_text(kamus("quote_not_found"))
@@ -69,11 +83,14 @@ def qotd(update,context,acak=None):
             args        = bar[0][1],bar[0][3]
             user_name   = getUsername(update,context,args)
             teks        = "<i>{}</i>\n\n{}:{}".format(html.escape(bar[0][0]),user_name,bar[0][2])
-            try:
-                m_id    = update.message["reply_to_message"]["message_id"]
-                bot.send_message(chat_id=update.message.chat_id,reply_to_message_id=m_id, text = teks, parse_mode=ParseMode.HTML)
-            except:
-                update.message.reply_html(teks)
+            if bar[0][4] == 1:
+                update.message.reply_text(random.choice(dequote))
+            else:                
+                try:
+                    m_id    = update.message["reply_to_message"]["message_id"]
+                    bot.send_message(chat_id=update.message.chat_id,reply_to_message_id=m_id, text = teks, parse_mode=ParseMode.HTML)
+                except:
+                    update.message.reply_html(teks)
             try:
                 lock.acquire(True)
                 sql_hit = "UPDATE qotd SET hit = hit+1 WHERE chat_id = '%s' AND nomor = '%s'"%(chat_id,bar[0][2])
@@ -194,6 +211,7 @@ def sqotd(update,context):
         user_name   = str(args[0]).replace('@','')        
         hitung      = "SELECT user_id,nomor,hit,user_name FROM qotd WHERE chat_id = ? AND user_name = ? ORDER BY cast(hit as integer) DESC limit 5"
         cur.execute(hitung,(chat_id,user_name))
+        db.commit()
         bar =  (cur.fetchall())
         jum =  (len(bar))
         if jum == 0:

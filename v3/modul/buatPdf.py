@@ -9,6 +9,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from config import *
 from datetime import datetime
+from dateutil.parser import  parse
 import html
 from bidi.algorithm import get_display
 from arabic_reshaper import ArabicReshaper
@@ -67,6 +68,7 @@ def buatPdf(chat_id):
 
     sql = "SELECT nomor,waktu, judul, author,chat_title  FROM rekam WHERE chat_id = '%s' AND done = 0"%chat_id
     bar, jum = eksekusi(sql)
+    
     nomor       = bar[0][0]
     waktu       = bar[0][1]
     judul       = bar[0][2]
@@ -128,13 +130,19 @@ def buatPdf(chat_id):
     story.append(Spacer(0.1 * cm, .8 * cm))
     sql_rangkum = "SELECT waktu, nama, message_chat, message_media, message_id, reply_to,username,forward_username, forward_name,image_size FROM rekam_log WHERE nomor = '%s' AND chat_id = '%s'"%(bar[0][0],chat_id)
     barR,jumR = eksekusi(sql_rangkum)
-    # jumR = 89
-    for i in range(jumR):        
-        waktu         = str( barR[i][0])
+    # jumR = 93
+    for i in range(jumR):
+
+        waktu         = str(barR[i][0])        
         username      = str(barR[i][6])
         nama          = barR[i][1]
-        tanggalexp    = datetime.strptime(waktu,"%Y-%m-%d %H:%M:%S")
-        waktu         = tanggalexp.strftime("%H:%M:%S")
+        try:
+          tanggalexp    = datetime.strptime(waktu,"%Y-%m-%d %H:%M:%S")        
+          waktu         = tanggalexp.strftime("%H:%M:%S")
+        except:
+          tanggalexp = parse(waktu).strftime("%Y-%m-%d %H:%M:%S")
+          waktu         = parse(waktu).strftime("%H:%M:%S")
+        
         dataLISTwidth = ('8%','8%','84%')
         reply_to      = barR[i][5]
         forward_username = barR[i][7]
@@ -144,9 +152,9 @@ def buatPdf(chat_id):
           width,height = [0,0]
         
 
-        if width > 500:
+        if width > 400:
           aspect  = height / float(width)
-          width   = 300
+          width   = 200
           height  = (width * aspect)
         else:
           pass
@@ -167,7 +175,10 @@ def buatPdf(chat_id):
             except Exception as e:
               message_chat = barReply[0][2]
 
-            waktureply = datetime.strptime(barReply[0][0],"%Y-%m-%d %H:%M:%S").strftime("%H:%M:%S")
+            try:
+              waktureply = datetime.strptime(barReply[0][0],"%Y-%m-%d %H:%M:%S").strftime("%H:%M:%S")
+            except:
+              waktureply = parse(barReply[0][0]).strftime("%H:%M:%S")
             data1 = [[
               Paragraph('', styles["Line_Label"]),
               Paragraph('<font size = 8 color = grey>%s</font>'%waktureply, styles["reply"]),
@@ -270,3 +281,5 @@ def buatPdf(chat_id):
 
     doc.build(story,canvasmaker = PageNumCanvas)
 
+# buatPdf(-1001286308688) # teh expired
+# buatPdf(-1001162202776) # koding Teh
