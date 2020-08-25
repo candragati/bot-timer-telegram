@@ -1,8 +1,8 @@
 # from telegram.ext import Updater
-from telegram.ext import CommandHandler, MessageHandler, Filters,Updater
+from telegram.ext import CommandHandler, MessageHandler, Filters, Updater
 from telegram import MessageEntity
 from telegram import ParseMode
-# from telegram.utils.helpers import escape_markdown
+from telegram.utils.helpers import escape_markdown
 import logging
 import datetime
 import re
@@ -19,7 +19,9 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 class bot_timer():
-    def __init__(self):     
+    t1 = threading.Thread()
+    def __init__(self, ):     
+        self.t1.start()    
         # updater = Updater(Config.TOKEN,workers = 8,request_kwargs = {'read_timeout':600,'connect_timeout':600})
         # dp = updater.dispatcher
         updater = Config.updater
@@ -75,7 +77,7 @@ class bot_timer():
         # dp.add_error_handler(self.error)
         # Start the Bot
         updater.start_polling()
-        updater.idle()     
+        updater.idle()         
 
     def start(self,update,context):
         try:
@@ -118,8 +120,10 @@ class bot_timer():
                 url_kota= "https://api.banghasan.com/sholat/format/json/kota"
                 r       = requests.get(url_kota)
                 kota_all=  r.json()['kota']
+                mirip = []
                 for a in kota_all:
-                    if a['nama'] == nama.upper():
+                    if a['nama'] == nama.upper() or a['id'] == nama:
+                        if a['id'] == nama: nama = a['nama']
                         update.message.reply_text(str(kamus("id_ketemu"))%a['id'])
                         url         = "https://api.banghasan.com/sholat/format/json/jadwal/kota/%s/tanggal/%s"%(a['id'],tanggal)            
                         r           = requests.get(url)
@@ -165,8 +169,11 @@ class bot_timer():
                         agenda_sholat =''.join('%s \n'%jadwal[i] for i in range(len(jadwal)))
                         update.message.reply_text(str(kamus("sholat_jadwal"))%(nama,tanggal,agenda_sholat))
                         break
+                    elif re.search(f"{nama}", a['nama'], re.IGNORECASE):
+                        mirip.append(f"`{escape_markdown(a['nama'])}`")
                 else:
-                    update.message.reply_text(kamus("kota_tidak_ketemu")%url_kota)
+                    pesan = kamus("kota_ketemu_sebagian")%"\n- ".join(mirip) if len(mirip)>0 else kamus("kota_tidak_ketemu")%url_kota
+                    update.message.reply_text(pesan,parse_mode=ParseMode.MARKDOWN)
             else:
                 update.message.reply_text(str(kamus("sholat_sudah_setting")%nama))
         except Exception as e:            
