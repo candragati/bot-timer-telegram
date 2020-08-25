@@ -136,6 +136,11 @@ def kamus(teks):
                 "en":  ["city not found.\nPlease check your city ID at %s"]
             },
 
+            "kota_ketemu_sebagian":   {
+                "id":  ["kota tidak ketemu.\nmungkin maksud anda:\n- %s "],
+                "en":  ["city not found.\nanother city was found:\n- %s"]
+            },
+
             "sholat_lewat":   {
                 "id":  ["-> sudah kelewat"],
                 "en":  ["-> already over"]

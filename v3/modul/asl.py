@@ -37,7 +37,7 @@ def asl(update,context):
                 db.commit()
             finally:
                 lock.release()
-            update.message.reply_text("Hei %s! \nASL plz, Or you will be banned in 10 minutes."%(user_name)
+            update.message.reply_text("Hei %s! \nASL plz, Or you will be banned in 10 minutes."%(user_name))
 
 def check_age(update,context):
     # pprint.pprint (update)
