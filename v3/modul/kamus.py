@@ -140,7 +140,7 @@ def kamus(teks):
                 "id":  ["kota tidak ketemu.\nmungkin maksud anda:\n- %s "],
                 "en":  ["city not found.\nanother city was found:\n- %s"]
             },
-
+             
             "sholat_lewat":   {
                 "id":  ["-> sudah kelewat"],
                 "en":  ["-> already over"]
@@ -180,6 +180,31 @@ def kamus(teks):
                 "id":  ["saatnya %s %s untuk wilayah %s - @%s %s"],
                 "en":  ["its %s %s for the %s region - @%s %s"]
             },
+
+            "media_simpan":{
+                "id":["media berhasil di simpan dengan keyword %s"],
+                "en":["saved with keyword %s"]
+            },
+
+            "media_asing":{
+                "id":["Tipe Media tidak dikenal"],
+                "en":["unknown media"]
+            },   
+
+            "media_kurang":{
+                "id":   ["Silahkan tulis keywordnya."],
+                "en":   ["Please add it with the keyword."]
+            },      
+
+            "media_kosong":{
+                "id":   ["media tidak ketemu."],
+                "en":   ["cannot find media"]
+            },
+
+            "media_kulgram":{
+                "id":   ["Fitur /media dimatikan. Masih belum selesai membaca..."],
+                "en":   ["Cannot execute /media feature. Still reading..."]
+            },       
         }
 
         sekarang = datetime.datetime.now()

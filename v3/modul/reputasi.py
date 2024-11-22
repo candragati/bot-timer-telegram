@@ -75,8 +75,8 @@ def reputasi(update,context,user_id):
         if barr[0][1] > 10:
             rep_b = ":shit: x {}".format(barr[0][1])
         else:
-            rep_b =  ''.join([(":shit:") for i in range(barr[0][1])])
+            rep_b =  ''.join([(":shit ") for i in range(barr[0][1])])
 
-        return emoji.emojize("reputasi\n{}\n{}".format(rep_g,rep_b), use_aliases=True)
+        return emoji.emojize("reputasi\n{}\n{}".format(rep_g,rep_b))
 
 

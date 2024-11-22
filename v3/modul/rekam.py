@@ -30,12 +30,12 @@ def baca(update,context):
             cek_done = "SELECT done FROM rekam WHERE chat_id = '%s' AND done = 0"%(chat_id)
             barD, jumD = eksekusi(cek_done)
             if jumD != 0:
-                update.message.reply_text("Saya belum selesai membaca...")
+                update.message.reply_text("Saya lagi sibuk membaca. Belum disuruh untuk /tulis")
             else:
                 sql_insert = "INSERT INTO rekam (nomor, waktu, chat_id, chat_type, chat_title, judul, baca, tulis,done) VALUES (?,?,?,?,?,?,?,?,?)"
                 cur.execute(sql_insert,(jum+1,sekarang, chat_id, chat_type, chat_title, 0,baca_id, 0,0))
                 db.commit()
-                update.message.reply_text("Mulai membaca...")
+                update.message.reply_text("Mulai membaca...\nsetelah mencapai 100 chat, pencatatan akan dihentikan.")
         except Exception as e:
             update.message.reply_text("Silahkan reply chat yang akan ditandai untuk dibaca\n%s"%e)    
 
@@ -122,7 +122,15 @@ def isi(update,context):
     else:
         # nomor = bar[0][0]
         # waktu = bar[0][1]
-        # baca = bar[0][2]
+        baca = bar[0][2]
+        jarak = message_id - baca
+        if jarak == 50:
+            update.message.reply_text("INFORMASI\n\nsudah sampai 50 chat...")
+        elif jarak >= 100:
+            update.message.reply_text("INFORMASI\n\nsudah sampai 100 chat.\nPencatatan dihentikan")
+            tulis(update, context)
+            return
+
         # tulis = bar[0][3]
         # judul = bar[0][4]
         # author = bar[0][5]

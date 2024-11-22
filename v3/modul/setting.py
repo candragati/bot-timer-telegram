@@ -37,6 +37,42 @@ def setting(update,context):
                     update.message.reply_text("english day is set for %s"%day_name)            
             except Exception as e:
                 update.message.reply_text("choose one from %s"%hari)
+        elif args[0]=='asl':
+            try:
+                if args[1].upper()=='OFF':
+                    sql = "UPDATE setting SET asl = 'OFF' WHERE chat_id = '%s'"%chat_id                
+                    cur.execute(sql)
+                    db.commit()
+                    update.message.reply_text("filter ASL non aktif")
+                elif args[1].upper()=='ON':
+                    sql = "SELECT asl FROM setting WHERE chat_id = '%s'"%chat_id
+                    bar, jum = eksekusi(sql)
+                    
+                    if jum == 0:
+                        sql = "INSERT INTO setting (chat_id, chat_type,asl) VALUES (?,?,?)"
+                        cur.execute(sql,(chat_id,chat_type,'ON'))
+                    else:
+                        sql = "UPDATE setting SET asl=? WHERE chat_id = ?"
+                        cur.execute(sql,('ON', chat_id))
+                    db.commit()
+                    update.message.reply_text("filter ASL aktif")            
+                elif args[1].upper()=='UMUR':
+                    sql = "SELECT asl FROM setting WHERE chat_id = '%s'"%chat_id
+                    bar, jum = eksekusi(sql)
+                    
+                    if jum == 0:
+                        sql = "INSERT INTO setting (chat_id, chat_type,asl) VALUES (?,?,?)"
+                        cur.execute(sql,(chat_id,chat_type,'UMUR'))
+                    else:
+                        sql = "UPDATE setting SET asl=? WHERE chat_id = ?"
+                        cur.execute(sql,('UMUR', chat_id))
+                    db.commit()
+                    update.message.reply_text("filter ASL dirubah ke bahasa")            
+                else:
+                    update.message.reply_text("pilih ON|OFF|UMUR")
+            except Exception:
+                update.message.reply_text("pilih ON|OFF|UMUR")
+
         else:
             update.message.reply_text("aku gak selalu ngerti kamu mas...")
     else:

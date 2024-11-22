@@ -3,6 +3,7 @@ from telegram import ParseMode
 from telegram.utils.helpers import escape_markdown
 from config import *
 from modul import reputasi
+import traceback
 
 def set_bio(update,context):
     m           = update.effective_message
@@ -43,5 +44,5 @@ def bio(update,context):
             update.message.reply_text("Gak ada member yang sudi menulis tentang @%s."%user_name)
         else:
             update.effective_message.reply_text("*{}*:\n{}\n\n{}".format(user_name, escape_markdown(bar[0][0]),teks_r),parse_mode=ParseMode.MARKDOWN)
-    except Exception as e:
-        update.message.reply_text("reply lalu ketik /bio\n%s"%e)
+    except:
+        update.message.reply_text("reply lalu ketik /bio\n%s"%traceback.format_exc())

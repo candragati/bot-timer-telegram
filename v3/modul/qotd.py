@@ -37,7 +37,7 @@ def qotd(update,context,acak=None):
     elif str(args[0]).isdigit():
         quote_id = args[0]    
      
-    
+
     chat_id = update.message["chat"]["id"]
     if quote_id == None:
         m = update.effective_message            

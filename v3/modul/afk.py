@@ -6,7 +6,6 @@ import random
 from telegram.utils.helpers import escape_markdown
 from modul.kamus import kamus
 
-
 lock = threading.Lock()
 def set_afk(update,context):
     m   = update.effective_message
@@ -72,19 +71,20 @@ def sudah_nongol(update,context):
         try:
             lock.acquire(True)
             sql = "UPDATE afk SET hapus = 1 WHERE chat_id = ? AND user_id = ?"
-            cur.execute(sql,(chat_id,from_user_id))
+            cur.execute(sql, (chat_id, from_user_id))
             db.commit()
-            update.message.reply_sticker(sticker = random.choice(sticker_list))            
+            update.message.reply_sticker(sticker=random.choice(sticker_list))
         finally:
             lock.release()
 
-def reply_afk(update,context):
+def reply_afk(update, context):
     # Dari mention    
     message     = update.effective_message
     chat_id     = message.chat.id    
-    entities    = message.parse_entities([MessageEntity.TEXT_MENTION, MessageEntity.MENTION])    
-    next = True
-    if message.entities and entities:
+    entities    = message.parse_entities([MessageEntity.TEXT_MENTION, MessageEntity.MENTION])
+    user_name   = message.from_user.username
+    next        = True
+    if message.entities and entities:        
         for ent in entities:            
             if ent.type == MessageEntity.TEXT_MENTION:
                 user_id = ent.user.id
@@ -101,10 +101,11 @@ def reply_afk(update,context):
             else:
                 next = False
                 update.message.reply_text("[%s](tg://user?id=%s) gak online, dia lagi %s"%(escape_markdown(bar[0][1]), bar[0][2],bar[0][0]),parse_mode=ParseMode.MARKDOWN)
+
     # Dari reply
     try:        
         r_user_name   = message.reply_to_message.from_user.username if message.reply_to_message.from_user.username else message.reply_to_message.from_user.id
-        cek         = "SELECT teks, user_name, user_id FROM afk WHERE chat_id='%s' AND (user_id='%s' OR user_name='%s') AND hapus = 0"%(chat_id, r_user_name, r_user_name)
+        cek         = "SELECT teks, user_name, user_id FROM afk WHERE chat_id='%s' AND (user_id='%s' OR user_name='%s') AND hapus = 0"%(chat_id, r_user_name, r_user_name)        
         bar, jum    = eksekusi(cek)
         if jum == 0:
             pass

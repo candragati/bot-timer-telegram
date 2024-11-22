@@ -4,11 +4,10 @@ from googletrans import Translator
 import datetime
 import re
 import random
-import pprint
 import traceback
 import threading
 import emoji
-
+from telegram import ChatPermissions
 
 teks = (
     "Please use only English in Sunday.",
@@ -25,96 +24,14 @@ teks = (
     )
 
 lock = threading.Lock()
-def echo(update,context): 
-    
-
-    bot             = context.bot
-    
+def echo(update,context):
+    bot             = context.bot    
     chat            = update.effective_chat  # type: Optional[Chat]
     # user            = update.effective_user  # type: Optional[User]
     message         = update.effective_message  # type: Optional[Message]    
     chat_id         = message.chat.id
-    chat_type       = message.chat.type
     message_id      = message.message_id
-    from_user_name  = message.from_user.username
-    from_user_id    = message.from_user.id    
-    member          = chat.get_member(from_user_id)
-    # date            = message.date
-    # try:
-    #     message         = update.effective_message.reply_to_message  # type: Optional[Message]    
-    #     audio       = message.audio
-    #     document    = message.document
-    #     animation   = message.animation
-    #     photo       = message.photo
-    #     sticker     = message.sticker        
-    #     video       = message.video
-    #     voice       = message.voice
-    #     video_note  = message.video_note
-    #     contact     = message.contact
-    #     pprint.pprint(message.to_dict())
-        
-    #     if audio is not None:
-    #         media       = audio['file_id']   
-    #         tipe        = "audio"
-    #         image_size  = "0x0"
-    #         thumb_id    = ""
-    #     elif document is not None:            
-    #         media       = document['file_id']
-    #         thumb_id    = document['thumb']['file_id']
-    #         tipe        = "document"
-    #         width       = animation['thumb']['width']
-    #         height      = animation['thumb']['height']
-    #         image_size  = "%sx%s"%(width,height)
-    #     elif animation is not None:            
-    #         media       = animation['file_id']
-    #         thumb_id    = animation['thumb']['file_id']
-    #         tipe        = "animation"
-    #         width       = animation['thumb']['width']
-    #         height      = animation['thumb']['height']
-    #         image_size  = "%sx%s"%(width,height)
-    #     elif len(photo) != 0:            
-    #         media       = photo[0]['file_id']
-    #         thumb_id    = photo[-1].file_id
-    #         tipe        = "photo"
-    #         width       = photo[-1].width
-    #         height      = photo[-1].height
-    #         image_size  = "%sx%s"%(width,height)
-    #     elif sticker is not None:            
-    #         media       = sticker['file_id']
-    #         thumb_id    = sticker['thumb']['file_id']
-    #         tipe        = "sticker"
-    #         width       = sticker['thumb']['width']
-    #         height      = sticker['thumb']['height']
-    #         image_size  = "%sx%s"%(width,height)
-    #     elif video is not None:            
-    #         media       = video['file_id']
-    #         thumb_id    = video['thumb']['file_id']
-    #         tipe        = "video"
-    #         width       = video['thumb']['width']
-    #         height      = video['thumb']['height']
-    #         image_size  = "%sx%s"%(width,height)
-    #     elif voice is not None:            
-    #         media       = voice['file_id']
-    #         tipe        = "voice"
-    #         image_size  = "0x0"
-    #         thumb_id    = ""
-    #     elif video_note is not None:            
-    #         media       = video_note['file_id']
-    #         tipe        = "video_note"
-    #     elif contact is not None:            
-    #         media       = contact['vcard']
-    #         tipe        = "contact"
-    #         image_size  = "0x0"
-    #         thumb_id    = ""
-    #     keyword = update.effective_message.text
-    #     print (tipe,keyword)
-    #     # pprint.pprint (update.message.to_dict())
-    #     sqlUpdate = "UPDATE media SET thumb_id = ?, image_size = ? WHERE media_keyword = ? AND chat_id = '-1001162202776'"
-    #     cur.execute(sqlUpdate, (thumb_id, image_size, keyword))
-    #     db.commit()
-    # except Exception as e:
-    #     print (e)
-    
+
     lock.acquire(True)
     try:        
         sql             = "SELECT english_day FROM setting WHERE chat_id = '%s'"%chat_id
@@ -122,8 +39,14 @@ def echo(update,context):
         if jum == 0:
             pass
         else:               
-            try:                   
-                translator = Translator()                
+            try:
+                chat_type       = message.chat.type
+                from_user_name  = message.from_user.username
+                from_user_id    = message.from_user.id
+                member          = chat.get_member(from_user_id)
+                sekarang        = message.date+datetime.timedelta(hours=7)
+
+                translator = Translator()
                 try:
                     message = re.sub(r"(?:\@|https?\://)\S+", "", message.text.encode().decode('utf-8'))                    
                 except:
@@ -138,10 +61,12 @@ def echo(update,context):
                 message = re.sub(r'/.*', "", message)
                 message = re.sub(r"\b[A-Z\.]{2,}s?\b", "", message)
                 try:
-                    a           = translator.detect(emoji.demojize(message)).lang
-                    sekarang    = datetime.datetime.now()
+                    a           = translator.detect(str(message)).lang
+                    if len(a) == 0:return
+                    # sekarang    = datetime.datetime.now()
                     tanggal     = '{:%Y-%m-%d}'.format(sekarang)
                     hari        = datetime.datetime.strftime(sekarang.date(),"%a")
+                    
                     if hari == bar[0][0] and a != 'en':
                         cek = "SELECT user_id, mute FROM blacklist WHERE chat_id = '%s' AND user_id = '%s' AND tanggal = '%s'"%(chat_id,from_user_id,tanggal)
                         bar, jum = eksekusi(cek)
@@ -178,7 +103,7 @@ def echo(update,context):
                                 except:
                                     bot.send_message(
                                         chat_id, 
-                                        'Gak bisa di delete nih', 
+                                        'Gak bisa di delete nih',
                                         reply_to_message_id=message_id)
                             elif member.can_send_messages is None or member.can_send_messages:
                                 mutetime    = datetime.datetime.now()+datetime.timedelta(hours=24)
@@ -186,12 +111,14 @@ def echo(update,context):
                                 infut       = "UPDATE blacklist SET mute_sampe_tanggal = '%s' WHERE chat_id = '%s' AND user_id = '%s' AND tanggal = '%s'"%(tanggalmute,chat_id, from_user_id,tanggal)
                                 cur.execute(infut)
                                 db.commit()
-                                bot.restrict_chat_member(chat_id, from_user_id, until_date=mutetime, can_send_messages=False)
+                                b = ChatPermissions(canSendMessages=False, canSendMediaMessages=False, canSendPolls=False, canSendOtherMessages=False, canAddWebPagePreviews=False, canChangeInfo=False, canInviteUsers=False, canPinMessages=False)
+                                bot.restrict_chat_member(chat_id, from_user_id,b, until_date=mutetime, can_send_messages=False)
                                 bot.send_message(chat_id, "Restricted until {}!".format(tanggalmute), reply_to_message_id=message_id) 
                             else:
                                 bot.send_message(chat_id, "Already muted.", reply_to_message_id=message_id)
                 except:
-                    bot.send_message(chat_id,  "Im stupid bot", reply_to_message_id=message_id)
+                    # print (traceback.format_exc())
+                    pass # belum update ke v13, coba hapus demojize
             except:
                 bot.send_message(chat_id,str(traceback.format_exc()), reply_to_message_id=message_id)
     finally:
