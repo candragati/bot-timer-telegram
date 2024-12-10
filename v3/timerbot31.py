@@ -3,6 +3,8 @@ from telegram import MessageEntity
 from telegram import ParseMode, Update, Bot, Message 
 from telegram.utils.helpers import escape_markdown
 from telegram import InputMediaPhoto, InputMediaVideo
+from concurrent.futures import ThreadPoolExecutor
+import requests
 import logging
 import datetime
 import re
@@ -12,6 +14,7 @@ import requests
 from config import *
 from modul import me,bio,afk,qotd,langdetect,setting,berita,rekam,asl,bantuan,media, reputasi, kawalCorona
 from modul.kamus import kamus
+from tempfile import TemporaryDirectory
 import pprint
 import sqlite3
 import tarfile
@@ -116,9 +119,11 @@ class bot_timer():
 
             if req['success']:
                 medias = []
-                if req['media']:
-                    for i, m in enumerate(req['media']):
-                        caption = req['caption'] if i == 0 else None
+                media_results = req['media']
+                total_media_res = len(media_results)
+                if media_results:
+                    for i, m in enumerate(media_results):
+                        caption = req['caption'] if i == total_media_res - 1 else None
                         if m['type'].upper() != 'VIDEO':
                             if sosmed == "api/fb":
                                 medias.append(InputMediaPhoto(m['imageHigh'], caption = caption))
@@ -134,10 +139,56 @@ class bot_timer():
                     caption = req['caption']
                     update.message.reply_text(caption)
                 else:
-                    bot.send_media_group(chat_id = chat_id, media = medias)
+                    self.reply_downloaded_media_chunk(bot, chat_id, medias)
+                    # bot.send_media_group(chat_id = chat_id, media = medias)
             else:
                 update.message.reply_text("gagal")
-
+                
+    def downloader_media(self, temp_dir, media_url):
+        try:
+            filename = f"media_{os.urandom(4).hex()}"
+            filepath = os.path.join(temp_dir, filename)
+            
+            response = requests.get(media_url, stream=True)
+            response.raise_for_status()
+            
+            with open(filepath, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+            
+            return {
+                'file': filepath,
+                'success': True,
+                'size': os.path.getsize(filepath)
+            }
+        
+        except Exception as e:
+            return {
+                'file': None,
+                'success': False,
+                'error': str(e)
+            }
+    
+    def reply_downloaded_media_chunk(self, bot, chat_id, medias):
+        with TemporaryDirectory() as tdir:
+            with ThreadPoolExecutor(max_workers=5) as executor:
+                results = list(executor.map(
+                    lambda m: self.downloader_media(tdir, m.media), 
+                    medias
+                ))
+                
+                successful_medias = []
+                for media, result in zip(medias, results):
+                    if result['success']:
+                        media.media = result['file']
+                        successful_medias.append(media)
+            
+            CHUNK_SIZE = 10
+            for i in range(0, len(successful_medias), CHUNK_SIZE):
+                chunk = successful_medias[i:i + CHUNK_SIZE]
+                bot.send_media_group(chat_id=chat_id, media=chunk)
+            
     def start(self,update,context):
         try:
             z = self.t1.is_alive()
