@@ -410,7 +410,7 @@ class bot_timer():
                 message.edit_text("📝 Ditemukan perubahan lokal, mencoba auto-stash...")
                 
                 stash_result = subprocess.run(
-                    ['git', 'stash', 'save', f"Auto stash before pull at {datetime.now()}"], 
+                    ['git', 'stash', 'save', f"Auto stash before pull at {datetime.datetime.now()}"], 
                     capture_output=True, 
                     text=True
                 )
