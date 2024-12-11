@@ -125,7 +125,7 @@ class bot_timer():
                     for i, m in enumerate(media_results):
                         caption = req['caption'] if i == total_media_res - 1 else None
                         read_more = 'Read More...'
-                        caption = caption[:1024 - len(read_more)] + f"[{read_more}]({link})" if len(caption) >=1024 else caption
+                        caption = caption[:1024 - len(read_more)] + f"[{read_more}]({link})" if caption and len(caption) >=1024 else caption
                         if m['type'].upper() != 'VIDEO':
                             if sosmed == "api/fb":
                                 medias.append(InputMediaPhoto(m['imageHigh'], caption = caption))
@@ -144,7 +144,7 @@ class bot_timer():
                     self.reply_downloaded_media_chunk(bot, chat_id, medias)
                     # bot.send_media_group(chat_id = chat_id, media = medias)
             else:
-                update.message.reply_text("gagal")
+                update.message.reply_text(req.get('msg') or "gagal")
                 
     def downloader_media(self, temp_dir, media_url):
         try:
@@ -185,12 +185,13 @@ class bot_timer():
                 
                 successful_medias = []
                 for media, result in zip(medias, results):
-                    with open(result['file'], 'rb') as f:
-                        if media.type == 'photo':
-                            media_obj = InputMediaPhoto(f, caption=media.caption, parse_mode='Markdown')
-                        elif media.type == 'video':
-                            media_obj = InputMediaVideo(f, caption=media.caption, parse_mode='Markdown')
-                        successful_medias.append(media_obj)
+                    if result['success']:
+                        with open(result['file'], 'rb') as f:
+                            if media.type == 'photo':
+                                media_obj = InputMediaPhoto(f, caption=media.caption, parse_mode='Markdown')
+                            elif media.type == 'video':
+                                media_obj = InputMediaVideo(f, caption=media.caption, parse_mode='Markdown')
+                            successful_medias.append(media_obj)
             
             CHUNK_SIZE = 10
             for i in range(0, len(successful_medias), CHUNK_SIZE):
