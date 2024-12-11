@@ -163,7 +163,7 @@ class bot_timer():
                         read_more = 'Read More...'
                         caption = caption[:1024 - len(read_more)] + f"[{read_more}]({args})" if caption and len(caption) >=1024 else caption
                         if m['type'].upper() != 'VIDEO':
-                            if socmed == 'api/thread':
+                            if sosmed == 'api/thread':
                                 medias.append(InputMediaPhoto(m['media_url'], caption = caption))
                             elif sosmed == "api/fb":
                                 medias.append(InputMediaPhoto(m['imageHigh'], caption = caption))
@@ -171,7 +171,7 @@ class bot_timer():
                                 medias.append(InputMediaPhoto(m['url'], caption = caption))
 
                         else:
-                            if socmed == 'api/thread':
+                            if sosmed == 'api/thread':
                                 medias.append(InputMediaVideo(m['media_url'], caption = caption))
                             elif sosmed == "api/fb":
                                 medias.append(InputMediaVideo(m['sd_url'], caption = caption))
