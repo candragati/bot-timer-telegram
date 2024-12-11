@@ -3,7 +3,7 @@ import builtins
 
 class UndefinedNameVisitor(ast.NodeVisitor):
     def __init__(self):
-        self.scopes = [set(dir(builtins)) | {'app', 'filters', 'idle', 'client', 'message'}]
+        self.scopes = [set(dir(builtins)) | {'dp', 'context', 'update'}]
         self.imported_names = set()
         self.errors = []
         self.in_annotation = False
