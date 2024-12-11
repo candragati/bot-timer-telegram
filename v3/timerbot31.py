@@ -367,28 +367,12 @@ class bot_timer():
             current_branch = 'master'
     
             try:
-                local_commit = subprocess.check_output(
-                    ['git', 'rev-parse', 'HEAD'],
-                    stderr=subprocess.STDOUT,
-                    text=True
-                ).strip()
-                
-                remote_commit = subprocess.check_output(
-                    ['git', 'rev-parse', f'origin/{current_branch}'],
-                    stderr=subprocess.STDOUT,
-                    text=True
-                ).strip()
-                
-                if local_commit == remote_commit:
-                    message.edit_text("✅ Tidak ada pembaruan yang tersedia.")
-                    return
-                    
                 diff_output = subprocess.check_output(
-                    ['git', 'diff', '--name-only', local_commit, remote_commit],
-                    stderr=subprocess.STDOUT,
+                    ['git', 'diff', '--name-only', f'HEAD..origin/{current_branch}'], 
+                    stderr=subprocess.STDOUT, 
                     text=True
                 ).strip()
-                                
+                
                 if not diff_output:
                     message.edit_text("✅ Tidak ada pembaruan yang tersedia.")
                     return
