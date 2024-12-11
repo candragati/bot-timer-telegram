@@ -306,7 +306,7 @@ class bot_timer():
 
     def restart_pull(self, update, context):
         user_id = update.effective_user.id
-        if user_id not in []:
+        if user_id not in [582005141, 377596941]:
             update.message.reply_text("❌ Anda tidak memiliki akses untuk menggunakan perintah ini.")
             return
     
