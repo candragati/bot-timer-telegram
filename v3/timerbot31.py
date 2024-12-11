@@ -4,6 +4,8 @@ from telegram import ParseMode, Update, Bot, Message
 from telegram.utils.helpers import escape_markdown
 from telegram import InputMediaPhoto, InputMediaVideo
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+import traceback
 import requests
 import signal
 import subprocess
@@ -102,11 +104,19 @@ class bot_timer():
                 chat_id = data.get('chat_id')
                 if chat_id:
                     bot = Bot(token = Config.TOKEN)
-                    bot.send_message(
-                        chat_id=chat_id,
-                        text="✅ Bot berhasil direstart!",
-                        parse_mode='Markdown'
-                    )
+                    try:
+                        bot.edit_message_text(
+                            chat_id=chat_id,
+                            message_id=message_id,
+                            text="✅ Bot berhasil direstart!",
+                            parse_mode='Markdown'
+                        )
+                    except Exception as e:
+                        bot.send_message(
+                            chat_id=chat_id,
+                            text="✅ Bot berhasil direstart!",
+                            parse_mode='Markdown'
+                        )
                 os.remove(restart_file)
         except Exception as e:
             print(f"Error sending restart message: {e}")
@@ -359,7 +369,10 @@ class bot_timer():
                 return
                 
             with open('/tmp/bot_restart_info.json', 'w') as f:
-                json.dump({'chat_id': chat_id}, f)
+                json.dump({
+                    'chat_id': chat_id,
+                    'message_id': message.message_id
+                }, f)
             
             message.edit_text(
                 f"✅ Pembaruan berhasil!\n"
@@ -372,10 +385,35 @@ class bot_timer():
             os.execl(sys.executable, sys.executable, *sys.argv)
             
         except Exception as e:
-            update.message.reply_text(
-                f"❌ Terjadi kesalahan saat pembaruan/restart:\n\n{str(e)}",
-                parse_mode='Markdown'
+            error_traceback = traceback.format_exc()
+            error_message = (
+                f"❌ Terjadi kesalahan saat pembaruan/restart:\n"
+                f"Error type: `{type(e).__name__}`\n"
+                f"Error message: `{str(e)}`\n"
+                f"Traceback:\n```\n{error_traceback}```"
             )
+            
+            if len(error_message) > 4096:
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                error_file = f"/tmp/bot_error_{timestamp}.txt"
+                with open(error_file, 'w') as f:
+                    f.write(error_message)
+                
+                short_message = (
+                    f"❌ Terjadi kesalahan saat pembaruan/restart:\n"
+                    f"Error type: `{type(e).__name__}`\n"
+                    f"Error message: `{str(e)}`"
+                )
+                with open(error_file, 'rb') as f:
+                    update.message.reply_document(
+                        document=f,
+                        filename=f"error_{timestamp}.txt",
+                        caption="📁 Log detail error"
+                    )
+            else:
+                update.message.reply_text(error_message, parse_mode='Markdown')
+            print("Error in restart_pull:")
+            print(error_traceback)
         
     def set_timer(self,update,context):
         args = context.args
