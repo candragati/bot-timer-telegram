@@ -100,22 +100,23 @@ class bot_timer():
             if os.path.exists(restart_file):
                 with open(restart_file, 'r') as f:
                     data = json.load(f)
-                chat_id = data.get('chat_id')
-                if chat_id:
-                    bot = Bot(token = Config.TOKEN)
-                    try:
-                        bot.edit_message_text(
-                            chat_id=chat_id,
-                            message_id=message_id,
-                            text="✅ Bot berhasil direstart!",
-                            parse_mode='Markdown'
-                        )
-                    except Exception as e:
-                        bot.send_message(
-                            chat_id=chat_id,
-                            text="✅ Bot berhasil direstart!",
-                            parse_mode='Markdown'
-                        )
+                    chat_id = data.get('chat_id')
+                    if chat_id:
+                        bot = Bot(token = Config.TOKEN)
+                        text = f"{data['msg']}\n✅ Bot berhasil direstart!"
+                        try:
+                            bot.edit_message_text(
+                                chat_id=chat_id,
+                                message_id=data['message_id'],
+                                text=text,
+                                parse_mode='Markdown'
+                            )
+                        except Exception as e:
+                            bot.send_message(
+                                chat_id=chat_id,
+                                text=text,
+                                parse_mode='Markdown'
+                            )
                 os.remove(restart_file)
         except Exception as e:
             print(f"Error sending restart message: {e}")
@@ -343,9 +344,22 @@ class bot_timer():
             status_result = subprocess.run(['git', 'status', '--porcelain'], 
                                          capture_output=True, 
                                          text=True)
+            
             if status_result.stdout.strip():
-                message.edit_text("❌ Direktori kerja tidak bersih. Harap commit atau stash perubahan terlebih dahulu.")
-                return
+                message.edit_text("📝 Ditemukan perubahan lokal, mencoba auto-stash...")
+                
+                stash_result = subprocess.run(['git', 'stash', 'save', f"Auto stash before pull at {datetime.now()}"], 
+                                            capture_output=True, 
+                                            text=True)
+                
+                if stash_result.returncode != 0:
+                    message.edit_text(
+                        f"❌ Gagal melakukan auto-stash:\n```\n{stash_result.stderr}```",
+                        parse_mode='Markdown'
+                    )
+                    return
+                
+                message.edit_text("✅ Berhasil menyimpan perubahan lokal dengan stash")
             
             branch_result = subprocess.run(['git', 'branch', '--show-current'], 
                                          capture_output=True, 
@@ -358,26 +372,44 @@ class bot_timer():
             
             if pull_result.returncode != 0:
                 message.edit_text(
-                    f"❌ Gagal melakukan git pull:\n\n{pull_result.stderr}", 
+                    f"❌ Gagal melakukan git pull:\n```\n{pull_result.stderr}```", 
                     parse_mode='Markdown'
                 )
                 return
-            
+                
             if "Already up to date" in pull_result.stdout:
-                message.edit_text("ℹ️ Tidak ada pembaruan baru yang tersedia.")
+                if status_result.stdout.strip():
+                    stash_pop = subprocess.run(['git', 'stash', 'pop'], 
+                                             capture_output=True, 
+                                             text=True)
+                    if stash_pop.returncode == 0:
+                        message.edit_text("ℹ️ Tidak ada pembaruan baru. Perubahan lokal telah dikembalikan.")
+                    else:
+                        message.edit_text("ℹ️ Tidak ada pembaruan baru. Gagal mengembalikan perubahan lokal, silakan cek git stash list.")
+                else:
+                    message.edit_text("ℹ️ Tidak ada pembaruan baru yang tersedia.")
                 return
                 
+            if status_result.stdout.strip():
+                stash_pop = subprocess.run(['git', 'stash', 'pop'], 
+                                         capture_output=True, 
+                                         text=True)
+                if stash_pop.returncode != 0:
+                    message.edit_text("⚠️ Berhasil pull tapi gagal mengembalikan perubahan lokal. Silakan cek git stash list.")
+                    return
+
+            prev_msg = f"✅ Pembaruan berhasil!\n"
+                f"Branch: `{current_branch}`\n"
+                f"```\n{pull_result.stdout}```"
             with open('/tmp/bot_restart_info.json', 'w') as f:
                 json.dump({
                     'chat_id': chat_id,
-                    'message_id': message.message_id
+                    'message_id': message.message_id,
+                    'msg': prev_msg
                 }, f)
-            
+            prev_msg += "\n🔄 Memulai ulang bot..."
             message.edit_text(
-                f"✅ Pembaruan berhasil!\n"
-                f"Branch: `{current_branch}`\n"
-                f"\n{pull_result.stdout}\n"
-                "🔄 Memulai ulang bot...",
+                prev_msg,
                 parse_mode='Markdown'
             )
             
