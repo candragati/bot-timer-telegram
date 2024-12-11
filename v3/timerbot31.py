@@ -5,6 +5,8 @@ from telegram.utils.helpers import escape_markdown
 from telegram import InputMediaPhoto, InputMediaVideo
 from concurrent.futures import ThreadPoolExecutor
 import requests
+import signal
+import subprocess
 import logging
 import datetime
 import re
@@ -34,6 +36,7 @@ class bot_timer():
         updater = Config.updater
         dp = Config.dp
 
+        dp.add_handler(CommandHandler("restart_pull",              self.restart_pull))
         dp.add_handler(CommandHandler("start",              self.start))
         dp.add_handler(CommandHandler("afk",                afk.set_afk))
         dp.add_handler(CommandHandler("setbio",             bio.set_bio))
@@ -125,7 +128,7 @@ class bot_timer():
                     for i, m in enumerate(media_results):
                         caption = req['caption'] if i == total_media_res - 1 else None
                         read_more = 'Read More...'
-                        caption = caption[:1024 - len(read_more)] + f"[{read_more}]({link})" if caption and len(caption) >=1024 else caption
+                        caption = caption[:1024 - len(read_more)] + f"[{read_more}]({args})" if caption and len(caption) >=1024 else caption
                         if m['type'].upper() != 'VIDEO':
                             if sosmed == "api/fb":
                                 medias.append(InputMediaPhoto(m['imageHigh'], caption = caption))
@@ -300,7 +303,92 @@ class bot_timer():
         except Exception as e:     
                    
             update.message.reply_text('%s\n%s'%(kamus("mogok"),e))
-        
+
+    def restart_pull(self, update, context):
+        user_id = update.effective_user.id
+        if user_id not in []:
+            update.message.reply_text("❌ Anda tidak memiliki akses untuk menggunakan perintah ini.")
+            return
+    
+        try:
+            message = update.message.reply_text("🔄 Memeriksa pembaruan dari GitHub...")
+            
+            status_result = subprocess.run(['git', 'status', '--porcelain'], 
+                                         capture_output=True, 
+                                         text=True)
+            if status_result.stdout.strip():
+                message.edit_text("❌ Direktori kerja tidak bersih. Harap commit atau stash perubahan terlebih dahulu.")
+                return
+            
+            branch_result = subprocess.run(['git', 'branch', '--show-current'], 
+                                         capture_output=True, 
+                                         text=True)
+            current_branch = branch_result.stdout.strip()
+            
+            remote_result = subprocess.run(['git', 'ls-remote', 'origin', current_branch],
+                                         capture_output=True,
+                                         text=True)
+            
+            local_result = subprocess.run(['git', 'rev-parse', 'HEAD'],
+                                        capture_output=True,
+                                        text=True)
+                                        
+            remote_hash = remote_result.stdout.split()[0]
+            local_hash = local_result.stdout.strip()
+            
+            if remote_hash == local_hash:
+                message.edit_text("ℹ️ Tidak ada pembaruan baru yang tersedia.")
+                return
+                
+            pull_result = subprocess.run(['git', 'pull', 'origin', current_branch], 
+                                       capture_output=True, 
+                                       text=True)
+            
+            if pull_result.returncode != 0:
+                message.edit_text(
+                    f"❌ Gagal melakukan git pull:\n\n{pull_result.stderr}", 
+                    parse_mode='Markdown'
+                )
+                return
+            
+            in_screen = bool(os.environ.get('STY'))
+            script_path = os.path.abspath(__file__)
+            
+            if in_screen:
+                screen_name = os.environ['STY'].split('.')[1]
+                restart_script = f"""#!/bin/bash
+sleep 2
+screen -S {screen_name} -X stuff "python3 {script_path}^M"
+rm -- "$0"
+"""
+            else:
+                restart_script = f"""#!/bin/bash
+sleep 2
+cd {os.path.dirname(script_path)}
+python3 {script_path} &
+rm -- "$0"
+"""            
+            restart_script_path = "/tmp/bot_restart.sh"
+            with open(restart_script_path, 'w') as f:
+                f.write(restart_script)
+            os.chmod(restart_script_path, 0o755)
+            
+            message.edit_text(
+                f"✅ Pembaruan berhasil!\n"
+                f"Branch: `{current_branch}`\n"
+                f"\n{pull_result.stdout}\n"
+                "🔄 Memulai ulang bot...",
+                parse_mode='Markdown'
+            )
+            
+            subprocess.Popen([restart_script_path])
+            os.kill(os.getpid(), signal.SIGTERM)
+            
+        except Exception as e:
+            update.message.reply_text(
+                f"❌ Terjadi kesalahan saat pembaruan/restart:\n\n{str(e)}",
+                parse_mode='Markdown'
+            )
     def set_timer(self,update,context):
         args = context.args
         if args[0].upper() == 'SHOLAT':
