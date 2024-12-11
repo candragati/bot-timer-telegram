@@ -187,11 +187,11 @@ def check_code_safety(code_content, filename):
         tree = ast.parse(code_content, filename)
     except SyntaxError as e:
         context = get_context_lines(lines, e.lineno)
-        return False, f"\n**SyntaxError di baris {e.lineno}**\n```\n{context}```\n**Error:** {str(e)}"
+        return False, f"\n*SyntaxError di baris {e.lineno}*\n```\n{context}```\n*Error:* {str(e)}"
     visitor = UndefinedNameVisitor()
     visitor.visit(tree)
     if visitor.errors:
         undefined_name, lineno = visitor.errors[0]
         context = get_context_lines(lines, lineno)
-        return False, f"\n**NameError di baris {lineno}**\n```\n{context}```\n**Error:** name '{undefined_name}' is not defined"
+        return False, f"\n*NameError di baris {lineno}*\n```\n{context}```\n*Error:* name '{undefined_name}' is not defined"
     return True, "Code is safe"
