@@ -4,6 +4,7 @@ from telegram import ParseMode, Update, Bot, Message
 from telegram.utils.helpers import escape_markdown
 from telegram import InputMediaPhoto, InputMediaVideo
 from concurrent.futures import ThreadPoolExecutor
+from check_safety_code import check_code_safety
 import traceback
 import requests
 import signal
@@ -343,6 +344,69 @@ class bot_timer():
         try:
             message = update.message.reply_text("🔄 Memeriksa pembaruan dari GitHub...")
             
+            try:
+                subprocess.check_output(['git', 'fetch'], stderr=subprocess.STDOUT, text=True)
+            except subprocess.CalledProcessError as e:
+                message.edit_text(f"❌ Gagal fetch dari remote:\n```\n{e.output}```", parse_mode='Markdown')
+                return
+    
+            try:
+                current_branch = subprocess.check_output(
+                    ['git', 'rev-parse', '--abbrev-ref', 'HEAD'], 
+                    stderr=subprocess.STDOUT, 
+                    text=True
+                ).strip()
+            except subprocess.CalledProcessError as e:
+                message.edit_text(f"❌ Gagal mendapatkan current branch:\n```\n{e.output}```", parse_mode='Markdown')
+                return
+    
+            try:
+                diff_output = subprocess.check_output(
+                    ['git', 'diff', '--name-only', f'HEAD..origin/{current_branch}'], 
+                    stderr=subprocess.STDOUT, 
+                    text=True
+                ).strip()
+                
+                if not diff_output:
+                    message.edit_text("✅ Tidak ada pembaruan yang tersedia.")
+                    return
+                    
+                changed_files = diff_output.split('\n')
+                message.edit_text("🔍 Memeriksa file yang diperbarui...")
+                
+                for file in changed_files:
+                    if file.endswith('.py'):
+                        try:
+                            remote_content = subprocess.check_output(
+                                ['git', 'show', f'origin/{current_branch}:{file}'], 
+                                stderr=subprocess.STDOUT, 
+                                text=True
+                            )
+                            
+                            is_safe, error_msg = check_code_safety(remote_content, file)
+                            if not is_safe:
+                                error_text = (
+                                    f"❌ Error terdeteksi di `{file}`:\n"
+                                    f"{error_msg}\n\n"
+                                    f"{formatted_commit_info}"
+                                )
+                                message.edit_text(error_text, parse_mode='Markdown')
+                                return
+                                
+                        except subprocess.CalledProcessError as e:
+                            error_text = (
+                                f"❌ Error saat memeriksa file `{file}`:\n"
+                                f"```\n{e.output}```"
+                            )
+                            message.edit_text(error_text, parse_mode='Markdown')
+                            return
+                            
+                message.edit_text("✅ Pemeriksaan sintaks berhasil.\n🔄 Mengambil pembaruan...")
+                
+            except subprocess.CalledProcessError as e:
+                message.edit_text(f"❌ Gagal memeriksa perubahan:\n```\n{e.output}```", parse_mode='Markdown')
+                return
+    
             status_result = subprocess.run(['git', 'status', '--porcelain'], 
                                          capture_output=True, 
                                          text=True)
@@ -350,24 +414,21 @@ class bot_timer():
             if status_result.stdout.strip():
                 message.edit_text("📝 Ditemukan perubahan lokal, mencoba auto-stash...")
                 
-                stash_result = subprocess.run(['git', 'stash', 'save', f"Auto stash before pull at {datetime.now()}"], 
-                                            capture_output=True, 
-                                            text=True)
+                stash_result = subprocess.run(
+                    ['git', 'stash', 'save', f"Auto stash before pull at {datetime.now()}"], 
+                    capture_output=True, 
+                    text=True
+                )
                 
                 if stash_result.returncode != 0:
                     message.edit_text(
-                        f"❌ Gagal melakukan auto-stash:\n```\n{stash_result.stderr}```",
+                        f"❌ Gagal melakukan auto-stash:\n```\n{stash_result.stderr}```", 
                         parse_mode='Markdown'
                     )
                     return
                 
                 message.edit_text("✅ Berhasil menyimpan perubahan lokal dengan stash")
-            
-            branch_result = subprocess.run(['git', 'branch', '--show-current'], 
-                                         capture_output=True, 
-                                         text=True)
-            current_branch = branch_result.stdout.strip()
-            
+    
             pull_result = subprocess.run(['git', 'pull', 'origin', current_branch], 
                                        capture_output=True, 
                                        text=True)
@@ -378,20 +439,7 @@ class bot_timer():
                     parse_mode='Markdown'
                 )
                 return
-                
-            if "Already up to date" in pull_result.stdout:
-                if status_result.stdout.strip():
-                    stash_pop = subprocess.run(['git', 'stash', 'pop'], 
-                                             capture_output=True, 
-                                             text=True)
-                    if stash_pop.returncode == 0:
-                        message.edit_text("ℹ️ Tidak ada pembaruan baru. Perubahan lokal telah dikembalikan.")
-                    else:
-                        message.edit_text("ℹ️ Tidak ada pembaruan baru. Gagal mengembalikan perubahan lokal, silakan cek git stash list.")
-                else:
-                    message.edit_text("ℹ️ Tidak ada pembaruan baru yang tersedia.")
-                return
-                
+    
             if status_result.stdout.strip():
                 stash_pop = subprocess.run(['git', 'stash', 'pop'], 
                                          capture_output=True, 
@@ -399,8 +447,14 @@ class bot_timer():
                 if stash_pop.returncode != 0:
                     message.edit_text("⚠️ Berhasil pull tapi gagal mengembalikan perubahan lokal. Silakan cek git stash list.")
                     return
-
-            prev_msg = f"✅ Pembaruan berhasil!\nBranch: `{current_branch}`\n```\n{pull_result.stdout}```"
+    
+            with open('/tmp/bot_restart_info.json', 'w') as f:
+                json.dump({
+                    'chat_id': chat_id,
+                    'message_id': message.message_id
+                }, f)
+            
+            prev_msg = f"✅ Pembaruan berhasil!\nBranch: `{current_branch}`\n📝 Git pull output::\n```\n{pull_result}\n```"
             with open('/tmp/bot_restart_info.json', 'w') as f:
                 json.dump({
                     'chat_id': chat_id,
