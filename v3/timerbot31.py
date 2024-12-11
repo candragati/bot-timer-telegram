@@ -133,7 +133,7 @@ class bot_timer():
             hostname= urlparse(args).hostname
             arsip   = os.environ.get('API_SOCMED', None)
             if not arsip:
-                raise ValueError('api socmed tidak terdeteksi, ketik export API_SOCMED=url, di terminal anda untuk export api nya')
+                return update.message.reply_text('api socmed tidak terdeteksi, ketik `export API_SOCMED=url`, di terminal anda untuk export api nya', parse_mode='Markdown')
             if hostname == 'twitter.com' or hostname == 'x.com':
                 sosmed = "api/twit"
             elif ('facebook' in hostname) or ('fb' in hostname):
