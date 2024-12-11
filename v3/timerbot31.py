@@ -187,10 +187,11 @@ class bot_timer():
                 for media, result in zip(medias, results):
                     if result['success']:
                         with open(result['file'], 'rb') as f:
+                            caption = getattr(media, 'caption', None)
                             if media.type == 'photo':
-                                media_obj = InputMediaPhoto(f, caption=media.caption, parse_mode='Markdown')
+                                media_obj = InputMediaPhoto(f, caption=caption, parse_mode='Markdown')
                             elif media.type == 'video':
-                                media_obj = InputMediaVideo(f, caption=media.caption, parse_mode='Markdown')
+                                media_obj = InputMediaVideo(f, caption=caption, parse_mode='Markdown')
                             successful_medias.append(media_obj)
             
             CHUNK_SIZE = 10
