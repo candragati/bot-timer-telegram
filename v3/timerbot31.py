@@ -401,8 +401,9 @@ class bot_timer():
                 short_message = (
                     f"❌ Terjadi kesalahan saat pembaruan/restart:\n"
                     f"Error type: `{type(e).__name__}`\n"
-                    f"Error message: `{str(e)}`"
+                    f"Error message: `{str(e)}`\n👇🏿 File Full Error 👇🏿"
                 )
+                update.message.reply_text(short_message, parse_mode='Markdown')
                 with open(error_file, 'rb') as f:
                     update.message.reply_document(
                         document=f,
