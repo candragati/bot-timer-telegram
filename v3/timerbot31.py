@@ -385,12 +385,7 @@ class bot_timer():
                             
                             is_safe, error_msg = check_code_safety(remote_content, file)
                             if not is_safe:
-                                error_text = (
-                                    f"❌ Error terdeteksi di `{file}`:\n"
-                                    f"{error_msg}\n\n"
-                                    f"{formatted_commit_info}"
-                                )
-                                message.edit_text(error_text, parse_mode='Markdown')
+                                message.edit_text(f"❌ Error terdeteksi di `{file}`:\n{error_msg}", parse_mode='Markdown')
                                 return
                                 
                         except subprocess.CalledProcessError as e:
