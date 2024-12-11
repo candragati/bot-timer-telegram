@@ -4,7 +4,6 @@ from telegram import ParseMode, Update, Bot, Message
 from telegram.utils.helpers import escape_markdown
 from telegram import InputMediaPhoto, InputMediaVideo
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 import traceback
 import requests
 import signal
@@ -394,7 +393,7 @@ class bot_timer():
             )
             
             if len(error_message) > 4096:
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
                 error_file = f"/tmp/bot_error_{timestamp}.txt"
                 with open(error_file, 'w') as f:
                     f.write(error_message)
