@@ -143,8 +143,8 @@ class bot_timer():
                 sosmed = "api/thread"
             elif 'instagram' in hostname:
                 sosmed = "api/ig"
-            elif hostname in ('tiktok.com', 'vt.tiktok.com', 'vm.tiktok.com'):
-                sosmed = "api/tiktok"
+            # elif hostname in ('tiktok.com', 'vt.tiktok.com', 'vm.tiktok.com'):
+            #     sosmed = "api/tiktok"
             else:                
                 return
             
@@ -163,13 +163,17 @@ class bot_timer():
                         read_more = 'Read More...'
                         caption = caption[:1024 - len(read_more)] + f"[{read_more}]({args})" if caption and len(caption) >=1024 else caption
                         if m['type'].upper() != 'VIDEO':
-                            if sosmed == "api/fb":
+                            if socmed == 'api/thread':
+                                medias.append(InputMediaPhoto(m['media_url'], caption = caption))
+                            elif sosmed == "api/fb":
                                 medias.append(InputMediaPhoto(m['imageHigh'], caption = caption))
                             else:
                                 medias.append(InputMediaPhoto(m['url'], caption = caption))
 
                         else:
-                            if sosmed == "api/fb":
+                            if socmed == 'api/thread':
+                                medias.append(InputMediaVideo(m['media_url'], caption = caption))
+                            elif sosmed == "api/fb":
                                 medias.append(InputMediaVideo(m['sd_url'], caption = caption))
                             else:
                                 medias.append(InputMediaVideo(m['url'], caption = caption))
