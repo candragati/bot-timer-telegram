@@ -146,11 +146,14 @@ class bot_timer():
                 
     def downloader_media(self, temp_dir, media_url):
         try:
-            filename = f"media_{os.urandom(4).hex()}"
-            filepath = os.path.join(temp_dir, filename)
-            
             response = requests.get(media_url, stream=True)
             response.raise_for_status()
+            
+            content_type = response.headers.get('content-type', '')
+            extension = '.' + (content_type.split('/')[-1] if '/' in content_type else 'tmp')
+            
+            filename = f"media_{os.urandom(4).hex()}{extension}"
+            filepath = os.path.join(temp_dir, filename)
             
             with open(filepath, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
@@ -181,8 +184,12 @@ class bot_timer():
                 successful_medias = []
                 for media, result in zip(medias, results):
                     if result['success']:
-                        media.media = result['file']
-                        successful_medias.append(media)
+                        with open(result['file'], 'rb') as f:
+                            if media.type == 'photo':
+                                media_obj = InputMediaPhoto(f)
+                            elif media.type == 'video':
+                                media_obj = InputMediaVideo(f)
+                            successful_medias.append(media_obj)
             
             CHUNK_SIZE = 10
             for i in range(0, len(successful_medias), CHUNK_SIZE):
