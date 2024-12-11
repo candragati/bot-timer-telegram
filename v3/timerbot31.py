@@ -139,6 +139,8 @@ class bot_timer():
                 sosmed = "api/twit"
             elif ('facebook' in hostname) or ('fb' in hostname):
                 sosmed = "api/fb"
+            elif 'threads' in hostname:
+                sosmed = "api/thread"
             elif 'instagram' in hostname:
                 sosmed = "api/ig"
             elif hostname in ('tiktok.com', 'vt.tiktok.com', 'vm.tiktok.com'):
