@@ -124,7 +124,7 @@ class bot_timer():
                 if media_results:
                     for i, m in enumerate(media_results):
                         caption = req['caption'] if i == total_media_res - 1 else None
-                        caption = caption[:1024] + '...' if len(caption) >=1024 else caption
+                        caption = caption[:1021] + '...' if len(caption) >=1024 else caption
                         if m['type'].upper() != 'VIDEO':
                             if sosmed == "api/fb":
                                 medias.append(InputMediaPhoto(m['imageHigh'], caption = caption))
@@ -186,9 +186,9 @@ class bot_timer():
                 for media, result in zip(medias, results):
                     with open(result['file'], 'rb') as f:
                         if media.type == 'photo':
-                            media_obj = InputMediaPhoto(f, caption=result['caption'])
+                            media_obj = InputMediaPhoto(f, caption=media.caption)
                         elif media.type == 'video':
-                            media_obj = InputMediaVideo(f, caption=result['caption'])
+                            media_obj = InputMediaVideo(f, caption=media.caption)
                         successful_medias.append(media_obj)
             
             CHUNK_SIZE = 10
