@@ -25,8 +25,6 @@ import tarfile
 import os
 from urllib.parse import urlparse, quote
 
-
-
 pathDB = "database"
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -357,23 +355,40 @@ class bot_timer():
                 message.edit_text(f"❌ Gagal fetch dari remote:\n```\n{e.output}```", parse_mode='Markdown')
                 return
     
-            try:
-                current_branch = subprocess.check_output(
-                    ['git', 'rev-parse', '--abbrev-ref', 'HEAD'], 
-                    stderr=subprocess.STDOUT, 
-                    text=True
-                ).strip()
-            except subprocess.CalledProcessError as e:
-                message.edit_text(f"❌ Gagal mendapatkan current branch:\n```\n{e.output}```", parse_mode='Markdown')
-                return
+            # try:
+            #     current_branch = subprocess.check_output(
+            #         ['git', 'rev-parse', '--abbrev-ref', 'HEAD'], 
+            #         stderr=subprocess.STDOUT, 
+            #         text=True
+            #     ).strip()
+            # except subprocess.CalledProcessError as e:
+            #     message.edit_text(f"❌ Gagal mendapatkan current branch:\n```\n{e.output}```", parse_mode='Markdown')
+            #     return
+            current_branch = 'master'
     
             try:
-                diff_output = subprocess.check_output(
-                    ['git', 'diff', '--name-only', f'HEAD..origin/{current_branch}'], 
-                    stderr=subprocess.STDOUT, 
+                local_commit = subprocess.check_output(
+                    ['git', 'rev-parse', 'HEAD'],
+                    stderr=subprocess.STDOUT,
                     text=True
                 ).strip()
                 
+                remote_commit = subprocess.check_output(
+                    ['git', 'rev-parse', f'origin/{current_branch}'],
+                    stderr=subprocess.STDOUT,
+                    text=True
+                ).strip()
+                
+                if local_commit == remote_commit:
+                    message.edit_text("✅ Tidak ada pembaruan yang tersedia.")
+                    return
+                    
+                diff_output = subprocess.check_output(
+                    ['git', 'diff', '--name-only', local_commit, remote_commit],
+                    stderr=subprocess.STDOUT,
+                    text=True
+                ).strip()
+                                
                 if not diff_output:
                     message.edit_text("✅ Tidak ada pembaruan yang tersedia.")
                     return
