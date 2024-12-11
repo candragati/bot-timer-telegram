@@ -4,7 +4,7 @@ from telegram import ParseMode, Update, Bot, Message
 from telegram.utils.helpers import escape_markdown
 from telegram import InputMediaPhoto, InputMediaVideo
 from concurrent.futures import ThreadPoolExecutor
-from check_safety_code import check_code_safety
+from .check_safety_code import check_code_safety
 import traceback
 import requests
 import signal
