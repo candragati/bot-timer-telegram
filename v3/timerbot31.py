@@ -140,7 +140,7 @@ class bot_timer():
                 sosmed = "api/fb"
             elif 'instagram' in hostname:
                 sosmed = "api/ig"
-            elif hostname == 'tiktok.com':
+            elif hostname in ('tiktok.com', 'vt.tiktok.com', 'vm.tiktok.com'):
                 sosmed = "api/tiktok"
             else:                
                 return
