@@ -400,9 +400,7 @@ class bot_timer():
                     message.edit_text("⚠️ Berhasil pull tapi gagal mengembalikan perubahan lokal. Silakan cek git stash list.")
                     return
 
-            prev_msg = f"✅ Pembaruan berhasil!\n"
-                f"Branch: `{current_branch}`\n"
-                f"```\n{pull_result.stdout}```"
+            prev_msg = f"✅ Pembaruan berhasil!\nBranch: `{current_branch}`\n```\n{pull_result.stdout}```"
             with open('/tmp/bot_restart_info.json', 'w') as f:
                 json.dump({
                     'chat_id': chat_id,
