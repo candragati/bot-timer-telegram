@@ -89,10 +89,28 @@ class bot_timer():
         dp.add_handler(MessageHandler(~Filters.command, afk.sudah_nongol), group = 4)
         dp.add_handler(MessageHandler(Filters.text, asl.check_age),group = 5)
         dp.add_handler(MessageHandler(Filters.text, self.cmedia),group = 6)
+        self.check_restart_message()
         updater.start_polling()
         updater.idle()
 
-    
+    def check_restart_message(self):
+        try:
+            restart_file = "/tmp/bot_restart_info.json"
+            if os.path.exists(restart_file):
+                with open(restart_file, 'r') as f:
+                    data = json.load(f)
+                chat_id = data.get('chat_id')
+                if chat_id:
+                    bot = Bot(token = Config.TOKEN)
+                    bot.send_message(
+                        chat_id=chat_id,
+                        text="✅ Bot berhasil direstart!",
+                        parse_mode='Markdown'
+                    )
+                os.remove(restart_file)
+        except Exception as e:
+            print(f"Error sending restart message: {e}")
+            
     def cmedia(self,update, context):
         bot     = context.bot    
         message = update.message.text
@@ -325,21 +343,6 @@ class bot_timer():
                                          text=True)
             current_branch = branch_result.stdout.strip()
             
-            remote_result = subprocess.run(['git', 'ls-remote', 'origin', current_branch],
-                                         capture_output=True,
-                                         text=True)
-            
-            local_result = subprocess.run(['git', 'rev-parse', 'HEAD'],
-                                        capture_output=True,
-                                        text=True)
-                                        
-            remote_hash = remote_result.stdout.split()[0]
-            local_hash = local_result.stdout.strip()
-            
-            if remote_hash == local_hash:
-                message.edit_text("ℹ️ Tidak ada pembaruan baru yang tersedia.")
-                return
-                
             pull_result = subprocess.run(['git', 'pull', 'origin', current_branch], 
                                        capture_output=True, 
                                        text=True)
@@ -351,27 +354,12 @@ class bot_timer():
                 )
                 return
             
-            in_screen = bool(os.environ.get('STY'))
-            script_path = os.path.abspath(__file__)
-            
-            if in_screen:
-                screen_name = os.environ['STY'].split('.')[1]
-                restart_script = f"""#!/bin/bash
-sleep 2
-screen -S {screen_name} -X stuff "python3 {script_path}^M"
-rm -- "$0"
-"""
-            else:
-                restart_script = f"""#!/bin/bash
-sleep 2
-cd {os.path.dirname(script_path)}
-python3 {script_path} &
-rm -- "$0"
-"""            
-            restart_script_path = "/tmp/bot_restart.sh"
-            with open(restart_script_path, 'w') as f:
-                f.write(restart_script)
-            os.chmod(restart_script_path, 0o755)
+            if "Already up to date" in pull_result.stdout:
+                message.edit_text("ℹ️ Tidak ada pembaruan baru yang tersedia.")
+                return
+                
+            with open('/tmp/bot_restart_info.json', 'w') as f:
+                json.dump({'chat_id': chat_id}, f)
             
             message.edit_text(
                 f"✅ Pembaruan berhasil!\n"
@@ -381,14 +369,14 @@ rm -- "$0"
                 parse_mode='Markdown'
             )
             
-            subprocess.Popen([restart_script_path])
-            os.kill(os.getpid(), signal.SIGTERM)
+            os.execl(sys.executable, sys.executable, *sys.argv)
             
         except Exception as e:
             update.message.reply_text(
                 f"❌ Terjadi kesalahan saat pembaruan/restart:\n\n{str(e)}",
                 parse_mode='Markdown'
             )
+        
     def set_timer(self,update,context):
         args = context.args
         if args[0].upper() == 'SHOLAT':
