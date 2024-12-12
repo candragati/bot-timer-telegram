@@ -321,8 +321,8 @@ class bot_timer():
                 sosmed = "api/thread"
             elif 'instagram' in hostname:
                 sosmed = "api/ig"
-            # elif hostname in ('tiktok.com', 'vt.tiktok.com', 'vm.tiktok.com'):
-            #     sosmed = "api/tiktok"
+            elif hostname in ('tiktok.com', 'vt.tiktok.com', 'vm.tiktok.com'):
+                sosmed = "api/tiktok"
             else:                
                 return
             
@@ -333,28 +333,33 @@ class bot_timer():
 
             if req['success']:
                 medias = []
-                media_results = req['media']
-                total_media_res = len(media_results)
-                if media_results:
-                    for i, m in enumerate(media_results):
-                        caption = req['caption'] if i == total_media_res - 1 else None
-                        read_more = 'Read More...'
-                        caption = caption[:1024 - len(read_more)] + f"[{read_more}]({args})" if caption and len(caption) >=1024 else caption
-                        if m['type'].upper() != 'VIDEO':
-                            if sosmed == 'api/thread':
-                                medias.append(InputMediaPhoto(m['media_url'], caption = caption))
-                            elif sosmed == "api/fb":
-                                medias.append(InputMediaPhoto(m['imageHigh'], caption = caption))
+                if sosmed == "api/tiktok" and req.get('video'):
+                    medias.append(InputMediaPhoto(req['video'][0], caption = caption))
+                else:
+                    media_results = req.get('media') or req.get('photos')
+                    total_media_res = len(media_results)
+                    if media_results:
+                        for i, m in enumerate(media_results):
+                            caption = req['caption'] if i == total_media_res - 1 else None
+                            read_more = 'Read More...'
+                            caption = caption[:1024 - len(read_more)] + f"[{read_more}]({args})" if caption and len(caption) >=1024 else caption
+                            if sosmed == "api/tiktok"
+                                medias.append(InputMediaPhoto(m, caption = caption))
+                            elif m['type'].upper() != 'VIDEO':
+                                if sosmed == 'api/thread':
+                                    medias.append(InputMediaPhoto(m['media_url'], caption = caption))
+                                elif sosmed == "api/fb":
+                                    medias.append(InputMediaPhoto(m['imageHigh'], caption = caption))
+                                else:
+                                    medias.append(InputMediaPhoto(m['url'], caption = caption))
+    
                             else:
-                                medias.append(InputMediaPhoto(m['url'], caption = caption))
-
-                        else:
-                            if sosmed == 'api/thread':
-                                medias.append(InputMediaVideo(m['media_url'], caption = caption))
-                            elif sosmed == "api/fb":
-                                medias.append(InputMediaVideo(m['sd_url'], caption = caption))
-                            else:
-                                medias.append(InputMediaVideo(m['url'], caption = caption))
+                                if sosmed == 'api/thread':
+                                    medias.append(InputMediaVideo(m['media_url'], caption = caption))
+                                elif sosmed == "api/fb":
+                                    medias.append(InputMediaVideo(m['sd_url'], caption = caption))
+                                else:
+                                    medias.append(InputMediaVideo(m['url'], caption = caption))
                 if len(medias) == 0:
                     caption = req['caption']
                     update.message.reply_text(caption)
