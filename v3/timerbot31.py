@@ -565,10 +565,17 @@ class bot_timer():
             current_branch = 'master'
     
             try:
-                ignored_files = ['config.py']  # tambahkan file yang ingin diabaikan
+                ignore_patterns = [
+                    'config.py',
+                    'modul/*'
+                ]
+        
+                # Create exclude pathspec
+                exclude_pattern = ' '.join([f':!{pattern}' for pattern in ignore_patterns])
+                
+                # Get diff with exclusions
+                diff_command = ['git', 'diff', '--name-only', f'HEAD..origin/{current_branch}', '--'] + [exclude_pattern]
 
-                diff_command = ['git', 'diff', '--name-only', '--ignore-submodules', '--diff-filter=ACMRT', f'HEAD..origin/{current_branch}']
-               
                 # Tambahkan pathspec untuk mengecualikan file
                 diff_command.extend([f':!{file}' for file in ignored_files])
 
