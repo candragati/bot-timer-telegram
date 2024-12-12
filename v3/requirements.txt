@@ -6,3 +6,4 @@ arabic_reshaper
 emojipy
 svglib
 pygal
+requests
