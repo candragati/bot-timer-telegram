@@ -6,3 +6,4 @@ v3/modul/__pycache__/*
 v3/modul/__pycache__
 v3/gambar
 v3/*.pdf
+v3/config.py
