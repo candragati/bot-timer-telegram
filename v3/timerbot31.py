@@ -566,8 +566,7 @@ class bot_timer():
     
             try:
                 ignore_patterns = [
-                    'config.py',
-                    'modul/__init__.py'
+                    'config.py'
                 ]
         
                 # Create exclude pathspec
@@ -575,9 +574,6 @@ class bot_timer():
                 
                 # Get diff with exclusions
                 diff_command = ['git', 'diff', '--name-only', f'HEAD..origin/{current_branch}', '--'] + [exclude_pattern]
-
-                # Tambahkan pathspec untuk mengecualikan file
-                diff_command.extend([f':!{file}' for file in ignored_files])
 
                 diff_output = subprocess.check_output(
                     diff_command, 
