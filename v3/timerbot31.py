@@ -357,7 +357,7 @@ class bot_timer():
                             caption = req['caption'] if i == total_media_res - 1 else None
                             read_more = 'Read More...'
                             caption = caption[:1024 - len(read_more)] + f"[{read_more}]({args})" if caption and len(caption) >=1024 else caption
-                            if sosmed == "api/tiktok"
+                            if sosmed == "api/tiktok":
                                 medias.append(InputMediaPhoto(m, caption = caption))
                             elif m['type'].upper() != 'VIDEO':
                                 if sosmed == 'api/thread':
