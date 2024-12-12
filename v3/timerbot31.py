@@ -13,6 +13,9 @@ import logging
 import datetime
 import re
 import time
+import sys
+import io
+import contextlib
 import threading
 import requests
 from config import *
@@ -38,6 +41,7 @@ class bot_timer():
         updater = Config.updater
         dp = Config.dp
 
+        dp.add_handler(CommandHandler("eval",              self.handle_eval))
         dp.add_handler(CommandHandler("bash",              self.handle_bash))
         dp.add_handler(CommandHandler("restart_pull",              self.restart_pull))
         dp.add_handler(CommandHandler("start",              self.start))
@@ -184,19 +188,19 @@ class bot_timer():
             )
             
             success, output = self.run_command(cmd)
-            
+            temp_output_file = "output_bash.txt"
             if success:
                 if len(output) > 4096:
-                    with open(self.temp_output_file, "w+", encoding='utf-8') as file:
+                    with open(temp_output_file, "w+", encoding='utf-8') as file:
                         file.write(output)
                     
                     update.message.reply_document(
-                        document=open(self.temp_output_file, "rb"),
+                        document=open(temp_output_file, "rb"),
                         caption="**Bash Output**",
                         parse_mode='Markdown'
                     )
                     
-                    os.remove(self.temp_output_file)
+                    os.remove(temp_output_file)
                     msg.delete()
                 else:
                     msg.edit_text(
@@ -214,7 +218,86 @@ class bot_timer():
                 f"**Error executing command:**\n```\n{str(e)}```",
                 parse_mode='Markdown'
             )       
+
+    def capture_output(self, code: str):
+        stdout_buf = io.StringIO()
+        stderr_buf = io.StringIO()
         
+        result = None
+        
+        with contextlib.redirect_stdout(stdout_buf), contextlib.redirect_stderr(stderr_buf):
+            try:
+                result = eval(code)
+            except Exception:
+                traceback.print_exc()
+        
+        stdout = stdout_buf.getvalue()
+        stderr = stderr_buf.getvalue()
+        
+        return stdout, stderr, str(result) if result is not None else ""
+
+    def handle_eval(self, update, context):
+        try:
+            user_id = update.message.from_user.id
+            if user_id not in SUDO:
+                update.message.reply_text(
+                    "⚠️ You don't have permission to use this command.",
+                    parse_mode='Markdown'
+                )
+                return
+
+            if len(context.args) < 1:
+                update.message.reply_text(
+                    "**Usage:**\n`/eval python_code`\n\n"
+                    "**Example:**\n`/eval 2 + 2`\n"
+                    "`/eval import platform; platform.python_version()`",
+                    parse_mode='Markdown'
+                )
+                return
+
+            code = ' '.join(context.args)
+
+            msg = update.message.reply_text(
+                "**Evaluating...**",
+                parse_mode='Markdown'
+            )
+
+            stdout, stderr, result = self.capture_output(code)
+
+            output_parts = []
+            if stdout:
+                output_parts.append(f"**Stdout:**\n```\n{stdout}```")
+            if stderr:
+                output_parts.append(f"**Stderr:**\n```\n{stderr}```")
+            if result:
+                output_parts.append(f"**Result:**\n```\n{result}```")
+            
+            output_text = "\n\n".join(output_parts) if output_parts else "*(No output)*"
+
+            temp_output_file = 'output_eval.txt'
+            if len(output_text) > 4096:
+                with open(temp_output_file, "w+", encoding='utf-8') as file:
+                    file.write(f"Code:\n{code}\n\n{output_text}")
+                
+                update.message.reply_document(
+                    document=open(temp_output_file, "rb"),
+                    caption="**Eval Output**",
+                    parse_mode='Markdown'
+                )
+                
+                os.remove(temp_output_file)
+                msg.delete()
+            else:
+                full_message = f"**Code:**\n```python\n{code}```\n\n{output_text}"
+                msg.edit_text(full_message, parse_mode='Markdown')
+
+        except Exception as e:
+            error_traceback = traceback.format_exc()
+            update.message.reply_text(
+                f"**Error executing code:**\n```\n{error_traceback}```",
+                parse_mode='Markdown'
+            )
+            
     def cmedia(self,update, context):
         bot     = context.bot    
         message = update.message.text
