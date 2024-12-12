@@ -5,6 +5,7 @@ import threading
 import tarfile
 import os
 import requests
+from config import *
 
 namaLog = "sarbot.log"
 
@@ -37,7 +38,7 @@ def waktu():
                         tar.add(os.path.join(root, name))
             tar.close()
 
-            bot_token   = "609147123:AAF-dfXuUj8rX8r1peMkQVvZg5BKlJv-Buc" # @srabatsrobot
+            bot_token   = Config.TOKEN
             bot_chatId  = -1001337729941
             akhir       = datetime.now()
             selisih     = (akhir-now).seconds
