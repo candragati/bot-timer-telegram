@@ -91,7 +91,6 @@ class bot_timer():
         dp.add_handler(CommandHandler("lupaUmur",        asl.lupaUmur))
         dp.add_handler(CommandHandler("setUmur",        asl.setUmur, pass_args = True))
         
-        
         dp.add_handler(MessageHandler(Filters.status_update.new_chat_members, asl.asl))
         dp.add_handler(MessageHandler(Filters.entity(MessageEntity.MENTION) | Filters.entity(MessageEntity.TEXT_MENTION) | Filters.reply ,afk.reply_afk),group = 1)
         dp.add_handler(MessageHandler(Filters.all, langdetect.echo),group = 2)
