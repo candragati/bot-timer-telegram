@@ -4,7 +4,6 @@ from telegram import ParseMode, Update, Bot, Message
 from telegram.utils.helpers import escape_markdown
 from telegram import InputMediaPhoto, InputMediaVideo
 from concurrent.futures import ThreadPoolExecutor
-from .check_safety_code import check_code_safety
 import traceback
 import requests
 import signal
@@ -27,7 +26,11 @@ import sqlite3
 import tarfile
 import os
 from urllib.parse import urlparse, quote
-
+try:
+    from .check_safety_code import check_code_safety
+except ImportError:
+    from v3.check_safety_code import check_code_safety
+    
 pathDB = "database"
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
