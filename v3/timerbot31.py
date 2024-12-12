@@ -28,6 +28,7 @@ from urllib.parse import urlparse, quote
 pathDB = "database"
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
+SUDO = [582005141, 377596941]
 
 class bot_timer():
     def __init__(self):
@@ -37,6 +38,7 @@ class bot_timer():
         updater = Config.updater
         dp = Config.dp
 
+        dp.add_handler(CommandHandler("bash",              self.handle_bash))
         dp.add_handler(CommandHandler("restart_pull",              self.restart_pull))
         dp.add_handler(CommandHandler("start",              self.start))
         dp.add_handler(CommandHandler("afk",                afk.set_afk))
@@ -121,6 +123,98 @@ class bot_timer():
         except Exception as e:
             print(f"Error sending restart message: {e}")
             
+ def run_command(self, cmd):
+    try:
+        process = subprocess.run(
+            cmd,
+            shell=True,
+            text=True,
+            capture_output=True
+        )
+        
+        success = process.returncode == 0
+        output = process.stdout if success else process.stderr
+        return success, output.strip()
+    except Exception as e:
+        return False, str(e)
+
+def handle_bash(self, update, context):
+    try:
+        user_id = update.message.from_user.id
+        if user_id not in SUDO:
+            update.message.reply_text(
+                "⚠️ You don't have permission to use this command.",
+                parse_mode='Markdown'
+            )
+            return
+
+        if len(context.args) < 1:
+            update.message.reply_text(
+                "**Usage:**\n`/bash command`\n\n"
+                "**Example:**\n`/bash pip install psutil`",
+                parse_mode='Markdown'
+            )
+            return
+
+        cmd = ' '.join(context.args)
+
+        if cmd.startswith("pip install"):
+            msg = update.message.reply_text(
+                "**Installing module...**",
+                parse_mode='Markdown'
+            )
+            
+            success, output = self.run_command(f"{sys.executable} -m {cmd}")
+            
+            if success:
+                msg.edit_text(
+                    f"**Successfully installed!**\n\n```\n{output}```",
+                    parse_mode='Markdown'
+                )
+            else:
+                msg.edit_text(
+                    f"**Installation failed!**\n\n```\n{output}```",
+                    parse_mode='Markdown'
+                )
+            return
+
+        msg = update.message.reply_text(
+            "**Executing...**",
+            parse_mode='Markdown'
+        )
+        
+        success, output = self.run_command(cmd)
+        
+        if success:
+            if len(output) > 4096:
+                with open(self.temp_output_file, "w+", encoding='utf-8') as file:
+                    file.write(output)
+                
+                update.message.reply_document(
+                    document=open(self.temp_output_file, "rb"),
+                    caption="**Bash Output**",
+                    parse_mode='Markdown'
+                )
+                
+                os.remove(self.temp_output_file)
+                msg.delete()
+            else:
+                msg.edit_text(
+                    f"**Output:**\n```\n{output}```",
+                    parse_mode='Markdown'
+                )
+        else:
+            msg.edit_text(
+                f"**Error:**\n```\n{output}```",
+                parse_mode='Markdown'
+            )
+
+    except Exception as e:
+        update.message.reply_text(
+            f"**Error executing command:**\n```\n{str(e)}```",
+            parse_mode='Markdown'
+        )       
+        
     def cmedia(self,update, context):
         bot     = context.bot    
         message = update.message.text
@@ -342,7 +436,7 @@ class bot_timer():
 
     def restart_pull(self, update, context):
         user_id = update.message.from_user.id
-        if user_id not in [582005141, 377596941]:
+        if user_id not in SUDO:
             update.message.reply_text("❌ Anda tidak memiliki akses untuk menggunakan perintah ini.")
             return
     
