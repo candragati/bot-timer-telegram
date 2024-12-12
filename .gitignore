@@ -8,3 +8,4 @@ v3/gambar
 v3/*.pdf
 v3/emojipy/*
 config.py
+emoji/*
