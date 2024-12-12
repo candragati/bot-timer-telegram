@@ -566,8 +566,7 @@ class bot_timer():
     
             try:
                 ignore_patterns = [
-                    'config.py',
-                    'modul/*'
+                    'config.py'
                 ]
         
                 # Create exclude pathspec
