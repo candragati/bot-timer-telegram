@@ -545,7 +545,7 @@ class bot_timer():
     
             try:
                 diff_output = subprocess.check_output(
-                    ['git', 'diff', '--name-only', f'HEAD..origin/{current_branch}'], 
+                    ['git', 'diff', '--name-only', '--ignore-submodules', '--diff-filter=ACMRT', f'HEAD..origin/{current_branch}'], 
                     stderr=subprocess.STDOUT, 
                     text=True
                 ).strip()
