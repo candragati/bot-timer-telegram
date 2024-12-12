@@ -224,12 +224,29 @@ class bot_timer():
     def capture_output(self, code: str):
         stdout_buf = io.StringIO()
         stderr_buf = io.StringIO()
-        
         result = None
+        
+        if not hasattr(self, 'local_vars'):
+            self.local_vars = {
+                'math': __import__('math'),
+                'datetime': __import__('datetime'),
+                'random': __import__('random'),
+                'json': __import__('json'),
+                'sys': __import__('sys'),
+                'platform': __import__('platform'),
+                '_': None  
+            }
         
         with contextlib.redirect_stdout(stdout_buf), contextlib.redirect_stderr(stderr_buf):
             try:
-                result = eval(code)
+                try:
+                    result = eval(code, globals(), self.local_vars)
+                except SyntaxError:
+                    exec(code, globals(), self.local_vars)
+                    result = self.local_vars.get('_')
+                
+                self.local_vars['_'] = result
+                
             except Exception:
                 traceback.print_exc()
         
