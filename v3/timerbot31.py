@@ -26,10 +26,7 @@ import sqlite3
 import tarfile
 import os
 from urllib.parse import urlparse, quote
-try:
-    from .check_safety_code import check_code_safety
-except ImportError:
-    from v3.check_safety_code import check_code_safety
+from check_safety_code import check_code_safety
     
 pathDB = "database"
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
