@@ -273,7 +273,7 @@ class bot_timer():
                 )
                 return
 
-            code = ' '.join(context.args)
+            code = update.message.text.split(None, 1)[1]
 
             msg = update.message.reply_text(
                 "**Evaluating...**",
