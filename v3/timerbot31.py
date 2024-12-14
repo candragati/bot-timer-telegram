@@ -314,7 +314,7 @@ class bot_timer():
                 parse_mode='Markdown'
             )       
 
-    def capture_output(self, code, update, msg):
+    def capture_output(self, code, update, msg, bot):
         stdout_buf = io.StringIO()
         stderr_buf = io.StringIO()
         result = None
@@ -331,7 +331,8 @@ class bot_timer():
                 'update': update,
                 'msg': msg,
                 '__name__': '__main__',
-                '__package__': None
+                '__package__': None, 
+                'bot': bot
             }
     
         def _meval(code, globs):
@@ -463,7 +464,7 @@ class bot_timer():
             
             dangerous_patterns = [
                 'subprocess', 'eval(', 'exec(',
-                'open(', 'file.', '.unlink(',
+                'file.', '.unlink(',
                 'shutil', 'rmtree'
             ]
             if any(pattern in code.lower() for pattern in dangerous_patterns):
@@ -478,7 +479,7 @@ class bot_timer():
                 parse_mode='Markdown'
             )
     
-            stdout, stderr, result = self.capture_output(code, update, update.message)
+            stdout, stderr, result = self.capture_output(code, update, update.message, context.bot)
     
             output_parts = []
             if stdout:
@@ -563,11 +564,10 @@ class bot_timer():
         arsip = os.environ.get('API_SOCMED', None)
     
         if not arsip:
-            logger.error(f"[{datetime.now()}] API_SOCMED environment variable not set")
+            logger.error(f"[{datetime.datetime.now()}] API_SOCMED environment variable not set")
             return update.message.reply_text('api socmed tidak terdeteksi, ketik `export API_SOCMED=url`, di terminal anda untuk export api nya', parse_mode='Markdown')
 
         bot = context.bot    
-        from datetime import datetime 
         chat_id = update.message["chat"]["id"]
     
         endpoint = f"?url={args}"
@@ -584,7 +584,7 @@ class bot_timer():
         try:
             req = requests.get(link).json()
         except Exception as e:
-            logger.error(f"[{datetime.now()}] API request failed: {str(e)}")
+            logger.error(f"[{datetime.datetime.now()}] API request failed: {str(e)}")
             return update.message.reply_text(f"Failed to fetch media")
     
         if req['success']:
@@ -617,7 +617,7 @@ class bot_timer():
                                 else:
                                     medias.append(InputMediaVideo(m['url'], caption=caption))
                         except Exception as e:
-                            logger.error(f"[{datetime.now()}] Error processing media item {i+1}: {str(e)}")
+                            logger.error(f"[{datetime.datetime.now()}] Error processing media item {i+1}: {str(e)}")
     
             if len(medias) == 0:
                 caption = req['caption']
@@ -626,11 +626,11 @@ class bot_timer():
                 try:
                     self.reply_downloaded_media_chunk(bot, chat_id, medias)
                 except Exception as e:
-                    logger.error(f"[{datetime.now()}] Failed to send media: {str(e)}")
+                    logger.error(f"[{datetime.datetime.now()}] Failed to send media: {str(e)}")
                     update.message.reply_text("Failed to send media")
         else:
             error_msg = req.get('msg') or "gagal"
-            logger.error(f"[{datetime.now()}] API request failed with message: {error_msg}")
+            logger.error(f"[{datetime.datetime.now()}] API request failed with message: {error_msg}")
             update.message.reply_text(error_msg)
                 
     def downloader_media(self, temp_dir, media_url):
