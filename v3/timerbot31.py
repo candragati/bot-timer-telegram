@@ -810,13 +810,13 @@ class bot_timer():
                             
                             is_safe, error_msg = check_code_safety(remote_content, file)
                             if not is_safe:
-                                message.edit_text(f"❌ Error terdeteksi di `{file}`:\n{self.escape_markdown(error_msg)}", parse_mode='Markdown')
+                                message.edit_text(f"❌ Error terdeteksi di `{file}`:\n{escape_markdown(error_msg)}", parse_mode='Markdown')
                                 return
                                 
                         except subprocess.CalledProcessError as e:
                             error_text = (
                                 f"❌ Error saat memeriksa file `{file}`:\n"
-                                f"```\n{self.escape_markdown(e.output)}```"
+                                f"```\n{escape_markdown(e.output)}```"
                             )
                             message.edit_text(error_text, parse_mode='Markdown')
                             return
