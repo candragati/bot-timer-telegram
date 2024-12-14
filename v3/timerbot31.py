@@ -376,6 +376,7 @@ class bot_timer():
                 update.message.reply_text(error_message, parse_mode='Markdown')
             
     def cmedia(self, update, context):
+        if not update.message: return
         message = update.message.text
         
         args = re.search(r'(https?://[^\s]+)', message)
@@ -407,7 +408,7 @@ class bot_timer():
         from datetime import datetime 
         chat_id = update.message["chat"]["id"]
     
-        endpoint = f"?url={quote(args)}"
+        endpoint = f"?url={args}"
         link = f"{arsip}{sosmed}{endpoint}"
         
         logger.info(f"[{datetime.now()}] Making API request to: {link}")
