@@ -416,7 +416,7 @@ class bot_timer():
             req = requests.get(link).json()
         except Exception as e:
             logger.error(f"[{datetime.now()}] API request failed: {str(e)}")
-            return update.message.reply_text(f"Failed to fetch media {e}\n{link}")
+            return update.message.reply_text(f"Failed to fetch media")
     
         if req['success']:
             medias = []
