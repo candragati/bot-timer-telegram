@@ -1,4 +1,5 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackContext #test
+from telegram.error import BadRequest
 from telegram import MessageEntity
 from telegram import ParseMode, Update, Bot, Message 
 from telegram.utils.helpers import escape_markdown
@@ -546,7 +547,7 @@ class bot_timer():
                     with open(temp_output_file, "rb") as file:
                         update.message.reply_document(
                             document=file,
-                            caption=self.escape_markdown_v2(f"*Eval Output* - {timestamp}"),
+                            caption=escape_markdown(f"Eval Output - {timestamp}"),
                             parse_mode='MarkdownV2'
                         )
                 finally:
@@ -556,7 +557,10 @@ class bot_timer():
                 msg.delete()
             else:
                 full_message = f"**Code:**\n```python\n{code}```\n\n{output_text}"
-                msg.edit_text(self.escape_markdown_v2(full_message), parse_mode='MarkdownV2')
+                try:
+                    msg.edit_text(full_message, parse_mode='MarkdownV2')
+                except BadRequest:
+                    msg.edit_text(escape_markdown(full_message), parse_mode='MarkdownV2')
     
         except Exception as e:
             error_traceback = traceback.format_exc()
@@ -573,14 +577,14 @@ class bot_timer():
                     with open(temp_error_file, "rb") as file:
                         update.message.reply_document(
                             document=file,
-                            caption=f"**Eval Error Log** - {timestamp}",
+                            caption=escape_markdown(f"Eval Error Log - {timestamp}"),
                             parse_mode='MarkdownV2'
                         )
                 finally:
                     if os.path.exists(temp_error_file):
                         os.remove(temp_error_file)
             else:
-                update.message.reply_text(self.escape_markdown_v2(error_message), parse_mode='MarkdownV2')
+                update.message.reply_text(error_message, parse_mode='MarkdownV2')
             
     def cmedia(self, update, context):
         if not update.message: return
@@ -980,21 +984,31 @@ class bot_timer():
                             
                             is_safe, error_msg = check_code_safety(remote_content, file)
                             if not is_safe:
-                                message.edit_text(f"❌ Error terdeteksi di `{file}`:\n{escape_markdown(error_msg)}", parse_mode='Markdown')
+                                try:
+                                    message.edit_text(f"❌ Error terdeteksi di `{file}`:\n{error_msg}", parse_mode='MarkdownV2')
+                                except BadRequest:
+                                    message.edit_text(f"❌ Error terdeteksi di `{file}`:\n{escape_markdown(error_msg)}", parse_mode='MarkdownV2')
                                 return
                                 
-                        except subprocess.CalledProcessError as e:
-                            error_text = (
-                                f"❌ Error saat memeriksa file `{file}`:\n"
-                                f"```\n{escape_markdown(e.output)}```"
-                            )
-                            message.edit_text(error_text, parse_mode='Markdown')
+                        except subprocess.CalledProcessError as e:                            
+                            try:
+                                error_text = (
+                                    f"❌ Error saat memeriksa file `{file}`:\n"
+                                    f"```\n{e.output}```"
+                                )
+                                message.edit_text(error_text, parse_mode='MarkdownV2')
+                            except BadRequest:
+                                error_text = (
+                                    f"❌ Error saat memeriksa file `{file}`:\n"
+                                    f"```\n{escape_markdown(e.output)}```"
+                                )
+                                message.edit_text(error_text, parse_mode='MarkdownV2')
                             return
                             
                 message.edit_text("✅ Pemeriksaan sintaks berhasil.\n🔄 Mengambil pembaruan...")
                 
             except subprocess.CalledProcessError as e:
-                message.edit_text(f"❌ Gagal memeriksa perubahan:\n```\n{escape_markdown(e.output)}```", parse_mode='Markdown')
+                message.edit_text(f"❌ Gagal memeriksa perubahan:\n```\n{e.output}```", parse_mode='Markdown')
                 return
     
             status_result = subprocess.run(['git', 'status', '--porcelain'], 
@@ -1025,7 +1039,7 @@ class bot_timer():
             
             if pull_result.returncode != 0:
                 message.edit_text(
-                    f"❌ Gagal melakukan git pull:\n```\n{escape_markdown(pull_result.stderr)}```", 
+                    f"❌ Gagal melakukan git pull:\n```\n{pull_result.stderr}```", 
                     parse_mode='Markdown'
                 )
                 return
