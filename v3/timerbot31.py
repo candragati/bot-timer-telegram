@@ -237,24 +237,6 @@ class bot_timer():
                 'update': update,
                 'msg': msg
             }
-        
-        def _telegram_obj_to_dict(obj):
-            if hasattr(obj, '__dict__'):
-                d = {}
-                for key, value in obj.__dict__.items():
-                    if key.startswith('_'):
-                        continue
-                    if isinstance(value, (list, tuple)):
-                        d[key] = [_telegram_obj_to_dict(item) for item in value]
-                    elif hasattr(value, '__dict__'):
-                        d[key] = _telegram_obj_to_dict(value)
-                    else:
-                        d[key] = value
-                return d
-            elif isinstance(obj, (list, tuple)):
-                return [_telegram_obj_to_dict(item) for item in obj]
-            else:
-                return obj
                 
         with contextlib.redirect_stdout(stdout_buf), contextlib.redirect_stderr(stderr_buf):
             try:
@@ -266,10 +248,11 @@ class bot_timer():
                     
                     if result is not None:
                         self.local_vars['_'] = result
+                        
                         if isinstance(result, (dict, list, tuple, set)):
                             result = json.dumps(result, indent=2, default=str)
-                        elif hasattr(result, '__dict__'):
-                            result = json.dumps(_telegram_obj_to_dict(result), indent=2)
+                        elif hasattr(result, '__dict__') and not isinstance(result, type):
+                            result = json.dumps(result.__dict__, indent=2, default=str)
                     
                 except SyntaxError:
                     exec(code, globals(), self.local_vars)
