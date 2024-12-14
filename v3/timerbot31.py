@@ -375,74 +375,112 @@ class bot_timer():
             else:
                 update.message.reply_text(error_message, parse_mode='Markdown')
             
-    def cmedia(self,update, context):
-        bot     = context.bot    
+    def cmedia(self, update, context):
+        bot = context.bot    
         message = update.message.text
-        args    = re.search(r'(https?://[^\s]+)', message)
+        chat_id = update.message["chat"]["id"]
+        user_id = update.message.from_user.id
+        username = update.message.from_user.username or "No username"
+        datetime = datetime.datetime
+    
+        logger.info(f"[{datetime.now()}] User {username}({user_id}) requested media download: {message}")
+    
+        args = re.search(r'(https?://[^\s]+)', message)
         if args == None:
-            pass
-        else:
-            args    = args.group()
-            chat_id = update.message["chat"]["id"]   
-            hostname= urlparse(args).hostname
-            arsip   = os.environ.get('API_SOCMED', None)
-            if not arsip:
-                return update.message.reply_text('api socmed tidak terdeteksi, ketik `export API_SOCMED=url`, di terminal anda untuk export api nya', parse_mode='Markdown')
-            if hostname == 'twitter.com' or hostname == 'x.com':
-                sosmed = "api/twit"
-            elif ('facebook' in hostname) or ('fb' in hostname):
-                sosmed = "api/fb"
-            elif 'threads' in hostname:
-                sosmed = "api/thread"
-            elif 'instagram' in hostname:
-                sosmed = "api/ig"
-            elif hostname in ('tiktok.com', 'vt.tiktok.com', 'vm.tiktok.com'):
-                sosmed = "api/tiktok"
-            else:                
-                return
-            
-            endpoint= f"?url={quote(args)}"
-            link = f"{arsip}{sosmed}{endpoint}"
+            logger.warning(f"[{datetime.now()}] No URL found in message from user {username}({user_id})")
+            return
+    
+        args = args.group()
+        hostname = urlparse(args).hostname
+        arsip = os.environ.get('API_SOCMED', None)
+    
+        if not arsip:
+            logger.error(f"[{datetime.now()}] API_SOCMED environment variable not set")
+            return update.message.reply_text('api socmed tidak terdeteksi, ketik `export API_SOCMED=url`, di terminal anda untuk export api nya', parse_mode='Markdown')
+    
+        logger.info(f"[{datetime.now()}] Processing URL: {args} from domain: {hostname}")
+    
+        if hostname == 'twitter.com' or hostname == 'x.com':
+            sosmed = "api/twit"
+        elif ('facebook' in hostname) or ('fb' in hostname):
+            sosmed = "api/fb"
+        elif 'threads' in hostname:
+            sosmed = "api/thread"
+        elif 'instagram' in hostname:
+            sosmed = "api/ig"
+        elif hostname in ('tiktok.com', 'vt.tiktok.com', 'vm.tiktok.com'):
+            sosmed = "api/tiktok"
+        else:                
+            logger.warning(f"[{datetime.now()}] Unsupported domain: {hostname}")
+            return
+    
+        endpoint = f"?url={quote(args)}"
+        link = f"{arsip}{sosmed}{endpoint}"
+        
+        logger.info(f"[{datetime.now()}] Making API request to: {link}")
+        
+        try:
             req = requests.get(link).json()
-
-
-            if req['success']:
-                medias = []
-                if sosmed == "api/tiktok" and req.get('video'):
-                    medias.append(InputMediaPhoto(req['video'][0], caption = req.get('caption')))
-                else:
-                    media_results = req.get('media') or req.get('photos')
-                    total_media_res = len(media_results)
-                    if media_results:
-                        for i, m in enumerate(media_results):
-                            caption = req['caption'] if i == total_media_res - 1 else None
-                            read_more = 'Read More...'
-                            caption = caption[:1024 - len(read_more)] + f"[{read_more}]({args})" if caption and len(caption) >=1024 else caption
+        except Exception as e:
+            logger.error(f"[{datetime.now()}] API request failed: {str(e)}")
+            return update.message.reply_text("Failed to fetch media")
+    
+        if req['success']:
+            medias = []
+            logger.info(f"[{datetime.now()}] Successfully fetched media from {sosmed}")
+    
+            if sosmed == "api/tiktok" and req.get('video'):
+                medias.append(InputMediaPhoto(req['video'][0], caption=req.get('caption')))
+                logger.info(f"[{datetime.now()}] Processing TikTok video")
+            else:
+                media_results = req.get('media') or req.get('photos')
+                total_media_res = len(media_results) if media_results else 0
+                logger.info(f"[{datetime.now()}] Found {total_media_res} media items")
+    
+                if media_results:
+                    for i, m in enumerate(media_results):
+                        caption = req['caption'] if i == total_media_res - 1 else None
+                        read_more = 'Read More...'
+                        if caption and len(caption) >= 1024:
+                            caption = caption[:1024 - len(read_more)] + f"[{read_more}]({args})"
+                        
+                        try:
                             if sosmed == "api/tiktok":
-                                medias.append(InputMediaPhoto(m, caption = caption))
+                                medias.append(InputMediaPhoto(m, caption=caption))
                             elif m['type'].upper() != 'VIDEO':
                                 if sosmed == 'api/thread':
-                                    medias.append(InputMediaPhoto(m['media_url'], caption = caption))
+                                    medias.append(InputMediaPhoto(m['media_url'], caption=caption))
                                 elif sosmed == "api/fb":
-                                    medias.append(InputMediaPhoto(m['imageHigh'], caption = caption))
+                                    medias.append(InputMediaPhoto(m['imageHigh'], caption=caption))
                                 else:
-                                    medias.append(InputMediaPhoto(m['url'], caption = caption))
-    
+                                    medias.append(InputMediaPhoto(m['url'], caption=caption))
                             else:
                                 if sosmed == 'api/thread':
-                                    medias.append(InputMediaVideo(m['media_url'], caption = caption))
+                                    medias.append(InputMediaVideo(m['media_url'], caption=caption))
                                 elif sosmed == "api/fb":
-                                    medias.append(InputMediaVideo(m['sd_url'], caption = caption))
+                                    medias.append(InputMediaVideo(m['sd_url'], caption=caption))
                                 else:
-                                    medias.append(InputMediaVideo(m['url'], caption = caption))
-                if len(medias) == 0:
-                    caption = req['caption']
-                    update.message.reply_text(caption)
-                else:
-                    self.reply_downloaded_media_chunk(bot, chat_id, medias)
-                    # bot.send_media_group(chat_id = chat_id, media = medias)
+                                    medias.append(InputMediaVideo(m['url'], caption=caption))
+                            logger.info(f"[{datetime.now()}] Added media item {i+1}/{total_media_res}")
+                        except Exception as e:
+                            logger.error(f"[{datetime.now()}] Error processing media item {i+1}: {str(e)}")
+    
+            if len(medias) == 0:
+                caption = req['caption']
+                logger.info(f"[{datetime.now()}] No media found, sending caption only")
+                update.message.reply_text(caption)
             else:
-                update.message.reply_text(req.get('msg') or "gagal")
+                logger.info(f"[{datetime.now()}] Sending {len(medias)} media items")
+                try:
+                    self.reply_downloaded_media_chunk(bot, chat_id, medias)
+                    logger.info(f"[{datetime.now()}] Successfully sent media to user {username}({user_id})")
+                except Exception as e:
+                    logger.error(f"[{datetime.now()}] Failed to send media: {str(e)}")
+                    update.message.reply_text("Failed to send media")
+        else:
+            error_msg = req.get('msg') or "gagal"
+            logger.error(f"[{datetime.now()}] API request failed with message: {error_msg}")
+            update.message.reply_text(error_msg)
                 
     def downloader_media(self, temp_dir, media_url):
         try:
