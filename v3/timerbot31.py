@@ -31,6 +31,7 @@ import sqlite3
 import tarfile
 import os
 import html
+import ast
 
 load_dotenv()
 
@@ -200,7 +201,7 @@ class bot_timer():
         Escape Telegram markdown symbols
         
         Args:
-            text (str): Text to escape
+            text (str): Text to 
             version (int): Markdown version (1 or 2)
             entity_type (str, optional): Entity type for selective escaping in v2
         """
