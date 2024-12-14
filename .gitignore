@@ -10,3 +10,4 @@ v3/emojipy/*
 config.py
 emojipy/*
 .env
+logs/*
