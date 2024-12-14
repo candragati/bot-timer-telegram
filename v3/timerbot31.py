@@ -45,7 +45,7 @@ def setup_logging():
     
     try:
         file_handler = RotatingFileHandler(
-            filename='logs/siakad.log',
+            filename='logs/srabat.log',
             maxBytes=10*1024*1024,  # 10MB
             backupCount=5,
             encoding='utf-8',
@@ -623,6 +623,42 @@ class bot_timer():
                 bot.send_media_group(chat_id=chat_id, media=chunk)
     
     def get_log(self, update, context):
+        user_id = update.message.from_user.id
+        if user_id not in SUDO:
+            return update.message.reply_text("⚠️ You don't have permission to access logs.")
+    
+        if not context.args:
+            return update.message.reply_text(
+                "**Usage:**\n"
+                "`/log`         - Send all logs\n"
+                "`/log -cut N`  - Send last N lines\n"
+                "`/log -trun`   - Truncate log file\n"
+                "`/log -trun filename` - Truncate specific log",
+                parse_mode='Markdown'
+            )
+    
+        if '-trun' in context.args:
+            try:
+                if len(context.args) < 2 or context.args[0] == '-trun':
+                    file_path = "srabat.log"  
+                else:
+                    file_path = f"{context.args[1]}.log"
+    
+                full_path = os.path.join('logs', file_path)
+    
+    
+                if not os.path.abspath(full_path).startswith(os.path.abspath('logs')):
+                    return update.message.reply_text("⚠️ Invalid file path")
+    
+                with open(full_path, 'w') as file:
+                    file.truncate(0)
+                return update.message.reply_text(f"File '{file_path}' has been truncated successfully.")
+                
+            except Exception as e:
+                return update.message.reply_text(
+                    f"Failed to truncate file '{file_path}': {str(e)}"
+                )
+    
         wait_msg = update.message.reply_text('wait...')
         directory_path = 'logs'
         
