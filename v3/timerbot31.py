@@ -566,7 +566,7 @@ class bot_timer():
                         update.message.reply_document(
                             document=file,
                             caption=f"**Eval Output** - {timestamp}",
-                            parse_mode='Markdown'
+                            parse_mode='MarkdownV2'
                         )
                 finally:
                     if os.path.exists(temp_output_file):
@@ -575,7 +575,7 @@ class bot_timer():
                 msg.delete()
             else:
                 full_message = f"**Code:**\n```python\n{code}```\n\n{output_text}"
-                msg.edit_text(escape_markdown(full_message), parse_mode='Markdown')
+                msg.edit_text(full_message, parse_mode='MarkdownV2')
     
         except Exception as e:
             error_traceback = traceback.format_exc()
@@ -593,13 +593,13 @@ class bot_timer():
                         update.message.reply_document(
                             document=file,
                             caption=f"**Eval Error Log** - {timestamp}",
-                            parse_mode='Markdown'
+                            parse_mode='MarkdownV2'
                         )
                 finally:
                     if os.path.exists(temp_error_file):
                         os.remove(temp_error_file)
             else:
-                update.message.reply_text(error_message, parse_mode='Markdown')
+                update.message.reply_text(error_message, parse_mode='MarkdownV2')
             
     def cmedia(self, update, context):
         if not update.message: return
