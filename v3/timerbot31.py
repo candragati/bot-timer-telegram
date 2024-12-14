@@ -242,19 +242,38 @@ class bot_timer():
             try:
                 try:
                     result = eval(code, globals(), self.local_vars)
+                    
+                    if result == msg or result == update.message:
+                        result = None
+             
+                    if result is not None:
+                        self.local_vars['_'] = result
+                        
+                        if isinstance(result, (dict, list, tuple, set)):
+                            result = json.dumps(result, indent=2, default=str)
+                        elif hasattr(result, '__dict__') and not isinstance(result, type):
+                            result = json.dumps(result.__dict__, indent=2, default=str)
+                    
                 except SyntaxError:
                     exec(code, globals(), self.local_vars)
-                    result = self.local_vars.get('_')
-                
-                self.local_vars['_'] = result
-                
+                    result = None
+                    
             except Exception:
-                traceback.print_exc()
+                traceback.print_exc(file=stderr_buf)
+                result = None
         
         stdout = stdout_buf.getvalue()
         stderr = stderr_buf.getvalue()
         
-        return stdout, stderr, str(result) if result is not None else ""
+        stdout_buf.close()
+        stderr_buf.close()
+        
+        result_str = str(result) if result is not None else ""
+        
+        if stdout and not result:
+            result_str = ""
+            
+        return stdout, stderr, result_str
 
     def handle_eval(self, update, context):
         try:
@@ -265,7 +284,7 @@ class bot_timer():
                     parse_mode='Markdown'
                 )
                 return
-
+    
             if len(context.args) < 1:
                 update.message.reply_text(
                     "**Usage:**\n`/eval python_code`\n\n"
@@ -274,16 +293,28 @@ class bot_timer():
                     parse_mode='Markdown'
                 )
                 return
-
+    
             code = update.message.text.split(None, 1)[1]
-
+            
+            dangerous_patterns = [
+                'os.system', 'subprocess', 'eval(', 'exec(',
+                'open(', 'file.', '.unlink(',
+                'shutil', 'rmtree'
+            ]
+            if any(pattern in code.lower() for pattern in dangerous_patterns):
+                update.message.reply_text(
+                    "⚠️ Operation not permitted for security reasons.",
+                    parse_mode='Markdown'
+                )
+                return
+    
             msg = update.message.reply_text(
                 "**Evaluating...**",
                 parse_mode='Markdown'
             )
-
+    
             stdout, stderr, result = self.capture_output(code, update, update.message)
-
+    
             output_parts = []
             if stdout:
                 output_parts.append(f"**Stdout:**\n```\n{stdout}```")
@@ -291,35 +322,55 @@ class bot_timer():
                 output_parts.append(f"**Stderr:**\n```\n{stderr}```")
             if result:
                 output_parts.append(f"**Result:**\n```\n{result}```")
-
-            if isinstance(output_parts, dict):
-                output_parts = json.dumps(output_parts, indent=2)
-                
+    
             output_text = "\n\n".join(output_parts) if output_parts else "*(No output)*"
-
-            temp_output_file = 'output_eval.txt'
+    
             if len(output_text) > 4096:
-                with open(temp_output_file, "w+", encoding='utf-8') as file:
-                    file.write(f"Code:\n{code}\n\n{output_text}")
+                timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+                temp_output_file = f'output_eval_{timestamp}.txt'
                 
-                update.message.reply_document(
-                    document=open(temp_output_file, "rb"),
-                    caption="**Eval Output**",
-                    parse_mode='Markdown'
-                )
+                try:
+                    with open(temp_output_file, "w+", encoding='utf-8') as file:
+                        file.write(f"Code:\n{code}\n\n{output_text}")
+                    
+                    with open(temp_output_file, "rb") as file:
+                        update.message.reply_document(
+                            document=file,
+                            caption=f"**Eval Output** - {timestamp}",
+                            parse_mode='Markdown'
+                        )
+                finally:
+                    if os.path.exists(temp_output_file):
+                        os.remove(temp_output_file)
                 
-                os.remove(temp_output_file)
                 msg.delete()
             else:
                 full_message = f"**Code:**\n```python\n{code}```\n\n{output_text}"
                 msg.edit_text(full_message, parse_mode='Markdown')
-
+    
         except Exception as e:
             error_traceback = traceback.format_exc()
-            update.message.reply_text(
-                f"**Error executing code:**\n```\n{error_traceback}```",
-                parse_mode='Markdown'
-            )
+            error_message = f"**Error executing code:**\n```\n{error_traceback}```"
+            
+            if len(error_message) > 4096:
+                timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+                temp_error_file = f'error_eval_{timestamp}.txt'
+                
+                try:
+                    with open(temp_error_file, "w+", encoding='utf-8') as file:
+                        file.write(f"Code:\n{code}\n\n{error_message}")
+                    
+                    with open(temp_error_file, "rb") as file:
+                        update.message.reply_document(
+                            document=file,
+                            caption=f"**Eval Error Log** - {timestamp}",
+                            parse_mode='Markdown'
+                        )
+                finally:
+                    if os.path.exists(temp_error_file):
+                        os.remove(temp_error_file)
+            else:
+                update.message.reply_text(error_message, parse_mode='Markdown')
             
     def cmedia(self,update, context):
         bot     = context.bot    
