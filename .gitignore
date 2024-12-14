@@ -9,3 +9,4 @@ v3/*.pdf
 v3/emojipy/*
 config.py
 emojipy/*
+.env
