@@ -465,7 +465,7 @@ class bot_timer():
                 
                 if result is not None:
                     self.local_vars['_'] = result
-                    if isinstance(result, (Message, Update))
+                    if isinstance(result, (Message, Update)):
                         result = json.dumps(result.to_dict(), indent=2, default=str)
                     elif isinstance(result, (dict, list, tuple, set)):
                         result = json.dumps(result, indent=2, default=str)
