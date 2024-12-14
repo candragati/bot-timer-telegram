@@ -584,8 +584,11 @@ class bot_timer():
                     if os.path.exists(temp_error_file):
                         os.remove(temp_error_file)
             else:
-                update.message.reply_text(error_message, parse_mode='MarkdownV2')
-            
+                try:
+                    update.message.reply_text(error_message, parse_mode='MarkdownV2')
+                except BadRequest:
+                    update.message.reply_text(escape_markdown(error_message), parse_mode='MarkdownV2')
+                    
     def cmedia(self, update, context):
         if not update.message: return
         message = update.message.text
