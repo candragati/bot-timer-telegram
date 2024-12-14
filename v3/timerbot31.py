@@ -396,6 +396,7 @@ class bot_timer():
         self.local_vars.update({
             'update': update,
             'msg': update.effective_message, 
+            'rm': update.effective_message.reply_to_message,
             'chat': update.effective_chat,
             'user': update.effective_user,
         })
