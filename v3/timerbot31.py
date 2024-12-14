@@ -33,6 +33,7 @@ pathDB = "database"
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
 SUDO = [582005141, 377596941]
+RESTART_FILE = '/tmp/bot_restart_info.json'
 
 class bot_timer():
     def __init__(self):
@@ -102,9 +103,8 @@ class bot_timer():
 
     def check_restart_message(self):
         try:
-            restart_file = "/tmp/bot_restart_info.json"
-            if os.path.exists(restart_file):
-                with open(restart_file, 'r') as f:
+            if os.path.exists(RESTART_FILE):
+                with open(RESTART_FILE, 'r') as f:
                     data = json.load(f)
                     chat_id = data.get('chat_id')
                     if chat_id:
@@ -123,7 +123,7 @@ class bot_timer():
                                 text=text,
                                 parse_mode='Markdown'
                             )
-                os.remove(restart_file)
+                os.remove(RESTART_FILE)
         except Exception as e:
             print(f"Error sending restart message: {e}")
             
@@ -660,8 +660,13 @@ class bot_timer():
                     
             prev_msg = f"✅ Pembaruan berhasil!\nBranch: `{current_branch}`\n📝 Git pull output::\n```\n{pull_result}\n```"
             
-            with open('/tmp/bot_restart_info.json', 'w') as f:
-                json.dump({'chat_id': update.message.chat.id, 'message_id': message.message_id, 'msg': prev_msg}, f)
+            with open(RESTART_FILE, 'w') as f:
+                data = dict(
+                    chat_id=message.chat.id,
+                    message_id=message.message_id,
+                    msg=prev_msg
+                )
+                json.dump(data, f)
             prev_msg += "\n🔄 Memulai ulang bot..."
             message.edit_text(
                 prev_msg,
@@ -671,6 +676,8 @@ class bot_timer():
             os.execl(sys.executable, sys.executable, *sys.argv)
             
         except Exception as e:
+            if os.path.exists(RESTART_FILE):
+                os.remove(RESTART_FILE)
             error_traceback = traceback.format_exc()
             error_message = (
                 f"❌ Terjadi kesalahan saat pembaruan/restart:\n"
