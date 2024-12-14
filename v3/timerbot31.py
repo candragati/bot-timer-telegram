@@ -4,6 +4,13 @@ from telegram import ParseMode, Update, Bot, Message
 from telegram.utils.helpers import escape_markdown
 from telegram import InputMediaPhoto, InputMediaVideo
 from concurrent.futures import ThreadPoolExecutor
+from config import Config, eksekusi, db, cur
+from modul import me,bio,afk,qotd,langdetect,setting,berita,rekam,asl,bantuan,media, reputasi, kawalCorona
+from modul.kamus import kamus
+from tempfile import TemporaryDirectory
+from dotenv import load_dotenv
+from urllib.parse import urlparse, quote
+from check_safety_code import check_code_safety
 import traceback
 import requests
 import signal
@@ -18,17 +25,13 @@ import json
 import contextlib
 import threading
 import requests
-from config import Config, eksekusi, db, cur
-from modul import me,bio,afk,qotd,langdetect,setting,berita,rekam,asl,bantuan,media, reputasi, kawalCorona
-from modul.kamus import kamus
-from tempfile import TemporaryDirectory
 import pprint
 import sqlite3
 import tarfile
 import os
-from urllib.parse import urlparse, quote
-from check_safety_code import check_code_safety
     
+load_dotenv()
+
 pathDB = "database"
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
