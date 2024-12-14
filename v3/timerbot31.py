@@ -396,7 +396,7 @@ class bot_timer():
             sosmed = "api/tiktok"
         else:                
             return
-            
+        await update.message.reply_text(args)
         arsip = os.environ.get('API_SOCMED', None)
     
         if not arsip:
