@@ -404,7 +404,7 @@ class bot_timer():
             return update.message.reply_text('api socmed tidak terdeteksi, ketik `export API_SOCMED=url`, di terminal anda untuk export api nya', parse_mode='Markdown')
 
         bot = context.bot    
-        datetime = datetime.datetime
+        from datetime import datetime 
         chat_id = update.message["chat"]["id"]
     
         endpoint = f"?url={quote(args)}"
