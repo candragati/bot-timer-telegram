@@ -11,6 +11,7 @@ from tempfile import TemporaryDirectory
 from dotenv import load_dotenv
 from urllib.parse import urlparse, quote
 from check_safety_code import check_code_safety
+from logging.handlers import RotatingFileHandler
 import traceback
 import requests
 import signal
@@ -173,7 +174,7 @@ class bot_timer():
             print(f"Error sending restart message: {e}")
 
     @staticmethod
-    def escape_markdown(text, version = 1, entity_type = None):
+    def escape_markdownV2(text, version = 1, entity_type = None):
         """
         Escape Telegram markdown symbols
         
@@ -480,7 +481,15 @@ class bot_timer():
         link = f"{arsip}{sosmed}{endpoint}"
         
         logger.info(f"[{datetime.now()}] Making API request to: {link}")
-        # update.message.reply_text(f"[{datetime.now()}] Making API request to: {link}")
+        
+        def _caption(caption):
+            read_more = 'Read More...'
+            if caption and len(caption) >= 1024:
+                caption = caption[:1024 - len(read_more)] + f"[{read_more}]({args})"
+            if caption:
+                caption = escape_markdown(caption)
+            return caption
+            
         try:
             req = requests.get(link).json()
         except Exception as e:
@@ -492,7 +501,7 @@ class bot_timer():
             logger.info(f"[{datetime.now()}] Successfully fetched media from {sosmed}")
     
             if sosmed == "api/tiktok" and req.get('video'):
-                medias.append(InputMediaVideo(req['video'][0], caption=escape_markdown(req.get('caption'))))
+                medias.append(InputMediaVideo(req['video'][0], caption=_caption(req.get('caption'))))
                 logger.info(f"[{datetime.now()}] Processing TikTok video")
             else:
                 media_results = req.get('media') or req.get('photos')
@@ -501,11 +510,7 @@ class bot_timer():
     
                 if media_results:
                     for i, m in enumerate(media_results):
-                        caption = req['caption'] if i == total_media_res - 1 else None
-                        read_more = 'Read More...'
-                        if caption and len(caption) >= 1024:
-                            caption = caption[:1024 - len(read_more)] + f"[{read_more}]({args})"
-                        
+                        caption = _caption(req['caption'] if i == total_media_res - 1 else None)
                         try:
                             if sosmed == "api/tiktok":
                                 medias.append(InputMediaPhoto(m, caption=caption))
