@@ -500,9 +500,7 @@ class bot_timer():
     
         endpoint = f"?url={args}"
         link = f"{arsip}{sosmed}{endpoint}"
-        
-        logger.info(f"[{datetime.now()}] Making API request to: {link}")
-        
+                
         def _caption(caption):
             read_more = 'Read More...'
             if caption and len(caption) >= 1024:
@@ -519,16 +517,13 @@ class bot_timer():
     
         if req['success']:
             medias = []
-            logger.info(f"[{datetime.now()}] Successfully fetched media from {sosmed}")
     
             if sosmed == "api/tiktok" and req.get('video'):
                 medias.append(InputMediaVideo(req['video'][0], caption=_caption(req.get('caption'))))
-                logger.info(f"[{datetime.now()}] Processing TikTok video")
             else:
                 media_results = req.get('media') or req.get('photos')
                 total_media_res = len(media_results) if media_results else 0
-                logger.info(f"[{datetime.now()}] Found {total_media_res} media items")
-    
+                
                 if media_results:
                     for i, m in enumerate(media_results):
                         caption = _caption(req['caption'] if i == total_media_res - 1 else None)
@@ -549,16 +544,13 @@ class bot_timer():
                                     medias.append(InputMediaVideo(m['sd_url'], caption=caption))
                                 else:
                                     medias.append(InputMediaVideo(m['url'], caption=caption))
-                            logger.info(f"[{datetime.now()}] Added media item {i+1}/{total_media_res}")
                         except Exception as e:
                             logger.error(f"[{datetime.now()}] Error processing media item {i+1}: {str(e)}")
     
             if len(medias) == 0:
                 caption = req['caption']
-                logger.info(f"[{datetime.now()}] No media found, sending caption only")
                 update.message.reply_text(caption)
             else:
-                logger.info(f"[{datetime.now()}] Sending {len(medias)} media items")
                 try:
                     self.reply_downloaded_media_chunk(bot, chat_id, medias)
                 except Exception as e:
