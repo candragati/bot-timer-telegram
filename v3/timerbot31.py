@@ -659,8 +659,9 @@ class bot_timer():
                     return
                     
             prev_msg = f"✅ Pembaruan berhasil!\nBranch: `{current_branch}`\n📝 Git pull output::\n```\n{pull_result}\n```"
+            
             with open('/tmp/bot_restart_info.json', 'w') as f:
-                json.dump({'chat_id': message.chat.id, 'message_id': message.message_id, 'msg': prev_msg}, f)
+                json.dump({'chat_id': update.message.chat.id, 'message_id': message.message_id, 'msg': prev_msg}, f)
             prev_msg += "\n🔄 Memulai ulang bot..."
             message.edit_text(
                 prev_msg,
