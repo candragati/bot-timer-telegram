@@ -425,7 +425,7 @@ class bot_timer():
             logger.info(f"[{datetime.now()}] Successfully fetched media from {sosmed}")
     
             if sosmed == "api/tiktok" and req.get('video'):
-                medias.append(InputMediaPhoto(req['video'][0], caption=html.escape(req.get('caption')), parse_mode='HTML'))
+                medias.append(InputMediaVideo(req['video'][0], caption=html.escape(req.get('caption')), parse_mode='HTML'))
                 logger.info(f"[{datetime.now()}] Processing TikTok video")
             else:
                 media_results = req.get('media') or req.get('photos')
