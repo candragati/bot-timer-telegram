@@ -481,9 +481,6 @@ class bot_timer():
             try:
                 result = _meval(code, self.local_vars)
                 
-                # if result == msg or result == update.message:
-                #     result = None
-                
                 if result is not None:
                     self.local_vars['_'] = result
                     if isinstance(result, (dict, list, tuple, set)):
@@ -578,7 +575,7 @@ class bot_timer():
                 msg.delete()
             else:
                 full_message = f"**Code:**\n```python\n{code}```\n\n{output_text}"
-                msg.edit_text(full_message, parse_mode='Markdown')
+                msg.edit_text(escape_markdown(full_message), parse_mode='Markdown')
     
         except Exception as e:
             error_traceback = traceback.format_exc()
