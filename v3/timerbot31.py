@@ -548,7 +548,7 @@ class bot_timer():
                         update.message.reply_document(
                             document=file,
                             caption=escape_markdown(f"Eval Output - {timestamp}"),
-                            parse_mode='MarkdownV2'
+                            parse_mode='Markdown'
                         )
                 finally:
                     if os.path.exists(temp_output_file):
@@ -560,7 +560,7 @@ class bot_timer():
                 try:
                     msg.edit_text(full_message, parse_mode='MarkdownV2')
                 except BadRequest:
-                    msg.edit_text(escape_markdown(full_message), parse_mode='MarkdownV2')
+                    msg.edit_text(escape_markdown(full_message), parse_mode='Markdown')
     
         except Exception as e:
             error_traceback = traceback.format_exc()
@@ -578,7 +578,7 @@ class bot_timer():
                         update.message.reply_document(
                             document=file,
                             caption=escape_markdown(f"Eval Error Log - {timestamp}"),
-                            parse_mode='MarkdownV2'
+                            parse_mode='Markdown'
                         )
                 finally:
                     if os.path.exists(temp_error_file):
@@ -587,7 +587,7 @@ class bot_timer():
                 try:
                     update.message.reply_text(error_message, parse_mode='MarkdownV2')
                 except BadRequest:
-                    update.message.reply_text(escape_markdown(error_message), parse_mode='MarkdownV2')
+                    update.message.reply_text(escape_markdown(error_message), parse_mode='Markdown')
                     
     def cmedia(self, update, context):
         if not update.message: return
@@ -990,7 +990,7 @@ class bot_timer():
                                 try:
                                     message.edit_text(f"❌ Error terdeteksi di `{file}`:\n{error_msg}", parse_mode='MarkdownV2')
                                 except BadRequest:
-                                    message.edit_text(f"❌ Error terdeteksi di `{file}`:\n{escape_markdown(error_msg)}", parse_mode='MarkdownV2')
+                                    message.edit_text(f"❌ Error terdeteksi di `{file}`:\n{escape_markdown(error_msg)}", parse_mode='Markdown')
                                 return
                                 
                         except subprocess.CalledProcessError as e:                            
@@ -1005,7 +1005,7 @@ class bot_timer():
                                     f"❌ Error saat memeriksa file `{file}`:\n"
                                     f"```\n{escape_markdown(e.output)}```"
                                 )
-                                message.edit_text(error_text, parse_mode='MarkdownV2')
+                                message.edit_text(error_text, parse_mode='Markdown')
                             return
                             
                 message.edit_text("✅ Pemeriksaan sintaks berhasil.\n🔄 Mengambil pembaruan...")
