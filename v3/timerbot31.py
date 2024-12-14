@@ -383,6 +383,7 @@ class bot_timer():
             'user': update.effective_user,
         })
 
+        # referensi: https://github.com/penn5/meval/blob/master/meval/__init__.py
         def _meval(code, globs):
             locs = {}
             globs = globs.copy()
