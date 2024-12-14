@@ -314,26 +314,90 @@ class bot_timer():
                 parse_mode='Markdown'
             )       
 
-    def capture_output(self, code, update, msg, bot):
+    def capture_output(self, code, update):
         stdout_buf = io.StringIO()
         stderr_buf = io.StringIO()
         result = None
         
         if not hasattr(self, 'local_vars'):
             self.local_vars = {
+                # Math and Numbers
                 'math': __import__('math'),
-                'datetime': __import__('datetime'),
+                'decimal': __import__('decimal'),
+                'fractions': __import__('fractions'),
                 'random': __import__('random'),
+                'statistics': __import__('statistics'),
+                
+                # Date and Time
+                'datetime': __import__('datetime'),
+                'time': __import__('time'),
+                'calendar': __import__('calendar'),
+                
+                # Data Processing
                 'json': __import__('json'),
+                'csv': __import__('csv'),
+                're': __import__('re'),  # Regular expressions
+                
+                # String Operations
+                'string': __import__('string'),
+                
+                # Data Structures
+                'collections': __import__('collections'),
+                'array': __import__('array'),
+                'itertools': __import__('itertools'),
+                
+                # System Info (Read-only)
                 'sys': __import__('sys'),
                 'platform': __import__('platform'),
+                
+                # Utility
+                'typing': __import__('typing'),
+                'enum': __import__('enum'),
+                'uuid': __import__('uuid'),
+                
+                # Previous result store
                 '_': None,
-                'update': update,
-                'msg': msg,
+                
+                # Module info
                 '__name__': '__main__',
-                '__package__': None, 
-                'bot': bot
+                '__package__': None,
+                
+                # Useful constants
+                'True': True,
+                'False': False,
+                'None': None,
+                
+                # Helper functions
+                'len': len,
+                'range': range,
+                'round': round,
+                'sum': sum,
+                'min': min,
+                'max': max,
+                'abs': abs,
+                'all': all,
+                'any': any,
+                'enumerate': enumerate,
+                'zip': zip,
+                'map': map,
+                'filter': filter,
+                'sorted': sorted,
+                'reversed': reversed,
+                'randint': random.randint,
+                'choice': random.choice,
+                'shuffle': random.shuffle,
+                'timestamp': lambda: datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'pretty': lambda x: json.dumps(x, indent=2, ensure_ascii=False),
+                'to_date': lambda x: datetime.datetime.strptime(x, '%Y-%m-%d'),
+                'to_datetime': lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S'),
             }
+            
+        self.local_vars.update({
+            'update': update,
+            'msg': update.effective_message, 
+            'chat': update.effective_chat,
+            'user': update.effective_user,
+        })
     
         def _meval(code, globs):
             locs = {}
@@ -415,8 +479,8 @@ class bot_timer():
             try:
                 result = _meval(code, self.local_vars)
                 
-                if result == msg or result == update.message:
-                    result = None
+                # if result == msg or result == update.message:
+                #     result = None
                 
                 if result is not None:
                     self.local_vars['_'] = result
@@ -479,7 +543,7 @@ class bot_timer():
                 parse_mode='Markdown'
             )
     
-            stdout, stderr, result = self.capture_output(code, update, update.message, context.bot)
+            stdout, stderr, result = self.capture_output(code, update)
     
             output_parts = []
             if stdout:
