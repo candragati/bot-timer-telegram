@@ -328,33 +328,105 @@ class bot_timer():
                 'platform': __import__('platform'),
                 '_': None,
                 'update': update,
-                'msg': msg
+                'msg': msg,
+                '__name__': '__main__',
+                '__package__': None
             }
-                
+    
+        def _meval(code, globs):
+            locs = {}
+            globs = globs.copy()
+    
+            try:
+                root = ast.parse(code, "exec")
+                code_ast = root.body
+    
+                ret_name = "_ret"
+                while ret_name in globs or any(isinstance(node, ast.Name) and node.id == ret_name 
+                                             for node in ast.walk(root)):
+                    ret_name = "_" + ret_name
+    
+                if not code_ast:
+                    return None
+    
+                if not any(isinstance(node, ast.Return) for node in code_ast):
+                    for i in range(len(code_ast)):
+                        if isinstance(code_ast[i], ast.Expr):
+                            if i == len(code_ast) - 1 or not isinstance(code_ast[i].value, ast.Call):
+                                code_ast[i] = ast.copy_location(
+                                    ast.Expr(ast.Call(
+                                        func=ast.Attribute(
+                                            value=ast.Name(id=ret_name, ctx=ast.Load()),
+                                            attr="append",
+                                            ctx=ast.Load()
+                                        ),
+                                        args=[code_ast[i].value],
+                                        keywords=[]
+                                    )),
+                                    code_ast[-1]
+                                )
+    
+                ret_decl = ast.Assign(
+                    targets=[ast.Name(id=ret_name, ctx=ast.Store())],
+                    value=ast.List(elts=[], ctx=ast.Load())
+                )
+                ast.fix_missing_locations(ret_decl)
+                code_ast.insert(0, ret_decl)
+                code_ast.append(
+                    ast.Return(value=ast.Name(id=ret_name, ctx=ast.Load()))
+                )
+    
+                fun = ast.FunctionDef(
+                    name="tmp",
+                    args=ast.arguments(
+                        args=[],
+                        posonlyargs=[],
+                        kwonlyargs=[],
+                        kw_defaults=[],
+                        defaults=[],
+                        vararg=None,
+                        kwarg=None
+                    ),
+                    body=code_ast,
+                    decorator_list=[],
+                    returns=None
+                )
+                ast.fix_missing_locations(fun)
+                mod = ast.parse("")
+                mod.body = [fun]
+    
+                comp = compile(mod, "<string>", "exec")
+                exec(comp, globs, locs)
+    
+                r = locs["tmp"]()
+    
+                if isinstance(r, list):
+                    r = [x for x in r if x is not None]
+                    return r[0] if len(r) == 1 else r if r else None
+                return r
+    
+            except Exception:
+                traceback.print_exc(file=stderr_buf)
+                return None
+    
         with contextlib.redirect_stdout(stdout_buf), contextlib.redirect_stderr(stderr_buf):
             try:
-                try:
-                    result = eval(code, globals(), self.local_vars)
-                    
-                    if result == msg or result == update.message:
-                        result = None
-                    
-                    if result is not None:
-                        self.local_vars['_'] = result
-                        
-                        if isinstance(result, (dict, list, tuple, set)):
-                            result = json.dumps(result, indent=2, default=str)
-                        elif hasattr(result, '__dict__') and not isinstance(result, type):
-                            result = json.dumps(result.__dict__, indent=2, default=str)
-                    
-                except SyntaxError:
-                    exec(code, globals(), self.local_vars)
+                result = _meval(code, self.local_vars)
+                
+                if result == msg or result == update.message:
                     result = None
+                
+                if result is not None:
+                    self.local_vars['_'] = result
+                    if isinstance(result, (dict, list, tuple, set)):
+                        result = json.dumps(result, indent=2, default=str)
+                    elif hasattr(result, '__dict__') and not isinstance(result, type):
+                        result = json.dumps(result.__dict__, indent=2, default=str)
                     
             except Exception:
                 traceback.print_exc(file=stderr_buf)
                 result = None
-        
+    
         stdout = stdout_buf.getvalue()
         stderr = stderr_buf.getvalue()
         
@@ -362,7 +434,6 @@ class bot_timer():
         stderr_buf.close()
         
         result_str = str(result) if result is not None else ""
-        
         if stdout and not result:
             result_str = ""
             
@@ -390,7 +461,7 @@ class bot_timer():
             code = update.message.text.split(None, 1)[1]
             
             dangerous_patterns = [
-                'os.system', 'subprocess', 'eval(', 'exec(',
+                'subprocess', 'eval(', 'exec(',
                 'open(', 'file.', '.unlink(',
                 'shutil', 'rmtree'
             ]
@@ -443,7 +514,7 @@ class bot_timer():
     
         except Exception as e:
             error_traceback = traceback.format_exc()
-            error_message = f"**Error executing code:**\n```\n{error_traceback}```"
+            error_message = f"**Error executing code:**\n\n{error_traceback}"
             
             if len(error_message) > 4096:
                 timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
