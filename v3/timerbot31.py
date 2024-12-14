@@ -408,7 +408,7 @@ class bot_timer():
         chat_id = update.message["chat"]["id"]
     
         endpoint = f"?url={quote(args)}"
-        link = f"{arsip.replace('/api/', '/')}{sosmed}{endpoint}"
+        link = f"{arsip}{sosmed}{endpoint}"
         
         logger.info(f"[{datetime.now()}] Making API request to: {link}")
         # update.message.reply_text(f"[{datetime.now()}] Making API request to: {link}")
