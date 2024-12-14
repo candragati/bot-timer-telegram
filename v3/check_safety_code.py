@@ -143,6 +143,22 @@ class UndefinedNameVisitor(ast.NodeVisitor):
     def visit_GeneratorExp(self, node):
         self._handle_comprehension(node)
 
+    def visit_Lambda(self, node):
+        self.scopes.append(set())
+        for arg in node.args.args:
+            self.scopes[-1].add(arg.arg)
+        if node.args.vararg:
+            self.scopes[-1].add(node.args.vararg.arg)
+        if node.args.kwarg:
+            self.scopes[-1].add(node.args.kwarg.arg)
+        for arg in node.args.kwonlyargs:
+            self.scopes[-1].add(arg.arg)
+        if node.args.posonlyargs:
+            for arg in node.args.posonlyargs:
+                self.scopes[-1].add(arg.arg)
+        self.visit(node.body)
+        self.scopes.pop()
+
     def _handle_comprehension(self, node):
         self.scopes.append(set())
         for generator in node.generators:
@@ -187,11 +203,11 @@ def check_code_safety(code_content, filename):
         tree = ast.parse(code_content, filename)
     except SyntaxError as e:
         context = get_context_lines(lines, e.lineno)
-        return False, f"\n*SyntaxError di baris {e.lineno}*\n```\n{context}```\n*Error:* {str(e)}"
+        return False, f"\n*SyntaxError di baris {e.lineno}*\n\n{context}\n*Error:* {str(e)}"
     visitor = UndefinedNameVisitor()
     visitor.visit(tree)
     if visitor.errors:
         undefined_name, lineno = visitor.errors[0]
         context = get_context_lines(lines, lineno)
-        return False, f"\n*NameError di baris {lineno}*\n```\n{context}```\n*Error:* name '{undefined_name}' is not defined"
+        return False, f"\n*NameError di baris {lineno}*\n\n{context}\n*Error:* name '{undefined_name}' is not defined"
     return True, "Code is safe"
