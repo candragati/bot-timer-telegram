@@ -40,68 +40,64 @@ RESTART_FILE = '/tmp/bot_restart_info.json'
 
 os.makedirs('logs', exist_ok=True)
 
-class StreamToLogger:
-    """
-    File-like stream object that redirects writes to a logger instance.
-    """
-
-    def __init__(self, logger, log_level):
-        self.logger = logger
-        self.log_level = log_level
-        self.linebuf = ''
-
-    def write(self, buf):
-        self.linebuf += buf
-        while '\n' in self.linebuf or '\r' in self.linebuf:
-            if '\n' in self.linebuf:
-                line, self.linebuf = self.linebuf.split('\n', 1)
-            else:
-                line, self.linebuf = self.linebuf.split('\r', 1)
-
-            self.logger.log(self.log_level, line.strip())
-
-    def flush(self):
-        if self.linebuf:
-            self.logger.log(self.log_level, self.linebuf.strip())
-            self.linebuf = ''
-            
-def setup_logging():
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
+def setup_logging():    
+    handlers = []
     
+    try:
+        file_handler = RotatingFileHandler(
+            filename='logs/siakad.log',
+            maxBytes=10*1024*1024,  # 10MB
+            backupCount=5,
+            encoding='utf-8',
+            delay=True 
+        )
+        handlers.append(file_handler)
+    except Exception as e:
+        print(f"Warning: Could not setup file logging: {e}")
+
+    
+    console_handler = logging.StreamHandler()
+    handlers.append(console_handler)
+
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-    file_handler = RotatingFileHandler(
-        'logs/srabat.log',
-        maxBytes=10*1024*1024,  # 10MB
-        backupCount=5,
-        encoding='utf-8'
-    )
-    file_handler.setFormatter(formatter)
-    file_handler.setLevel(logging.INFO)
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
 
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setFormatter(formatter)
-    console_handler.setLevel(logging.INFO)
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
 
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
+    for handler in handlers:
+        handler.setFormatter(formatter)
+        handler.setLevel(logging.INFO)
+        
+        if isinstance(handler, logging.FileHandler):
+            original_emit = handler.emit
+            
+            def emit_with_retry(record):
+                try:
+                    original_emit(record)
+                except Exception as e:
+                    console_handler.emit(record)
+                    error_record = logging.LogRecord(
+                        name=record.name,
+                        level=logging.ERROR,
+                        pathname=record.pathname,
+                        lineno=record.lineno,
+                        msg=f"Logging error: {str(e)}",
+                        args=(),
+                        exc_info=None
+                    )
+                    console_handler.emit(error_record)
+            
+            handler.emit = emit_with_retry
+        
+        root_logger.addHandler(handler)
 
-    sys.stdout = StreamToLogger(logger, logging.INFO)
-    sys.stderr = StreamToLogger(logger, logging.ERROR)
-
-    def handle_exception(exc_type, exc_value, exc_traceback):
-        if issubclass(exc_type, KeyboardInterrupt):
-            sys.__excepthook__(exc_type, exc_value, exc_traceback)
-            return
-        logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
-
-    sys.excepthook = handle_exception
-
-    return logger
+    return root_logger
     
 logger = setup_logging()
 
