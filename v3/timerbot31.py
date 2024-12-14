@@ -198,14 +198,11 @@ class bot_timer():
 
     @staticmethod
     def escape_markdown_v2(text):
-        special_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
-        escaped_text = ''
-        for char in str(text):
-            if char in special_chars:
-                escaped_text += f'\\{char}'
-            else:
-                escaped_text += char
-        return escaped_text
+        special_chars = [
+            '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', 
+            '+', '-', '=', '|', '{', '}', '.', '!'
+        ]
+        return ''.join(f'\\{c}' if c in special_chars else c for c in str(text))
     
     def run_command(self, cmd):
         try:
@@ -549,7 +546,7 @@ class bot_timer():
                     with open(temp_output_file, "rb") as file:
                         update.message.reply_document(
                             document=file,
-                            caption=f"**Eval Output** - {timestamp}",
+                            caption=self.escape_markdown_v2(f"*Eval Output* - {timestamp}"),
                             parse_mode='MarkdownV2'
                         )
                 finally:
