@@ -291,7 +291,10 @@ class bot_timer():
                 output_parts.append(f"**Stderr:**\n```\n{stderr}```")
             if result:
                 output_parts.append(f"**Result:**\n```\n{result}```")
-            
+
+            if isinstance(output_parts, dict):
+                output_parts = json.dumps(output_parts, indent=2)
+                
             output_text = "\n\n".join(output_parts) if output_parts else "*(No output)*"
 
             temp_output_file = 'output_eval.txt'
