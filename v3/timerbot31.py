@@ -40,6 +40,31 @@ RESTART_FILE = '/tmp/bot_restart_info.json'
 
 os.makedirs('logs', exist_ok=True)
 
+class StreamToLogger:
+    """
+    File-like stream object that redirects writes to a logger instance.
+    """
+
+    def __init__(self, logger, log_level):
+        self.logger = logger
+        self.log_level = log_level
+        self.linebuf = ''
+
+    def write(self, buf):
+        self.linebuf += buf
+        while '\n' in self.linebuf or '\r' in self.linebuf:
+            if '\n' in self.linebuf:
+                line, self.linebuf = self.linebuf.split('\n', 1)
+            else:
+                line, self.linebuf = self.linebuf.split('\r', 1)
+
+            self.logger.log(self.log_level, line.strip())
+
+    def flush(self):
+        if self.linebuf:
+            self.logger.log(self.log_level, self.linebuf.strip())
+            self.linebuf = ''
+            
 def setup_logging():
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
