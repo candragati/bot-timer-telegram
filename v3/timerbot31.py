@@ -197,31 +197,15 @@ class bot_timer():
             print(f"Error sending restart message: {e}")
 
     @staticmethod
-    def escape_markdownV2(text, version = 1, entity_type = None):
-        """
-        Escape Telegram markdown symbols
-        
-        Args:
-            text (str): Text to 
-            version (int): Markdown version (1 or 2)
-            entity_type (str, optional): Entity type for selective escaping in v2
-        """
-        if not text:
-            return ""
-    
-        if version == 1:
-            escape_chars = r"_*`["
-        elif version == 2:
-            if entity_type in ["pre", "code"]:
-                escape_chars = r"\`"
-            elif entity_type in ["text_link", "custom_emoji"]:
-                escape_chars = r"\)"
+    def escape_markdown_v2(text):
+        special_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+        escaped_text = ''
+        for char in str(text):
+            if char in special_chars:
+                escaped_text += f'\\{char}'
             else:
-                escape_chars = r"\_*[]()~`>#+-=|{}.!"
-        else:
-            raise ValueError("Markdown version must be either 1 or 2!")
-    
-        return re.sub(f"([{re.escape(escape_chars)}])", r"\\\1", str(text))
+                escaped_text += char
+        return escaped_text
     
     def run_command(self, cmd):
         try:
@@ -575,7 +559,7 @@ class bot_timer():
                 msg.delete()
             else:
                 full_message = f"**Code:**\n```python\n{code}```\n\n{output_text}"
-                msg.edit_text(full_message, parse_mode='MarkdownV2')
+                msg.edit_text(self.escape_markdown_v2(full_message), parse_mode='MarkdownV2')
     
         except Exception as e:
             error_traceback = traceback.format_exc()
@@ -599,7 +583,7 @@ class bot_timer():
                     if os.path.exists(temp_error_file):
                         os.remove(temp_error_file)
             else:
-                update.message.reply_text(error_message, parse_mode='MarkdownV2')
+                update.message.reply_text(self.escape_markdown_v2(error_message), parse_mode='MarkdownV2')
             
     def cmedia(self, update, context):
         if not update.message: return
