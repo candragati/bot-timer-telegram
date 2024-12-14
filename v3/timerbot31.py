@@ -220,7 +220,7 @@ class bot_timer():
                 parse_mode='Markdown'
             )       
 
-    def capture_output(self, code: str):
+    def capture_output(self, code, update, msg):
         stdout_buf = io.StringIO()
         stderr_buf = io.StringIO()
         result = None
@@ -233,7 +233,9 @@ class bot_timer():
                 'json': __import__('json'),
                 'sys': __import__('sys'),
                 'platform': __import__('platform'),
-                '_': None  
+                '_': None,
+                'update': update,
+                'msg': msg
             }
         
         with contextlib.redirect_stdout(stdout_buf), contextlib.redirect_stderr(stderr_buf):
@@ -280,7 +282,7 @@ class bot_timer():
                 parse_mode='Markdown'
             )
 
-            stdout, stderr, result = self.capture_output(code)
+            stdout, stderr, result = self.capture_output(code, update, update.message)
 
             output_parts = []
             if stdout:
