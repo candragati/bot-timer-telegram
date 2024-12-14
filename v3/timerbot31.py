@@ -29,7 +29,7 @@ import pprint
 import sqlite3
 import tarfile
 import os
-    
+
 load_dotenv()
 
 pathDB = "database"
