@@ -376,30 +376,14 @@ class bot_timer():
                 update.message.reply_text(error_message, parse_mode='Markdown')
             
     def cmedia(self, update, context):
-        bot = context.bot    
         message = update.message.text
-        chat_id = update.message["chat"]["id"]
-        user_id = update.message.from_user.id
-        username = update.message.from_user.username or "No username"
-        datetime = datetime.datetime
-    
-        logger.info(f"[{datetime.now()}] User {username}({user_id}) requested media download: {message}")
-    
+        
         args = re.search(r'(https?://[^\s]+)', message)
         if args == None:
-            logger.warning(f"[{datetime.now()}] No URL found in message from user {username}({user_id})")
             return
-    
         args = args.group()
         hostname = urlparse(args).hostname
-        arsip = os.environ.get('API_SOCMED', None)
-    
-        if not arsip:
-            logger.error(f"[{datetime.now()}] API_SOCMED environment variable not set")
-            return update.message.reply_text('api socmed tidak terdeteksi, ketik `export API_SOCMED=url`, di terminal anda untuk export api nya', parse_mode='Markdown')
-    
-        logger.info(f"[{datetime.now()}] Processing URL: {args} from domain: {hostname}")
-    
+        
         if hostname == 'twitter.com' or hostname == 'x.com':
             sosmed = "api/twit"
         elif ('facebook' in hostname) or ('fb' in hostname):
@@ -411,14 +395,23 @@ class bot_timer():
         elif hostname in ('tiktok.com', 'vt.tiktok.com', 'vm.tiktok.com'):
             sosmed = "api/tiktok"
         else:                
-            logger.warning(f"[{datetime.now()}] Unsupported domain: {hostname}")
             return
+            
+        arsip = os.environ.get('API_SOCMED', None)
+    
+        if not arsip:
+            logger.error(f"[{datetime.now()}] API_SOCMED environment variable not set")
+            return update.message.reply_text('api socmed tidak terdeteksi, ketik `export API_SOCMED=url`, di terminal anda untuk export api nya', parse_mode='Markdown')
+
+        bot = context.bot    
+        datetime = datetime.datetime
+        chat_id = update.message["chat"]["id"]
     
         endpoint = f"?url={quote(args)}"
         link = f"{arsip}{sosmed}{endpoint}"
         
         logger.info(f"[{datetime.now()}] Making API request to: {link}")
-        
+        update.message.reply_text(f"[{datetime.now()}] Making API request to: {link}")
         try:
             req = requests.get(link).json()
         except Exception as e:
@@ -473,7 +466,6 @@ class bot_timer():
                 logger.info(f"[{datetime.now()}] Sending {len(medias)} media items")
                 try:
                     self.reply_downloaded_media_chunk(bot, chat_id, medias)
-                    logger.info(f"[{datetime.now()}] Successfully sent media to user {username}({user_id})")
                 except Exception as e:
                     logger.error(f"[{datetime.now()}] Failed to send media: {str(e)}")
                     update.message.reply_text("Failed to send media")
