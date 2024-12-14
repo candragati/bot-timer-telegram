@@ -415,6 +415,7 @@ class bot_timer():
     
     def reply_downloaded_media_chunk(self, bot, chat_id, medias):
         with TemporaryDirectory() as tdir:
+            
             with ThreadPoolExecutor(max_workers=5) as executor:
                 results = list(executor.map(
                     lambda m: self.downloader_media(tdir, m.media), 
