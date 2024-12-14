@@ -87,6 +87,7 @@ class bot_timer():
         updater = Config.updater
         dp = Config.dp
 
+        dp.add_handler(CommandHandler("log",              self.get_log))
         dp.add_handler(CommandHandler("eval",              self.handle_eval))
         dp.add_handler(CommandHandler("bash",              self.handle_bash))
         dp.add_handler(CommandHandler("restart_pull",              self.restart_pull))
@@ -170,7 +171,34 @@ class bot_timer():
                 os.remove(RESTART_FILE)
         except Exception as e:
             print(f"Error sending restart message: {e}")
-            
+
+    @staticmethod
+    def escape_markdown(text, version = 1, entity_type = None):
+        """
+        Escape Telegram markdown symbols
+        
+        Args:
+            text (str): Text to escape
+            version (int): Markdown version (1 or 2)
+            entity_type (str, optional): Entity type for selective escaping in v2
+        """
+        if not text:
+            return ""
+    
+        if version == 1:
+            escape_chars = r"_*`["
+        elif version == 2:
+            if entity_type in ["pre", "code"]:
+                escape_chars = r"\`"
+            elif entity_type in ["text_link", "custom_emoji"]:
+                escape_chars = r"\)"
+            else:
+                escape_chars = r"\_*[]()~`>#+-=|{}.!"
+        else:
+            raise ValueError("Markdown version must be either 1 or 2!")
+    
+        return re.sub(f"([{re.escape(escape_chars)}])", r"\\\1", str(text))
+    
     def run_command(self, cmd):
         try:
             process = subprocess.run(
@@ -464,7 +492,7 @@ class bot_timer():
             logger.info(f"[{datetime.now()}] Successfully fetched media from {sosmed}")
     
             if sosmed == "api/tiktok" and req.get('video'):
-                medias.append(InputMediaVideo(req['video'][0], caption=html.escape(req.get('caption')), parse_mode='HTML'))
+                medias.append(InputMediaVideo(req['video'][0], caption=escape_markdown(req.get('caption'))))
                 logger.info(f"[{datetime.now()}] Processing TikTok video")
             else:
                 media_results = req.get('media') or req.get('photos')
@@ -782,13 +810,13 @@ class bot_timer():
                             
                             is_safe, error_msg = check_code_safety(remote_content, file)
                             if not is_safe:
-                                message.edit_text(f"❌ Error terdeteksi di `{file}`:\n{error_msg}", parse_mode='Markdown')
+                                message.edit_text(f"❌ Error terdeteksi di `{file}`:\n{self.escape_markdown(error_msg)}", parse_mode='Markdown')
                                 return
                                 
                         except subprocess.CalledProcessError as e:
                             error_text = (
                                 f"❌ Error saat memeriksa file `{file}`:\n"
-                                f"```\n{e.output}```"
+                                f"```\n{self.escape_markdown(e.output)}```"
                             )
                             message.edit_text(error_text, parse_mode='Markdown')
                             return
