@@ -829,7 +829,7 @@ class bot_timer():
                 message.edit_text("✅ Pemeriksaan sintaks berhasil.\n🔄 Mengambil pembaruan...")
                 
             except subprocess.CalledProcessError as e:
-                message.edit_text(f"❌ Gagal memeriksa perubahan:\n```\n{e.output}```", parse_mode='Markdown')
+                message.edit_text(f"❌ Gagal memeriksa perubahan:\n```\n{escape_markdown(e.output)}```", parse_mode='Markdown')
                 return
     
             status_result = subprocess.run(['git', 'status', '--porcelain'], 
@@ -860,7 +860,7 @@ class bot_timer():
             
             if pull_result.returncode != 0:
                 message.edit_text(
-                    f"❌ Gagal melakukan git pull:\n```\n{pull_result.stderr}```", 
+                    f"❌ Gagal melakukan git pull:\n```\n{escape_markdown(pull_result.stderr)}```", 
                     parse_mode='Markdown'
                 )
                 return
@@ -873,7 +873,7 @@ class bot_timer():
                     message.edit_text("⚠️ Berhasil pull tapi gagal mengembalikan perubahan lokal. Silakan cek git stash list.")
                     return
                     
-            prev_msg = f"✅ Pembaruan berhasil!\nBranch: `{current_branch}`\n📝 Git pull output:\n```\n{pull_result.stdout}\n```"
+            prev_msg = f"✅ Pembaruan berhasil!\nBranch: `{current_branch}`\n📝 Git pull output:\n```\n{escape_markdown(pull_result.stdout)}\n```"
             
             with open(RESTART_FILE, 'w') as f:
                 json.dump({'cid': message.chat.id, 'message_id': message.message_id, 'msg': prev_msg}, f)
