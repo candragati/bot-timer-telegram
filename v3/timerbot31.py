@@ -17,7 +17,7 @@ import io
 import contextlib
 import threading
 import requests
-from config import *
+from config import Config, eksekusi, db, cur
 from modul import me,bio,afk,qotd,langdetect,setting,berita,rekam,asl,bantuan,media, reputasi, kawalCorona
 from modul.kamus import kamus
 from tempfile import TemporaryDirectory
