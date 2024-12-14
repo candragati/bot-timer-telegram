@@ -106,7 +106,7 @@ class bot_timer():
             if os.path.exists(RESTART_FILE):
                 with open(RESTART_FILE, 'r') as f:
                     data = json.load(f)
-                    chat_id = data.get('chat_id')
+                    chat_id = data.get('cid')
                     if chat_id:
                         bot = Bot(token = Config.TOKEN)
                         text = f"{data['msg']}\n✅ Bot berhasil direstart!"
@@ -661,12 +661,7 @@ class bot_timer():
             prev_msg = f"✅ Pembaruan berhasil!\nBranch: `{current_branch}`\n📝 Git pull output::\n```\n{pull_result}\n```"
             
             with open(RESTART_FILE, 'w') as f:
-                data = dict(
-                    chat_id=message.chat.id,
-                    message_id=message.message_id,
-                    msg=prev_msg
-                )
-                json.dump(data, f)
+                json.dump({'cid': message.chat.id, 'message_id': message.message_id, 'msg': prev_msg}, f)
             prev_msg += "\n🔄 Memulai ulang bot..."
             message.edit_text(
                 prev_msg,
