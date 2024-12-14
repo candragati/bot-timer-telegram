@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from urllib.parse import urlparse, quote
 from check_safety_code import check_code_safety
 from logging.handlers import RotatingFileHandler
+import random
 import traceback
 import requests
 import signal
