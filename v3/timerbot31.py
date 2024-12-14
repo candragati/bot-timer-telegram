@@ -383,28 +383,6 @@ class bot_timer():
             'user': update.effective_user,
         })
 
-        def telegram_obj_to_dict(obj):
-            if hasattr(obj, '__dict__'):
-                d = {}
-                for key, value in obj.__dict__.items():
-                    if key.startswith('_'):
-                        continue
-                    d[key] = telegram_obj_to_dict(value)
-                return d
-            elif isinstance(obj, (list, tuple)):
-                return [telegram_obj_to_dict(item) for item in obj]
-            elif isinstance(obj, dict):
-                return {k: telegram_obj_to_dict(v) for k, v in obj.items()}
-            elif isinstance(obj, str):
-                if obj.startswith('{') and obj.endswith('}'):
-                    try:
-                        return json.loads(obj.replace("'", '"'))
-                    except:
-                        return obj
-                return obj
-            else:
-                return obj
-                
         def _meval(code, globs):
             locs = {}
             globs = globs.copy()
@@ -487,10 +465,12 @@ class bot_timer():
                 
                 if result is not None:
                     self.local_vars['_'] = result
-                    if isinstance(result, (dict, list, tuple, set)):
-                        result = json.dumps(telegram_obj_to_dict(result), indent=2, default=str)
+                    if isinstance(result, (Message, Update))
+                        result = json.dumps(result.to_dict(), indent=2, default=str)
+                    elif isinstance(result, (dict, list, tuple, set)):
+                        result = json.dumps(result, indent=2, default=str)
                     elif hasattr(result, '__dict__') and not isinstance(result, type):
-                        result = json.dumps(telegram_obj_to_dict(result), indent=2, default=str)
+                        result = json.dumps(result.__dict__, indent=2, default=str)
                     
             except Exception:
                 traceback.print_exc(file=stderr_buf)
