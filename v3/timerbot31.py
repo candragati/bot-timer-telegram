@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 SUDO = [582005141, 377596941]
 RESTART_FILE = '/tmp/bot_restart_info.json'
 
+
 class bot_timer():
     def __init__(self):
         self.koneksiDatabase()
