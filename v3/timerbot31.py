@@ -396,7 +396,7 @@ class bot_timer():
             sosmed = "api/tiktok"
         else:                
             return
-        await update.message.reply_text(args)
+        
         arsip = os.environ.get('API_SOCMED', None)
     
         if not arsip:
@@ -411,7 +411,7 @@ class bot_timer():
         link = f"{arsip}{sosmed}{endpoint}"
         
         logger.info(f"[{datetime.now()}] Making API request to: {link}")
-        update.message.reply_text(f"[{datetime.now()}] Making API request to: {link}")
+        # update.message.reply_text(f"[{datetime.now()}] Making API request to: {link}")
         try:
             req = requests.get(link).json()
         except Exception as e:
