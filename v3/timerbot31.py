@@ -34,11 +34,50 @@ import html
 load_dotenv()
 
 pathDB = "database"
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
-logger = logging.getLogger(__name__)
 SUDO = [582005141, 377596941]
 RESTART_FILE = '/tmp/bot_restart_info.json'
 
+os.makedirs('logs', exist_ok=True)
+
+def setup_logging():
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
+    file_handler = RotatingFileHandler(
+        'logs/srabat.log',
+        maxBytes=10*1024*1024,  # 10MB
+        backupCount=5,
+        encoding='utf-8'
+    )
+    file_handler.setFormatter(formatter)
+    file_handler.setLevel(logging.INFO)
+
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(formatter)
+    console_handler.setLevel(logging.INFO)
+
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
+    sys.stdout = StreamToLogger(logger, logging.INFO)
+    sys.stderr = StreamToLogger(logger, logging.ERROR)
+
+    def handle_exception(exc_type, exc_value, exc_traceback):
+        if issubclass(exc_type, KeyboardInterrupt):
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
+            return
+        logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+
+    sys.excepthook = handle_exception
+
+    return logger
+    
+logger = setup_logging()
 
 class bot_timer():
     def __init__(self):
@@ -528,7 +567,58 @@ class bot_timer():
             for i in range(0, len(successful_medias), CHUNK_SIZE):
                 chunk = successful_medias[i:i + CHUNK_SIZE]
                 bot.send_media_group(chat_id=chat_id, media=chunk)
-            
+    
+    def get_log(self, update, context):
+        wait_msg = update.message.reply_text('wait...')
+        directory_path = 'logs'
+        
+        try:
+            files = os.listdir(directory_path)
+        except FileNotFoundError:
+            wait_msg.delete()
+            return update.message.reply_text("Logs directory not found")
+        except Exception as e:
+            wait_msg.delete()
+            return update.message.reply_text(f"Error accessing logs directory: {str(e)}")
+    
+        for file in files:
+            file_path = os.path.join(directory_path, file)
+            if os.path.isfile(file_path):
+                try:
+                    if '-cut' in update.message.text:
+                        match = re.search(r'\d+', update.message.text)
+                        num = int(match.group()) if match else 100
+                        
+                        with open(file_path, 'r') as f:
+                            lines = f.readlines()
+                            last_lines = ''.join(lines[-num:])
+                        
+                        bio = io.BytesIO(last_lines.encode())
+                        bio.name = f"{file}_last_{num}_lines.txt"
+                        
+                        update.message.reply_document(
+                            document=bio,
+                            filename=bio.name,
+                            caption=f"Last {num} lines of {file}"
+                        )
+                    else:
+                        with open(file_path, 'rb') as f:
+                            update.message.reply_document(
+                                document=f,
+                                filename=file,
+                                caption=f"Full log file: {file}"
+                            )
+                            
+                except Exception as e:
+                    update.message.reply_text(
+                        f"Failed to send log file '{file}': {str(e)}"
+                    )
+        
+        try:
+            wait_msg.delete()
+        except:
+            pass
+    
     def start(self,update,context):
         try:
             z = self.t1.is_alive()
