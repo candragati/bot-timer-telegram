@@ -779,6 +779,7 @@ class bot_timer():
                                 opened_files.append(thumbnail['thumb'])
                                 if '.heic' in media.thumb:
                                     bot.send_message(Config.BOT_CHAT_ID, thumb_result['file'])
+                                    bot.send_photo(Config.BOT_CHAT_ID, thumbnail['thumb'])
                             duration = round(MediaInfo.parse(media_result['file']).tracks[0].duration / 1000)
                             
                             media_obj = InputMediaVideo(
