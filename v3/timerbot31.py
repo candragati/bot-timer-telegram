@@ -709,6 +709,7 @@ class bot_timer():
                         f.write(chunk)
                         
             if '.heic' in media_url:
+                register_heif_opener()
                 image = Image.open(filepath)
                 image = image.convert('RGB')
                 filepath = filepath.rsplit('.', 1)[0] + '.jpg'
