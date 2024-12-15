@@ -605,7 +605,7 @@ class bot_timer():
     def needs_escaping(self, text: str) -> bool:
         return any(char in text for char in self.SPECIAL_CHARS)
     
-    def safe_markdown_formatting(text: str) -> str:
+    def safe_markdown_formatting(self, text: str) -> str:
         FORMATTING_PATTERNS = [
             ('**', 'bold'),
             ('__', 'italic'),
