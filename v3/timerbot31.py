@@ -614,29 +614,11 @@ class bot_timer():
             ('```', 'pre'),
         ]
         
-        link_placeholders = {}
-        link_patterns = [
-            r'\[\{([^}]+)\}\]\(([^)]+)\)',  
-            r'\[([^\]]+)\]\(([^)]+)\)'      
-        ]
-        
-        for pattern in link_patterns:
-            matches = re.finditer(pattern, text)
-            for i, match in enumerate(matches):
-                placeholder = f'||link{i}||'
-                text_part = match.group(1)
-                url_part = match.group(2)
-                
-                link_placeholders[placeholder] = (text_part, url_part)
-                
-                text = text.replace(match.group(0), placeholder)
-    
         for pattern, placeholder in FORMATTING_PATTERNS:
             text = text.replace(pattern, f'||{placeholder}||')
         
-        for char in self.SPECIAL_CHARS:
-            text = text.replace(char, f'\\{char}')
-    
+        text = self.escape_markdownV2(text)
+        
         formatting_map = {
             '||bold||': '*',
             '||italic||': '_',
@@ -647,22 +629,6 @@ class bot_timer():
         
         for placeholder, format_char in formatting_map.items():
             text = text.replace(placeholder, format_char)
-        
-        for placeholder, (text_part, url_part) in link_placeholders.items():
-            escaped_text = text_part
-            escaped_url = url_part
-            
-            if not ('{' in text_part and '}' in text_part):
-                for char in self.SPECIAL_CHARS:
-                    if char not in ['[', ']', '(', ')', '{', '}']:  
-                        escaped_text = escaped_text.replace(char, f'\\{char}')
-            
-            url_special_chars = ['(', ')', ' ']
-            for char in url_special_chars:
-                escaped_url = escaped_url.replace(char, f'\\{char}')
-            
-            formatted_link = f'[{escaped_text}]({escaped_url})'
-            text = text.replace(placeholder, formatted_link)
         
         return text
     
@@ -704,8 +670,8 @@ class bot_timer():
         def _caption(caption):
             if caption and len(caption) >= 1024:
                 read_more = 'Read More...'
-                caption_full = caption[:1024 - len(read_more)] + f"[{read_more}]({args})" 
-                caption = self.safe_markdown_formatting(caption_full) if self.needs_escaping(caption_full) else caption_full
+                caption = self.safe_markdown_formatting(caption) if self.needs_escaping(caption) else caption
+                caption = caption[:1024 - len(read_more)] + f"[{read_more}]({args})" if len(caption) > 1024 else caption
             return caption
             
         try:
