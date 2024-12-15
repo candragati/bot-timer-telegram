@@ -646,7 +646,7 @@ class bot_timer():
             medias = []
     
             if sosmed == "api/tiktok" and req.get('video'):
-                medias.append(InputMediaVideo(req['video'][0], caption=_caption(req.get('caption')), thumbnail=req.get('thumbnail')))
+                medias.append(InputMediaVideo(req['video'][0], caption=_caption(req.get('caption')), thumb=req.get('thumbnail')))
             else:
                 media_results = req.get('media') or req.get('photos')
                 total_media_res = len(media_results) if media_results else 0
@@ -667,11 +667,11 @@ class bot_timer():
                             else:
                                 thumb = m.get('thumbnail')
                                 if sosmed == 'api/thread':
-                                    medias.append(InputMediaVideo(m['media_url'], caption=caption, thumbnail=thumb))
+                                    medias.append(InputMediaVideo(m['media_url'], caption=caption, thumb=thumb))
                                 elif sosmed == "api/fb":
-                                    medias.append(InputMediaVideo(m['sd_url'], caption=caption, thumbnail=thumb))
+                                    medias.append(InputMediaVideo(m['sd_url'], caption=caption, thumb=thumb))
                                 else:
-                                    medias.append(InputMediaVideo(m['url'], caption=caption, thumbnail=thumb))
+                                    medias.append(InputMediaVideo(m['url'], caption=caption, thumb=thumb))
                         except Exception as e:
                             logger.error(f"[{datetime.datetime.now()}] Error processing media item {i+1}: {str(e)}")
     
