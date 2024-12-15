@@ -779,15 +779,15 @@ class bot_timer():
                                 parse_mode='Markdown'
                             )
                         elif media.type == 'video':
-                            thumbnail = {'thumb': None}
-                            if '.heic' in media.thumb:
-                                bot.send_message(Config.BOT_CHAT_ID, thumb_result)
+                            thumbnail = {}
+                            # if '.heic' in media.thumb:
+                            #     bot.send_message(Config.BOT_CHAT_ID, thumb_result)
                             if thumb_result.get('success'):
                                 thumbnail['thumb'] = open(thumb_result['file'], 'rb')
                                 opened_files.append(thumbnail['thumb'])
-                                if '.heic' in media.thumb:
-                                    bot.send_message(Config.BOT_CHAT_ID, thumb_result['file'])
-                                    bot.send_photo(Config.BOT_CHAT_ID, thumbnail['thumb'])
+                                # if '.heic' in media.thumb:
+                                #     bot.send_message(Config.BOT_CHAT_ID, thumb_result['file'])
+                                #     bot.send_photo(Config.BOT_CHAT_ID, thumbnail['thumb'])
                             duration = round(MediaInfo.parse(media_result['file']).tracks[0].duration / 1000)
                             
                             media_obj = InputMediaVideo(
@@ -795,7 +795,7 @@ class bot_timer():
                                 caption=caption, 
                                 parse_mode='Markdown',
                                 duration=duration,
-                                thumb=thumbnail['thumb']
+                                **thumbnail
                             )
                         successful_medias.append(media_obj)
 
