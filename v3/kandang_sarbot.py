@@ -1,82 +1,125 @@
+from config import Config
 import subprocess
-from datetime import datetime
 import time
 import threading
 import tarfile
 import os
 import requests
-from config import *
+import datetime
+import signal
 
-namaLog = "sarbot.log"
+BOT_TOKEN = Config.TOKEN 
+BOT_CHAT_ID = -1001337729941       
 
-def tanggal():
-    now = datetime.now()
-    return now.strftime('%Y-%m-%d %X')
+LOG_FILE = "sarbot.log"  # Nama file log
 
-def tulisLogAkhir(teks):
-    file = open(namaLog,'r')
-    lines = file.readlines()[:-1]
-    lines.append(f"{tanggal()} {teks}\nreading...")
-    file.close()
-    file = open(namaLog,'w')
-    file.writelines(lines)
-    file.close()
-    
-def waktu():
+def get_current_time_str():
+    return datetime.datetime.now().strftime('%Y-%m-%d %X')
+
+def write_log_entry(text):
+    try:
+        with open(LOG_FILE, 'r') as file:
+            lines = file.readlines()
+            # Hapus baris terakhir jika file tidak kosong
+            if lines:
+                lines = lines[:-1]
+    except FileNotFoundError:
+        # Jika file log tidak ada, mulai dengan daftar kosong
+        lines = []
+
+    # Tambahkan entri log baru
+    lines.append(f"{get_current_time_str()} {text}\nreading...\n")
+
+    with open(LOG_FILE, 'w') as file:
+        file.writelines(lines)
+
+def backup_and_send():
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%d%m%Y-%H%M%S")
+    backup_filename = f"sarbot{timestamp}.tar.gz"
+
+    # Membuat file tar.gz dengan file .py dan folder 'database'
+    with tarfile.open(backup_filename, "w:gz") as tar:
+        for root, dirs, files in os.walk(os.getcwd()):
+            for name in files:
+                if name.endswith(".py") or name == 'database':
+                    tar.add(os.path.join(root, name))
+
+    # Menghitung durasi proses backup
+    end_time = datetime.datetime.now()
+    duration_seconds = int((end_time - now).total_seconds())
+
+    # Mempersiapkan pengiriman file melalui Telegram
+    with open(backup_filename, 'rb') as file_data:
+        send_url = f'https://api.telegram.org/bot{BOT_TOKEN}/sendDocument'
+        data = {
+            'chat_id': BOT_CHAT_ID,
+            'parse_mode': 'HTML',
+            'caption': f"{now}\n{end_time}\n\n{duration_seconds} detik"
+        }
+        files = {'document': file_data}
+
+        response = requests.post(send_url, data=data, files=files)
+        if response.status_code != 200:
+            print(f"Gagal mengirim dokumen: {response.status_code}, {response.text}")
+
+def schedule_backup():
     while True:
-        time.sleep(40)
-        sekarang    = datetime.now()
-        if sekarang.hour == 18 and sekarang.minute == 00:
-            now     = datetime.now()
-            tanggal = now.strftime("%d%m%Y-%H%M%S")
-            namaFile= f"sarbot{tanggal}.tar.gz"
-            tar     = tarfile.open(namaFile, "w:gz")
+        now = datetime.datetime.now()
+        # Atur waktu target ke pukul 18:00 hari ini
+        target_time = now.replace(hour=18, minute=0, second=0, microsecond=0)
+        # Jika sudah melewati pukul 18:00, jadwalkan untuk hari berikutnya
+        if now >= target_time:
+            target_time += datetime.timedelta(days=1)
+        sleep_seconds = (target_time - now).total_seconds()
+        print(f"Backup dijadwalkan dalam {sleep_seconds} detik.")
+        time.sleep(sleep_seconds)
+        backup_and_send()
 
-            for root, dirs, files in os.walk(os.getcwd()):
-                for name in files:
-                    if (name.endswith((".py",".py")) or name == 'database'):
-                        tar.add(os.path.join(root, name))
-            tar.close()
-
-            bot_token   = Config.TOKEN
-            bot_chatId  = -1001337729941
-            akhir       = datetime.now()
-            selisih     = (akhir-now).seconds
-
-            a = open(namaFile, 'rb')
-            send_document = 'https://api.telegram.org/bot' + bot_token +'/sendDocument?'
-            data = {
-              'chat_id'     : bot_chatId,
-              'parse_mode'  : 'HTML',
-              'caption'     : f"{now}\n{akhir}\n\n{selisih} detik"
-               }
-
-            r = requests.post(send_document, data=data, files={'document': a},stream=True)
-
-def cetak():
-    filename = '~/v3/timerbot31.py'
-    i = 0
+def monitor_script():
+    script_path = os.path.expanduser('~/v3/timerbot31.py')
+    script_dir = os.path.dirname(script_path)
+    restart_count = 0
     while True:
-        p = subprocess.Popen('python3 '+filename, shell=True).wait()
-        if p != 0:            
-            i += 1
-            teks = f"restart ke {i}"
-            tulisLogAkhir(teks)
+        # Sebelum menjalankan script, lakukan git pull origin master
+        try:
+            subprocess.run(['git', 'pull', 'origin', 'master'], cwd=script_dir, check=True)
+            print("Git pull berhasil.")
+        except subprocess.CalledProcessError as e:
+            print(f"Gagal melakukan git pull: {e}")
+        process = subprocess.Popen(['python3', script_path], preexec_fn=os.setsid)
+        try:
+            exit_code = process.wait()
+        except KeyboardInterrupt:
+            print("Diterima KeyboardInterrupt. Menghentikan script...")
+            # Menghentikan semua proses dalam grup proses
+            os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+            break
+        if exit_code != 0:
+            # Jika script keluar dengan error, restart
+            restart_count += 1
+            log_text = f"restart ke {restart_count}"
+            write_log_entry(log_text)
+            print(f"Script keluar dengan kode {exit_code}. Me-restart...")
+            # Menghentikan semua proses anak yang tersisa
+            os.killpg(os.getpgid(process.pid), signal.SIGTERM)
             time.sleep(2)
-            continue
         else:
+            # Keluar dari loop jika script selesai dengan sukses
+            print("Script selesai dengan sukses.")
             break
 
+def main():
+    # Mulai fungsi monitor_script dan schedule_backup dalam thread terpisah
+    threading.Thread(target=monitor_script, daemon=True).start()
+    threading.Thread(target=schedule_backup, daemon=True).start()
 
-# Create an event to signal the threads to stop
-event = threading.Event()
+    # Menjaga thread utama tetap berjalan
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("Program dihentikan oleh pengguna.")
 
-# Start the threads
-threading.Thread(target=cetak, daemon=True).start()
-# threading.Thread(target=waktu, daemon=True).start()
-
-# Wait for the threads to finish
-while not event.is_set():
-    time.sleep(1)
-
-
+if __name__ == "__main__":
+    main()
