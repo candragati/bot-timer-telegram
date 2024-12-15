@@ -813,7 +813,7 @@ class bot_timer():
                             media_obj = InputMediaPhoto(
                                 f, 
                                 caption=caption, 
-                                parse_mode='Markdown'
+                                parse_mode='MarkdownV2'
                             )
                         elif media.type == 'video':
                             thumbnail = {}
@@ -830,7 +830,7 @@ class bot_timer():
                             media_obj = InputMediaVideo(
                                 f, 
                                 caption=caption, 
-                                parse_mode='Markdown',
+                                parse_mode='MarkdownV2',
                                 duration=duration,
                                 **thumbnail
                             )
