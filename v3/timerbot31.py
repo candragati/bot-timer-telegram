@@ -709,7 +709,9 @@ class bot_timer():
                         f.write(chunk)
                         
             if '.heic' in media_url:
-                filepath = self.convert_heic_to_jpeg(filepath)
+                image = Image.open(filepath)
+                image = image.convert('RGB')
+                image.save(filepath, 'JPEG', quality=95)
                 
             return {
                 'file': filepath,
