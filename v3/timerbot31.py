@@ -597,15 +597,13 @@ class bot_timer():
                 except BadRequest:
                     update.message.reply_text(escape_markdown(error_message), parse_mode='Markdown')
 
-    @staticmethod
-    def escape_markdownV2(text: str) -> str:
+    def escape_markdownV2(self, text: str) -> str:
         for char in self.SPECIAL_CHARS:
             text = text.replace(char, f'\\{char}')
         return text
         
-    @staticmethod
-    def needs_escaping(text: str) -> bool:
-        return any(char in text for char in SPECIAL_CHARS)
+    def needs_escaping(self, text: str) -> bool:
+        return any(char in text for char in self.SPECIAL_CHARS)
     
     def safe_markdown_formatting(self, text: str) -> str:
         FORMATTING_PATTERNS = [
