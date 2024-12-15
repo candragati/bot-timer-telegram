@@ -109,6 +109,7 @@ logger = setup_logging()
 
 class bot_timer():
     def __init__(self):
+        self.SPECIAL_CHARS = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
         self.koneksiDatabase()
         self.t1 = threading.Thread(target=self.timer)
         self.t1.start()
@@ -595,7 +596,44 @@ class bot_timer():
                     update.message.reply_text(error_message, parse_mode='Markdown')
                 except BadRequest:
                     update.message.reply_text(escape_markdown(error_message), parse_mode='Markdown')
-                    
+
+    @staticmethod
+    def escape_markdownV2(text: str) -> str:
+        for char in self.SPECIAL_CHARS:
+            text = text.replace(char, f'\\{char}')
+        return text
+        
+    @staticmethod
+    def needs_escaping(text: str) -> bool:
+        return any(char in text for char in SPECIAL_CHARS)
+    
+    def safe_markdown_formatting(self, text: str) -> str:
+        FORMATTING_PATTERNS = [
+            ('**', 'bold'),
+            ('__', 'italic'),
+            ('~~', 'strikethrough'),
+            ('`', 'code'),
+            ('```', 'pre'),
+        ]
+        
+        for pattern, placeholder in FORMATTING_PATTERNS:
+            text = text.replace(pattern, f'||{placeholder}||')
+        
+        text = self.escape_markdownV2(text)
+        
+        formatting_map = {
+            '||bold||': '*',
+            '||italic||': '_',
+            '||strikethrough||': '~',
+            '||code||': '`',
+            '||pre||': '```'
+        }
+        
+        for placeholder, format_char in formatting_map.items():
+            text = text.replace(placeholder, format_char)
+        
+        return text
+    
     def cmedia(self, update, context):
         if not update.message: return
         message = update.message.text
@@ -633,13 +671,9 @@ class bot_timer():
                 
         def _caption(caption):
             if caption and len(caption) >= 1024:
-                if re.search(r'[\\*_\[\]()~>#+\-=\|{}.!]', caption):
-                    read_more = dot = '...'
-                    caption = escape_markdown(caption)
-                else:
-                    read_more = 'Read More...'
-                    dot = f"[{read_more}]({args})"                
-                caption = caption[:1024 - len(read_more)] + dot
+                read_more = 'Read More...'
+                caption_full = caption[:1024 - len(read_more)] + f"[{read_more}]({args})" 
+                caption = self.safe_markdown_formatting() if needs_escaping(caption_full) else caption_full
             return caption
             
         try:
