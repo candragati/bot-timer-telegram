@@ -671,7 +671,7 @@ class bot_timer():
             if caption and len(caption) >= 1024:
                 read_more = 'Read More...'
                 caption_full = caption[:1024 - len(read_more)] + f"[{read_more}]({args})" 
-                caption = self.safe_markdown_formatting() if needs_escaping(caption_full) else caption_full
+                caption = self.safe_markdown_formatting(caption_full) if self.needs_escaping(caption_full) else caption_full
             return caption
             
         try:
