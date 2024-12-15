@@ -709,11 +709,7 @@ class bot_timer():
                         f.write(chunk)
                         
             if '.heic' in media_url:
-                register_heif_opener()
-                image = Image.open(filepath)
-                image = image.convert('RGB')
-                filepath = filepath.rsplit('.', 1)[0] + '.jpg'
-                image.save(filepath, 'JPEG', quality=95)
+                filepath = self.convert_heic_to_jpeg(filepath, quality=72) or filepath
                 
             return {
                 'file': filepath,
@@ -729,15 +725,16 @@ class bot_timer():
             }
 
     @staticmethod
-    def convert_heic_to_jpeg(input_path):
+    def convert_heic_to_jpeg(input_path, quality=95):
         directory = os.path.dirname(input_path)
         filename = os.path.splitext(os.path.basename(input_path))[0]
         output_path = os.path.join(directory, f"{filename}.jpg")
     
         try:
+            register_heif_opener()
             image = Image.open(input_path)
             image = image.convert('RGB')
-            image.save(output_path, 'JPEG', quality=95)
+            image.save(output_path, 'JPEG', quality=quality)
             return output_path
         except Exception as e:
             print(f"Conversion error: {e}")
