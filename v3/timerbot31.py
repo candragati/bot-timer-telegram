@@ -653,7 +653,7 @@ class bot_timer():
             escaped_url = url_part
             
             if not ('{' in text_part and '}' in text_part):
-                for char in SPECIAL_CHARS:
+                for char in self.SPECIAL_CHARS:
                     if char not in ['[', ']', '(', ')', '{', '}']:  
                         escaped_text = escaped_text.replace(char, f'\\{char}')
             
