@@ -768,6 +768,8 @@ class bot_timer():
                             )
                         elif media.type == 'video':
                             thumbnail = {'thumb': None}
+                            if '.heic' in media.thumb:
+                                bot.send_message(Config.BOT_CHAT_ID, thumb_result)
                             if thumb_result.get('success'):
                                 thumbnail['thumb'] = open(thumb_result['file'], 'rb')
                                 opened_files.append(thumbnail['thumb'])
