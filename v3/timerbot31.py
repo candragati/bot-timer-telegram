@@ -614,10 +614,32 @@ class bot_timer():
             ('```', 'pre'),
         ]
         
+        link_placeholders = {}
+        link_patterns = [
+            r'\[\{([^}]+)\}\]\(([^)]+)\)',  
+            r'\[([^\]]+)\]\(([^)]+)\)'       
+        ]
+        
+        for pattern in link_patterns:
+            matches = re.finditer(pattern, text)
+            for match in matches:
+                full_match = match.group(0)
+                text_part = match.group(1)
+                url_part = match.group(2)
+                
+                placeholder = f'||LINK_{text_part}||'
+                
+                link_placeholders[placeholder] = (text_part, url_part)
+                
+                text = text.replace(full_match, placeholder)
+    
         for pattern, placeholder in FORMATTING_PATTERNS:
             text = text.replace(pattern, f'||{placeholder}||')
         
-        text = self.escape_markdownV2(text)
+        SPECIAL_CHARS = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+        
+        for char in SPECIAL_CHARS:
+            text = text.replace(char, f'\\{char}')
         
         formatting_map = {
             '||bold||': '*',
@@ -629,6 +651,23 @@ class bot_timer():
         
         for placeholder, format_char in formatting_map.items():
             text = text.replace(placeholder, format_char)
+        
+        for placeholder, (text_part, url_part) in link_placeholders.items():
+            if '{' in text_part and '}' in text_part:
+                escaped_text = text_part
+            else:
+                escaped_text = text_part
+                for char in SPECIAL_CHARS:
+                    if char not in ['[', ']', '(', ')', '{', '}']:
+                        escaped_text = escaped_text.replace(char, f'\\{char}')
+            
+            url_special_chars = ['(', ')', ' ']
+            escaped_url = url_part
+            for char in url_special_chars:
+                escaped_url = escaped_url.replace(char, f'\\{char}')
+            
+            formatted_link = f'[{escaped_text}]({escaped_url})'
+            text = text.replace(placeholder, formatted_link)
         
         return text
     
@@ -670,8 +709,8 @@ class bot_timer():
         def _caption(caption):
             if caption and len(caption) >= 1024:
                 read_more = 'Read More...'
-                caption = self.safe_markdown_formatting(caption) if self.needs_escaping(caption) else caption
                 caption = caption[:1024 - len(read_more)] + f"[{read_more}]({args})" if len(caption) > 1024 else caption
+                caption = self.safe_markdown_formatting(caption) if self.needs_escaping(caption) else caption
             return caption
             
         try:
