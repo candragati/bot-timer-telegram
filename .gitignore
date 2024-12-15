@@ -11,5 +11,4 @@ config.py
 emojipy/*
 .env
 logs/*
-config.py
 database
