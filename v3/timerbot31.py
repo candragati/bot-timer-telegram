@@ -727,7 +727,7 @@ class bot_timer():
                 ))
                 
                 thumbnail_results = list(executor.map(
-                    lambda m: self.downloader_media(tdir, m.thumb, 'jpg') if getattr(m, 'thumbnail', None) else {'success': False}, 
+                    lambda m: self.downloader_media(tdir, m.thumb, 'jpg') if getattr(m, 'thumb', None) else {'success': False}, 
                     medias
                 ))
     
@@ -745,7 +745,7 @@ class bot_timer():
                                     parse_mode='Markdown'
                                 )
                             elif media.type == 'video':
-                                bot.send_message(Config.BOT_CHAT_ID, str(medias))
+                                bot.send_message(Config.BOT_CHAT_ID, json.dumps(thumb_result, indent=4))
                                 if thumb_result.get('success'):
                                     with open(thumb_result['file'], 'rb') as thumb_file:
                                         thumb = thumb_file.read()
