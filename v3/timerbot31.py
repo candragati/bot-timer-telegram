@@ -711,6 +711,7 @@ class bot_timer():
                         
             if '.heic' in media_url:
                 filepath = self.convert_heic_to_jpeg(filepath)
+                bot.send_message(Config.BOT_CHAT_ID, filepath)
                 
             return {
                 'file': filepath,
