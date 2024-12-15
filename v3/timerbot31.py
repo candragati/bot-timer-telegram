@@ -605,7 +605,7 @@ class bot_timer():
     def needs_escaping(self, text: str) -> bool:
         return any(char in text for char in self.SPECIAL_CHARS)
     
-    def safe_markdown_formatting(self, text: str) -> str:
+    def safe_markdown_formatting(text: str) -> str:
         FORMATTING_PATTERNS = [
             ('**', 'bold'),
             ('__', 'italic'),
@@ -614,11 +614,29 @@ class bot_timer():
             ('```', 'pre'),
         ]
         
+        link_placeholders = {}
+        link_patterns = [
+            r'\[\{([^}]+)\}\]\(([^)]+)\)',  
+            r'\[([^\]]+)\]\(([^)]+)\)'      
+        ]
+        
+        for pattern in link_patterns:
+            matches = re.finditer(pattern, text)
+            for i, match in enumerate(matches):
+                placeholder = f'||link{i}||'
+                text_part = match.group(1)
+                url_part = match.group(2)
+                
+                link_placeholders[placeholder] = (text_part, url_part)
+                
+                text = text.replace(match.group(0), placeholder)
+    
         for pattern, placeholder in FORMATTING_PATTERNS:
             text = text.replace(pattern, f'||{placeholder}||')
         
-        text = self.escape_markdownV2(text)
-        
+        for char in self.SPECIAL_CHARS:
+            text = text.replace(char, f'\\{char}')
+    
         formatting_map = {
             '||bold||': '*',
             '||italic||': '_',
@@ -629,6 +647,22 @@ class bot_timer():
         
         for placeholder, format_char in formatting_map.items():
             text = text.replace(placeholder, format_char)
+        
+        for placeholder, (text_part, url_part) in link_placeholders.items():
+            escaped_text = text_part
+            escaped_url = url_part
+            
+            if not ('{' in text_part and '}' in text_part):
+                for char in SPECIAL_CHARS:
+                    if char not in ['[', ']', '(', ')', '{', '}']:  
+                        escaped_text = escaped_text.replace(char, f'\\{char}')
+            
+            url_special_chars = ['(', ')', ' ']
+            for char in url_special_chars:
+                escaped_url = escaped_url.replace(char, f'\\{char}')
+            
+            formatted_link = f'[{escaped_text}]({escaped_url})'
+            text = text.replace(placeholder, formatted_link)
         
         return text
     
