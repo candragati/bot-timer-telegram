@@ -745,19 +745,19 @@ class bot_timer():
                                     parse_mode='Markdown'
                                 )
                             elif media.type == 'video':
-                                bot.send_message(Config.BOT_CHAT_ID, json.dumps(thumb_result, indent=4))
+                                # bot.send_message(Config.BOT_CHAT_ID, json.dumps(thumb_result, indent=4))
+                                thumbnail = {'thumb': None}
                                 if thumb_result.get('success'):
                                     with open(thumb_result['file'], 'rb') as thumb_file:
-                                        thumb = thumb_file
-                                    logger.info(thumb_result['file'])       
+                                        thumbnail['thumb'] = thumb_file
                                 duration = round(MediaInfo.parse(media_result['file']).tracks[0].duration / 1000)
                                 
                                 media_obj = InputMediaVideo(
                                     f, 
                                     caption=caption, 
                                     parse_mode='Markdown',
-                                    thumb=thumb,
-                                    duration=duration
+                                    duration=duration,
+                                    **thumbnail
                                 )
                             successful_medias.append(media_obj)
             
