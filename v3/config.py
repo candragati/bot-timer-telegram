@@ -11,7 +11,8 @@ class Config():
     TOKEN    = os.environ.get('TOKEN', None)
     BOT_ID   = os.environ.get('BOT_ID', None) 
     APINEWS  = os.environ.get('APINEWS', None)
-    ICETEA   = os.environ.get('ICETEA', None)    
+    ICETEA   = os.environ.get('ICETEA', None)
+    BOT_CHAT_ID = os.environ.get('BOT_CHAT_ID', None)
     updater  = Updater(TOKEN,use_context = True,workers = 8,request_kwargs = {'read_timeout':600,'connect_timeout':600})
     dp = updater.dispatcher
     
