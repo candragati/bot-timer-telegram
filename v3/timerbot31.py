@@ -632,11 +632,14 @@ class bot_timer():
         link = f"{arsip}{sosmed}{endpoint}"
                 
         def _caption(caption):
-            read_more = '...'
             if caption and len(caption) >= 1024:
-                caption = caption[:1024 - len(read_more)] + read_more
-            if caption:
-                caption = escape_markdown(caption)
+                if re.search(r'[\\*_\[\]()~>#+\-=\|{}.!]', caption):
+                    read_more = dot = '...'
+                    caption = escape_markdown(caption)
+                else:
+                    read_more = 'Read More...'
+                    dot = f"[{read_more}]({args})"                
+                caption = caption[:1024 - len(read_more)] + dot
             return caption
             
         try:
