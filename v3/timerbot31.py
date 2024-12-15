@@ -745,7 +745,7 @@ class bot_timer():
                                     parse_mode='Markdown'
                                 )
                             elif media.type == 'video':
-                                bot.send_message(Config.BOT_CHAT_ID, json.dumps(thumb_result, indent=4))
+                                bot.send_message(Config.BOT_CHAT_ID, json.dumps(medias, indent=4))
                                 if thumb_result.get('success'):
                                     with open(thumb_result['file'], 'rb') as thumb_file:
                                         thumb = thumb_file.read()
