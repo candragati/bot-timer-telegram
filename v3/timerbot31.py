@@ -709,7 +709,7 @@ class bot_timer():
                         f.write(chunk)
                         
             if '.heic' in media_url:
-                filepath = self.convert_heic_to_jpeg(filepath, quality=72) or filepath
+                filepath = self.convert_heic_to_jpeg(filepath) or filepath
                 
             return {
                 'file': filepath,
@@ -725,21 +725,32 @@ class bot_timer():
             }
 
     @staticmethod
-    def convert_heic_to_jpeg(input_path, quality=95):
-        directory = os.path.dirname(input_path)
-        filename = os.path.splitext(os.path.basename(input_path))[0]
-        output_path = os.path.join(directory, f"{filename}.jpg")
-    
+    def convert_heic_to_jpeg(input_path, max_size=320, quality=75):
         try:
             register_heif_opener()
             image = Image.open(input_path)
             image = image.convert('RGB')
-            image.save(output_path, 'JPEG', quality=quality)
-            return output_path
+            
+            width, height = image.size
+            ratio = min(max_size/width, max_size/height)
+            new_size = (int(width * ratio), int(height * ratio))
+            
+            image = image.resize(new_size, Image.Resampling.LANCZOS)
+            
+            new_path = input_path.rsplit('.', 1)[0] + '.jpg'
+            
+            current_quality = quality
+            while current_quality > 5: 
+                image.save(new_path, 'JPEG', quality=current_quality, optimize=True)
+                if os.path.getsize(new_path) <= 200 * 1024:
+                    break
+                current_quality -= 5
+                
+            return new_path
         except Exception as e:
-            print(f"Conversion error: {e}")
-        return None
-        
+            print(f"HEIC Conversion error: {str(e)}")
+            return None
+            
     def reply_downloaded_media_chunk(self, bot, chat_id, medias):
         with TemporaryDirectory() as tdir:
             with ThreadPoolExecutor(max_workers=5) as executor:
