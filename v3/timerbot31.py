@@ -109,7 +109,6 @@ logger = setup_logging()
 
 class bot_timer():
     def __init__(self):
-        self.SPECIAL_CHARS = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
         self.koneksiDatabase()
         self.t1 = threading.Thread(target=self.timer)
         self.t1.start()
@@ -596,80 +595,6 @@ class bot_timer():
                     update.message.reply_text(error_message, parse_mode='Markdown')
                 except BadRequest:
                     update.message.reply_text(escape_markdown(error_message), parse_mode='Markdown')
-
-    def escape_markdownV2(self, text: str) -> str:
-        for char in self.SPECIAL_CHARS:
-            text = text.replace(char, f'\\{char}')
-        return text
-        
-    def needs_escaping(self, text: str) -> bool:
-        return any(char in text for char in self.SPECIAL_CHARS)
-    
-    def safe_markdown_formatting(self, text: str) -> str:
-        FORMATTING_PATTERNS = [
-            ('**', 'bold'),
-            ('__', 'italic'),
-            ('~~', 'strikethrough'),
-            ('`', 'code'),
-            ('```', 'pre'),
-        ]
-        
-        link_placeholders = {}
-        link_patterns = [
-            r'\[\{([^}]+)\}\]\(([^)]+)\)',  
-            r'\[([^\]]+)\]\(([^)]+)\)'       
-        ]
-        
-        for pattern in link_patterns:
-            matches = re.finditer(pattern, text)
-            for match in matches:
-                full_match = match.group(0)
-                text_part = match.group(1)
-                url_part = match.group(2)
-                
-                placeholder = f'||LINK_{text_part}||'
-                
-                link_placeholders[placeholder] = (text_part, url_part)
-                
-                text = text.replace(full_match, placeholder)
-    
-        for pattern, placeholder in FORMATTING_PATTERNS:
-            text = text.replace(pattern, f'||{placeholder}||')
-        
-        SPECIAL_CHARS = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
-        
-        for char in SPECIAL_CHARS:
-            text = text.replace(char, f'\\{char}')
-        
-        formatting_map = {
-            '||bold||': '*',
-            '||italic||': '_',
-            '||strikethrough||': '~',
-            '||code||': '`',
-            '||pre||': '```'
-        }
-        
-        for placeholder, format_char in formatting_map.items():
-            text = text.replace(placeholder, format_char)
-        
-        for placeholder, (text_part, url_part) in link_placeholders.items():
-            if '{' in text_part and '}' in text_part:
-                escaped_text = text_part
-            else:
-                escaped_text = text_part
-                for char in SPECIAL_CHARS:
-                    if char not in ['[', ']', '(', ')', '{', '}']:
-                        escaped_text = escaped_text.replace(char, f'\\{char}')
-            
-            url_special_chars = ['(', ')', ' ']
-            escaped_url = url_part
-            for char in url_special_chars:
-                escaped_url = escaped_url.replace(char, f'\\{char}')
-            
-            formatted_link = f'[{escaped_text}]({escaped_url})'
-            text = text.replace(placeholder, formatted_link)
-        
-        return text
     
     def cmedia(self, update, context):
         if not update.message: return
@@ -708,9 +633,10 @@ class bot_timer():
                 
         def _caption(caption):
             if caption and len(caption) >= 1024:
-                read_more = 'Read More...'
-                caption = caption[:1024 - len(read_more)] + f"[{read_more}]({args})" if len(caption) > 1024 else caption
-                caption = self.safe_markdown_formatting(caption) if self.needs_escaping(caption) else caption
+                read_more = '...'
+                caption = caption[:1024 - len(read_more)] + read_more if len(caption) > 1024 else caption
+            if caption:
+                caption = escape_markdown(caption)
             return caption
             
         try:
@@ -850,7 +776,7 @@ class bot_timer():
                             media_obj = InputMediaPhoto(
                                 f, 
                                 caption=caption, 
-                                parse_mode='MarkdownV2'
+                                parse_mode='Markdown'
                             )
                         elif media.type == 'video':
                             thumbnail = {}
@@ -867,7 +793,7 @@ class bot_timer():
                             media_obj = InputMediaVideo(
                                 f, 
                                 caption=caption, 
-                                parse_mode='MarkdownV2',
+                                parse_mode='Markdown',
                                 duration=duration,
                                 **thumbnail
                             )
