@@ -681,8 +681,10 @@ class bot_timer():
             if len(medias) == 0:
                 caption = req['caption']
                 update.message.reply_text(caption)
-            else:
+            else:                    
                 try:
+                    self.send_media_chunk(bot, chat_id, medias)
+                except BadRequest:
                     self.reply_downloaded_media_chunk(bot, chat_id, medias)
                 except Exception as e:
                     logger.error(f"[{datetime.datetime.now()}] Failed to send media: {str(e)}")
@@ -691,7 +693,14 @@ class bot_timer():
             error_msg = req.get('msg') or "gagal"
             logger.error(f"[{datetime.datetime.now()}] API request failed with message: {error_msg}")
             update.message.reply_text(error_msg)
-                
+
+    @staticmethod
+    def send_media_chunk(bot, chat_id, successful_medias):
+        CHUNK_SIZE = 10
+        for i in range(0, len(successful_medias), CHUNK_SIZE):
+            chunk = successful_medias[i:i + CHUNK_SIZE]
+            bot.send_media_group(chat_id=chat_id, media=chunk)
+            
     def downloader_media(self, temp_dir, media_url, ext=None):
         try:
             response = requests.get(media_url, stream=True)
@@ -800,10 +809,10 @@ class bot_timer():
                         successful_medias.append(media_obj)
 
             try:
-                CHUNK_SIZE = 10
-                for i in range(0, len(successful_medias), CHUNK_SIZE):
-                    chunk = successful_medias[i:i + CHUNK_SIZE]
-                    bot.send_media_group(chat_id=chat_id, media=chunk)
+                self.send_media_chunk(successful_medias)
+            except Exception as e:
+                logger.error(f"[{datetime.datetime.now()}] Failed to send media: {str(e)}")
+                update.message.reply_text("Failed to send media")
             finally:
                 for file in opened_files:
                     file.close()
