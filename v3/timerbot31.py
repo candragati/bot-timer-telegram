@@ -795,7 +795,7 @@ class bot_timer():
                                 caption=caption, 
                                 parse_mode='Markdown',
                                 duration=duration,
-                                **thumbnail
+                                thumb=thumbnail['thumb']
                             )
                         successful_medias.append(media_obj)
 
