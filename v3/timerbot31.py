@@ -39,6 +39,7 @@ import html
 import ast
 
 load_dotenv()
+register_heif_opener()
 
 pathDB = "database"
 SUDO = [582005141, 377596941]
