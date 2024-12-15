@@ -712,7 +712,7 @@ class bot_timer():
                 image = Image.open(filepath)
                 image = image.convert('RGB')
                 filepath = filepath.rsplit('.', 1)[0] + '.jpg'
-                image.save(new_path, 'JPEG', quality=95)
+                image.save(filepath, 'JPEG', quality=95)
                 
             return {
                 'file': filepath,
