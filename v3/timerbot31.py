@@ -727,7 +727,7 @@ class bot_timer():
                 ))
                 
                 thumbnail_results = list(executor.map(
-                    lambda m: self.downloader_media(tdir, m.thumbnail, 'jpg') if getattr(m, 'thumbnail', None) else {'success': False}, 
+                    lambda m: self.downloader_media(tdir, m.thumb, 'jpg') if getattr(m, 'thumbnail', None) else {'success': False}, 
                     medias
                 ))
     
