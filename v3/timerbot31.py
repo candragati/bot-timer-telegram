@@ -597,8 +597,8 @@ class bot_timer():
                     update.message.reply_text(escape_markdown(error_message), parse_mode='Markdown')
     
     def cmedia(self, update, context):
-        if not update.message: return
-        message = update.message.text
+        if not update.effective_message: return
+        message = update.effective_message.text
         
         args = re.search(r'(https?://[^\s]+)', message)
         if args == None:
