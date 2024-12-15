@@ -14,6 +14,8 @@ from urllib.parse import urlparse, quote
 from check_safety_code import check_code_safety
 from logging.handlers import RotatingFileHandler
 from pymediainfo import MediaInfo
+from pillow_heif import register_heif_opener
+from PIL import Image
 import random
 import traceback
 import requests
