@@ -13,3 +13,4 @@ emojipy/*
 logs/*
 kandang_sarbot.py
 config.py
+database
