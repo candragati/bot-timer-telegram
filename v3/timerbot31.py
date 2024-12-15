@@ -689,7 +689,7 @@ class bot_timer():
             logger.error(f"[{datetime.datetime.now()}] API request failed with message: {error_msg}")
             update.message.reply_text(error_msg)
                 
-    def downloader_media(self, temp_dir, media_url):
+    def downloader_media(self, temp_dir, media_url, ext=None):
         try:
             response = requests.get(media_url, stream=True)
             response.raise_for_status()
@@ -697,7 +697,7 @@ class bot_timer():
             content_type = response.headers.get('content-type', '')
             extension = '.' + (content_type.split('/')[-1] if '/' in content_type else 'tmp')
             
-            filename = f"media_{os.urandom(4).hex()}{extension}"
+            filename = f"media_{os.urandom(4).hex()}{ext or extension}"
             filepath = os.path.join(temp_dir, filename)
             
             with open(filepath, 'wb') as f:
@@ -727,7 +727,7 @@ class bot_timer():
                 ))
                 
                 thumbnail_results = list(executor.map(
-                    lambda m: self.downloader_media(tdir, m.thumbnail) if getattr(m, 'thumbnail', None) else {'success': False}, 
+                    lambda m: self.downloader_media(tdir, m.thumbnail, 'jpg') if getattr(m, 'thumbnail', None) else {'success': False}, 
                     medias
                 ))
     
@@ -748,7 +748,7 @@ class bot_timer():
                                 if thumb_result.get('success'):
                                     with open(thumb_result['file'], 'rb') as thumb_file:
                                         thumb = thumb_file.read()
-                                        
+                                    logger.info(thumb_result['file'])       
                                 duration = round(MediaInfo.parse(media_result['file']).tracks[0].duration / 1000)
                                 
                                 media_obj = InputMediaVideo(
