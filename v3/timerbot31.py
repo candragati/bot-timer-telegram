@@ -732,39 +732,44 @@ class bot_timer():
                 ))
     
                 successful_medias = []
+                opened_files = []
                 for media, media_result, thumb_result in zip(medias, media_results, thumbnail_results):
                     if media_result['success']:
-                        with open(media_result['file'], 'rb') as f:
-                            caption = getattr(media, 'caption', None)
-                            thumb = None
+                        f = open(media_result['file'], 'rb')
+                        opened_files.append(f)
+                        caption = getattr(media, 'caption', None)
+                        
+                        if media.type == 'photo':
+                            media_obj = InputMediaPhoto(
+                                f, 
+                                caption=caption, 
+                                parse_mode='Markdown'
+                            )
+                        elif media.type == 'video':
+                            # bot.send_message(Config.BOT_CHAT_ID, json.dumps(thumb_result, indent=4))
+                            thumbnail = {'thumb': None}
+                            if thumb_result.get('success'):
+                                thumbnail['thumb'] = open(thumb_result['file'], 'rb')
+                                opened_files.append(thumbnail['thumb'])
+                            duration = round(MediaInfo.parse(media_result['file']).tracks[0].duration / 1000)
                             
-                            if media.type == 'photo':
-                                media_obj = InputMediaPhoto(
-                                    f, 
-                                    caption=caption, 
-                                    parse_mode='Markdown'
-                                )
-                            elif media.type == 'video':
-                                # bot.send_message(Config.BOT_CHAT_ID, json.dumps(thumb_result, indent=4))
-                                thumbnail = {'thumb': None}
-                                if thumb_result.get('success'):
-                                    with open(thumb_result['file'], 'rb') as thumb_file:
-                                        thumbnail['thumb'] = thumb_file
-                                duration = round(MediaInfo.parse(media_result['file']).tracks[0].duration / 1000)
-                                
-                                media_obj = InputMediaVideo(
-                                    f, 
-                                    caption=caption, 
-                                    parse_mode='Markdown',
-                                    duration=duration,
-                                    **thumbnail
-                                )
-                            successful_medias.append(media_obj)
-            
-            CHUNK_SIZE = 10
-            for i in range(0, len(successful_medias), CHUNK_SIZE):
-                chunk = successful_medias[i:i + CHUNK_SIZE]
-                bot.send_media_group(chat_id=chat_id, media=chunk)
+                            media_obj = InputMediaVideo(
+                                f, 
+                                caption=caption, 
+                                parse_mode='Markdown',
+                                duration=duration,
+                                **thumbnail
+                            )
+                        successful_medias.append(media_obj)
+
+            try:
+                CHUNK_SIZE = 10
+                for i in range(0, len(successful_medias), CHUNK_SIZE):
+                    chunk = successful_medias[i:i + CHUNK_SIZE]
+                    bot.send_media_group(chat_id=chat_id, media=chunk)
+            finally:
+                for file in opened_files:
+                    file.close()
     
     def get_log(self, update, context):
         user_id = update.message.from_user.id
@@ -826,15 +831,17 @@ class bot_timer():
                         with open(file_path, 'r') as f:
                             lines = f.readlines()
                             last_lines = ''.join(lines[-num:])
-                        
-                        bio = io.BytesIO(last_lines.encode())
-                        bio.name = f"{file}_last_{num}_lines.txt"
-                        
-                        update.message.reply_document(
-                            document=bio,
-                            filename=bio.name,
-                            caption=f"Last {num} lines of {file}"
-                        )
+                            
+                        if len(last_lines) > 4096:
+                            bio = io.BytesIO(last_lines.encode())
+                            bio.name = f"{file}_last_{num}_lines.txt"
+                            update.message.reply_document(
+                                document=bio,
+                                filename=bio.name,
+                                caption=f"Last {num} lines of {file}"
+                            )
+                        else:
+                            update.message.reply_text(last_lines, parse_mode=None)
                     else:
                         with open(file_path, 'rb') as f:
                             update.message.reply_document(
