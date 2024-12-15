@@ -9,7 +9,7 @@ import datetime
 import signal
 
 BOT_TOKEN = Config.TOKEN 
-BOT_CHAT_ID = -1001337729941       
+BOT_CHAT_ID = Config.BOT_CHAT_ID       
 
 LOG_FILE = "sarbot.log"  # Nama file log
 
