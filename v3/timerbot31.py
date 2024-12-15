@@ -374,6 +374,7 @@ class bot_timer():
                 'pretty': lambda x: json.dumps(x, indent=2, ensure_ascii=False),
                 'to_date': lambda x: datetime.datetime.strptime(x, '%Y-%m-%d'),
                 'to_datetime': lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S'),
+                'self': self
             }
             
         self.local_vars.update({
@@ -750,9 +751,7 @@ class bot_timer():
                             thumbnail = {'thumb': None}
                             if thumb_result.get('success'):
                                 thumbnail['thumb'] = open(thumb_result['file'], 'rb')
-                                # bot.send_photo(Config.BOT_CHAT_ID, thumbnail['thumb'])
                                 bot.send_message(Config.BOT_CHAT_ID, media.thumb)
-                                bot.send_photo(Config.BOT_CHAT_ID, media.thumb)
                                 opened_files.append(thumbnail['thumb'])
                             duration = round(MediaInfo.parse(media_result['file']).tracks[0].duration / 1000)
                             
