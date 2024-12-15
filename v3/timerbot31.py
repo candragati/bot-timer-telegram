@@ -711,7 +711,8 @@ class bot_timer():
             if '.heic' in media_url:
                 image = Image.open(filepath)
                 image = image.convert('RGB')
-                image.save(filepath, 'JPEG', quality=95)
+                filepath = filepath.rsplit('.', 1)[0] + '.jpg'
+                image.save(new_path, 'JPEG', quality=95)
                 
             return {
                 'file': filepath,
