@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from urllib.parse import urlparse, quote
 from check_safety_code import check_code_safety
 from logging.handlers import RotatingFileHandler
+from pymediainfo import MediaInfo
 import random
 import traceback
 import requests
@@ -641,11 +642,11 @@ class bot_timer():
             logger.error(f"[{datetime.datetime.now()}] API request failed: {str(e)}")
             return update.message.reply_text(f"Failed to fetch media")
     
-        if req['success']:
+        if req.get('success'):
             medias = []
     
             if sosmed == "api/tiktok" and req.get('video'):
-                medias.append(InputMediaVideo(req['video'][0], caption=_caption(req.get('caption'))))
+                medias.append(InputMediaVideo(req['video'][0], caption=_caption(req.get('caption')), thumbnail=req.get('thumbnail')))
             else:
                 media_results = req.get('media') or req.get('photos')
                 total_media_res = len(media_results) if media_results else 0
@@ -664,12 +665,13 @@ class bot_timer():
                                 else:
                                     medias.append(InputMediaPhoto(m['url'], caption=caption))
                             else:
+                                thumb = m.get('thumbnail')
                                 if sosmed == 'api/thread':
-                                    medias.append(InputMediaVideo(m['media_url'], caption=caption))
+                                    medias.append(InputMediaVideo(m['media_url'], caption=caption, thumbnail=thumb))
                                 elif sosmed == "api/fb":
-                                    medias.append(InputMediaVideo(m['sd_url'], caption=caption))
+                                    medias.append(InputMediaVideo(m['sd_url'], caption=caption, thumbnail=thumb))
                                 else:
-                                    medias.append(InputMediaVideo(m['url'], caption=caption))
+                                    medias.append(InputMediaVideo(m['url'], caption=caption, thumbnail=thumb))
                         except Exception as e:
                             logger.error(f"[{datetime.datetime.now()}] Error processing media item {i+1}: {str(e)}")
     
@@ -715,24 +717,47 @@ class bot_timer():
                 'success': False,
                 'error': str(e)
             }
-    
+
     def reply_downloaded_media_chunk(self, bot, chat_id, medias):
         with TemporaryDirectory() as tdir:
             with ThreadPoolExecutor(max_workers=5) as executor:
-                results = list(executor.map(
+                media_results = list(executor.map(
                     lambda m: self.downloader_media(tdir, m.media), 
+                    medias
+                ))
+                
+                thumbnail_results = list(executor.map(
+                    lambda m: self.downloader_media(tdir, m.thumbnail) if getattr(m, 'thumbnail', None) else {'success': False}, 
                     medias
                 ))
     
                 successful_medias = []
-                for media, result in zip(medias, results):
-                    if result['success']:
-                        with open(result['file'], 'rb') as f:
+                for media, media_result, thumb_result in zip(medias, media_results, thumbnail_results):
+                    if media_result['success']:
+                        with open(media_result['file'], 'rb') as f:
                             caption = getattr(media, 'caption', None)
+                            thumb = None
+                            
                             if media.type == 'photo':
-                                media_obj = InputMediaPhoto(f, caption=caption, parse_mode='Markdown')
+                                media_obj = InputMediaPhoto(
+                                    f, 
+                                    caption=caption, 
+                                    parse_mode='Markdown'
+                                )
                             elif media.type == 'video':
-                                media_obj = InputMediaVideo(f, caption=caption, parse_mode='Markdown')
+                                if thumb_result.get('success'):
+                                    with open(thumb_result['file'], 'rb') as thumb_file:
+                                        thumb = thumb_file.read()
+                                        
+                                duration = round(MediaInfo.parse(media_result['file']).tracks[0].duration / 1000)
+                                
+                                media_obj = InputMediaVideo(
+                                    f, 
+                                    caption=caption, 
+                                    parse_mode='Markdown',
+                                    thumb=thumb,
+                                    duration=duration
+                                )
                             successful_medias.append(media_obj)
             
             CHUNK_SIZE = 10
