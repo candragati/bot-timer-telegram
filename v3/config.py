@@ -1,4 +1,5 @@
 import sqlite3
+import os
 from telegram.ext import Updater
 from dotenv import load_dotenv
 
