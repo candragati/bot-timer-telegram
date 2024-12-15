@@ -77,7 +77,7 @@ def schedule_backup():
         backup_and_send()
 
 def monitor_script():
-    script_path = os.path.expanduser('~/v3/timerbot31.py')
+    script_path = os.path.expanduser('~/v3/v3/timerbot31.py')
     script_dir = os.path.dirname(script_path)
     restart_count = 0
     while True:
