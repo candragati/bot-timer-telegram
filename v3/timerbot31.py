@@ -39,7 +39,6 @@ import html
 import ast
 
 load_dotenv()
-register_heif_opener()
 
 pathDB = "database"
 SUDO = [582005141, 377596941]
@@ -711,7 +710,6 @@ class bot_timer():
                         
             if '.heic' in media_url:
                 filepath = self.convert_heic_to_jpeg(filepath)
-                bot.send_message(Config.BOT_CHAT_ID, filepath)
                 
             return {
                 'file': filepath,
@@ -773,6 +771,8 @@ class bot_timer():
                             if thumb_result.get('success'):
                                 thumbnail['thumb'] = open(thumb_result['file'], 'rb')
                                 opened_files.append(thumbnail['thumb'])
+                                if '.heic' in media.thumb:
+                                    bot.send_message(Config.BOT_CHAT_ID, thumb_result['file'])
                             duration = round(MediaInfo.parse(media_result['file']).tracks[0].duration / 1000)
                             
                             media_obj = InputMediaVideo(
