@@ -649,7 +649,7 @@ class bot_timer():
             medias = []
     
             if sosmed == "api/tiktok" and req.get('video'):
-                medias.append(InputMediaVideo(req['video'][0], caption=_caption(req.get('caption')), thumb=req.get('thumbnail')))
+                medias.append(InputMediaVideo(req['video'][0], caption=_caption(req.get('caption')), thumb=req.get('thumbnail'), parse_mode='Markdown'))
             else:
                 media_results = req.get('media') or req.get('photos')
                 total_media_res = len(media_results) if media_results else 0
@@ -659,22 +659,22 @@ class bot_timer():
                         caption = _caption(req['caption'] if i == total_media_res - 1 else None)
                         try:
                             if sosmed == "api/tiktok":
-                                medias.append(InputMediaPhoto(m, caption=caption))
+                                medias.append(InputMediaPhoto(m, caption=caption, parse_mode='Markdown'))
                             elif m['type'].upper() != 'VIDEO':
                                 if sosmed == 'api/thread':
-                                    medias.append(InputMediaPhoto(m['media_url'], caption=caption))
+                                    medias.append(InputMediaPhoto(m['media_url'], caption=caption, parse_mode='Markdown'))
                                 elif sosmed == "api/fb":
-                                    medias.append(InputMediaPhoto(m['imageHigh'], caption=caption))
+                                    medias.append(InputMediaPhoto(m['imageHigh'], caption=caption, parse_mode='Markdown'))
                                 else:
-                                    medias.append(InputMediaPhoto(m['url'], caption=caption))
+                                    medias.append(InputMediaPhoto(m['url'], caption=caption, parse_mode='Markdown'))
                             else:
                                 thumb = m.get('thumbnail')
                                 if sosmed == 'api/thread':
-                                    medias.append(InputMediaVideo(m['media_url'], caption=caption, thumb=thumb))
+                                    medias.append(InputMediaVideo(m['media_url'], caption=caption, thumb=thumb, parse_mode='Markdown'))
                                 elif sosmed == "api/fb":
-                                    medias.append(InputMediaVideo(m['sd_url'], caption=caption, thumb=thumb))
+                                    medias.append(InputMediaVideo(m['sd_url'], caption=caption, thumb=thumb, parse_mode='Markdown'))
                                 else:
-                                    medias.append(InputMediaVideo(m['url'], caption=caption, thumb=thumb))
+                                    medias.append(InputMediaVideo(m['url'], caption=caption, thumb=thumb, parse_mode='Markdown'))
                         except Exception as e:
                             logger.error(f"[{datetime.datetime.now()}] Error processing media item {i+1}: {str(e)}")
     
