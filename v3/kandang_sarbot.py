@@ -33,6 +33,18 @@ def write_log_entry(text):
     with open(LOG_FILE, 'w') as file:
         file.writelines(lines)
 
+def send_telegram_message(message):
+    """Mengirim pesan ke Telegram melalui bot."""
+    send_url = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
+    data = {
+        'chat_id': BOT_CHAT_ID,
+        'text': message,
+        'parse_mode': 'HTML'
+    }
+    response = requests.post(send_url, data=data)
+    if response.status_code != 200:
+        print(f"Gagal mengirim pesan: {response.status_code}, {response.text}")
+        
 def backup_and_send():
     now = datetime.datetime.now()
     timestamp = now.strftime("%d%m%Y-%H%M%S")
@@ -83,10 +95,22 @@ def monitor_script():
     while True:
         # Sebelum menjalankan script, lakukan git pull origin master
         try:
-            subprocess.run(['git', 'pull', 'origin', 'master'], cwd=script_dir, check=True)
+            pull_result = subprocess.run(['git', 'pull', 'origin', 'master'],
+                                             cwd=script_dir, capture_output=True, text=True, check=True)
+            output = pull_result.stdout.strip()
+            
+            # Mengirim pesan notifikasi ke Telegram dengan output git pull
+            message = f"Bot Berhasil Dimulai Ulang dengan Pull Terbaru!\nOutput:\n<pre>{output}</pre>"
+            send_telegram_message(message)            
             print("Git pull berhasil.")
+            
         except subprocess.CalledProcessError as e:
             print(f"Gagal melakukan git pull: {e}")
+
+            # Mengirim pesan notifikasi ke Telegram dengan output git pull gagal
+            message = f"Bot Berhasil Dimulai Ulang namun gagal melakukan git Pull Terbaru!\nError: <pre>{e}</pre>"
+            send_telegram_message(message)            
+            
         process = subprocess.Popen(['python3', script_path], preexec_fn=os.setsid)
         try:
             exit_code = process.wait()
