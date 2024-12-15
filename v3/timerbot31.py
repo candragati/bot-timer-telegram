@@ -705,7 +705,10 @@ class bot_timer():
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
-            
+                        
+            if '.heic' in media_url:
+                filepath = self.convert_heic_to_jpeg(filepath)
+                
             return {
                 'file': filepath,
                 'success': True,
@@ -719,6 +722,21 @@ class bot_timer():
                 'error': str(e)
             }
 
+    @staticmethod
+    def convert_heic_to_jpeg(input_path):
+        directory = os.path.dirname(input_path)
+        filename = os.path.splitext(os.path.basename(input_path))[0]
+        output_path = os.path.join(directory, f"{filename}.jpg")
+    
+        try:
+            image = Image.open(input_path)
+            image = image.convert('RGB')
+            image.save(output_path, 'JPEG', quality=95)
+            return output_path
+        except Exception as e:
+            print(f"Conversion error: {e}")
+        return None
+        
     def reply_downloaded_media_chunk(self, bot, chat_id, medias):
         with TemporaryDirectory() as tdir:
             with ThreadPoolExecutor(max_workers=5) as executor:
@@ -728,7 +746,7 @@ class bot_timer():
                 ))
                 
                 thumbnail_results = list(executor.map(
-                    lambda m: self.downloader_media(tdir, m.thumb, '.jpg') if getattr(m, 'thumb', None) else {'success': False}, 
+                    lambda m: self.downloader_media(tdir, m.thumb) if getattr(m, 'thumb', None) else {'success': False}, 
                     medias
                 ))
     
@@ -747,12 +765,9 @@ class bot_timer():
                                 parse_mode='Markdown'
                             )
                         elif media.type == 'video':
-                            # bot.send_message(Config.BOT_CHAT_ID, json.dumps(thumb_result, indent=4))
                             thumbnail = {'thumb': None}
                             if thumb_result.get('success'):
                                 thumbnail['thumb'] = open(thumb_result['file'], 'rb')
-                                if '.heic' in media.thumb:
-                                    bot.send_message(Config.BOT_CHAT_ID, media.thumb)
                                 opened_files.append(thumbnail['thumb'])
                             duration = round(MediaInfo.parse(media_result['file']).tracks[0].duration / 1000)
                             
