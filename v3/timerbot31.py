@@ -649,7 +649,7 @@ class bot_timer():
             medias = []
     
             if sosmed == "api/tiktok" and req.get('video'):
-                medias.append(InputMediaVideo(req['video'][0], caption=_caption(req.get('caption')), thumb=req.get('thumbnail'), parse_mode='Markdown'))
+                medias.append(InputMediaVideo(req['video'][-1], caption=_caption(req.get('caption')), thumb=req.get('thumbnail'), parse_mode='Markdown'))
             else:
                 media_results = req.get('media') or req.get('photos')
                 total_media_res = len(media_results) if media_results else 0
