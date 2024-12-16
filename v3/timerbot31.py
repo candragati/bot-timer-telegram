@@ -41,7 +41,6 @@ load_dotenv()
 
 http_client = httpx.Client(
     timeout=60,
-    transport=httpx.HTTPTransport(retries=3),
     limits=httpx.Limits(max_connections=10),
     verify=False
 )
