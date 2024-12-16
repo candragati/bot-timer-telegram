@@ -35,15 +35,10 @@ import tarfile
 import os
 import html
 import ast
-import httpx
+import requests
 
 load_dotenv()
 
-http_client = httpx.Client(
-    timeout=60,
-    limits=httpx.Limits(max_connections=10),
-    verify=False
-)
 pathDB = "database"
 SUDO = [582005141, 377596941]
 RESTART_FILE = '/tmp/bot_restart_info.json'
@@ -644,7 +639,7 @@ class bot_timer():
             return caption
             
         try:
-            req = http_client.get(link).json()
+            req = requests.get(link).json()
         except Exception as e:
             logger.error(f"[{datetime.datetime.now()}] API request failed: {str(e)}")
             return update.message.reply_text(f"Failed to fetch media")
@@ -709,27 +704,27 @@ class bot_timer():
             
     def downloader_media(self, temp_dir, media_url, ext=None):
         try:
-            with http_client.stream('GET', media_url) as response:
-                response.raise_for_status()            
-                content_type = response.headers.get('content-type', '')
-                extension = '.' + (content_type.split('/')[-1] if '/' in content_type else 'tmp')
+            response = requests.get(media_url, stream=True)
+            response.raise_for_status()            
+            content_type = response.headers.get('content-type', '')
+            extension = '.' + (content_type.split('/')[-1] if '/' in content_type else 'tmp')
+            
+            filename = f"media_{os.urandom(4).hex()}{ext or extension}"
+            filepath = os.path.join(temp_dir, filename)
+            
+            with open(filepath, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+                        
+            if '.heic' in media_url:
+                filepath = self.convert_heic_to_jpeg(filepath) or filepath
                 
-                filename = f"media_{os.urandom(4).hex()}{ext or extension}"
-                filepath = os.path.join(temp_dir, filename)
-                
-                with open(filepath, 'wb') as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        if chunk:
-                            f.write(chunk)
-                            
-                if '.heic' in media_url:
-                    filepath = self.convert_heic_to_jpeg(filepath) or filepath
-                    
-                return {
-                    'file': filepath,
-                    'success': True,
-                    'size': os.path.getsize(filepath)
-                }
+            return {
+                'file': filepath,
+                'success': True,
+                'size': os.path.getsize(filepath)
+            }
         
         except Exception as e:
             return {
@@ -943,7 +938,7 @@ class bot_timer():
             bar, jum    = eksekusi(cek)
             if jum == 0:                
                 url_kota= "https://api.banghasan.com/sholat/format/json/kota"
-                r       = http_client.get(url_kota)
+                r       = requests.get(url_kota)
                 kota_all= r.json()['kota']
                 mirip   = []
                 for a in kota_all:
@@ -951,7 +946,7 @@ class bot_timer():
                         if a['id'] == nama: nama = a['nama']
                         update.message.reply_text(str(kamus("id_ketemu"))%a['id'])
                         url         = "https://api.banghasan.com/sholat/format/json/jadwal/kota/%s/tanggal/%s"%(a['id'],tanggal)            
-                        r           = http_client.get(url)
+                        r           = requests.get(url)
                         sholat_all  =  r.json()['jadwal']['data']
                         jadwal      = []
                         t           = ""
