@@ -35,16 +35,16 @@ import tarfile
 import os
 import html
 import ast
-import httpx
+# import httpx
 
 load_dotenv()
 
-http_client = httpx.Client(
-    timeout=60,
-    transport=httpx.HTTPTransport(retries=3),
-    limits=httpx.Limits(max_connections=10),
-    verify=False
-)
+# http_client = httpx.Client(
+#     timeout=60,
+#     transport=httpx.HTTPTransport(retries=3),
+#     limits=httpx.Limits(max_connections=10),
+#     verify=False
+# )
 pathDB = "database"
 SUDO = [582005141, 377596941]
 RESTART_FILE = '/tmp/bot_restart_info.json'
