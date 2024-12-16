@@ -4,7 +4,7 @@ from telegram import MessageEntity
 from telegram import ParseMode, Update, Bot, Message 
 from telegram.utils.helpers import escape_markdown
 from telegram import InputMediaPhoto, InputMediaVideo
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from config import Config, eksekusi, db, cur
 from modul import me,bio,afk,qotd,langdetect,setting,berita,rekam,asl,bantuan,media, reputasi, kawalCorona
 from modul.kamus import kamus
@@ -763,34 +763,8 @@ class bot_timer():
     def reply_downloaded_media_chunk(self, bot, chat_id, medias):
         with TemporaryDirectory() as tdir:
             with ThreadPoolExecutor(max_workers=5) as executor:
-                futures = {}                
-                for i, m in enumerate(medias):
-                    future = executor.submit(self.downloader_media, tdir, m.media)
-                    futures[future] = ('media', i)
-                    
-                    if getattr(m, 'thumb', None):
-                        future = executor.submit(self.downloader_media, tdir, m.thumb)
-                        futures[future] = ('thumb', i)
-                
-                media_results = [None] * len(medias)
-                thumbnail_results = [None] * len(medias)
-                
-                for future in as_completed(futures):
-                    try:
-                        result = future.result()
-                        download_type, index = futures[future]
-                        
-                        if download_type == 'media':
-                            media_results[index] = result
-                        else:
-                            thumbnail_results[index] = result
-                            
-                    except Exception as e:
-                        error_result = {'success': False, 'error': str(e)}
-                        if download_type == 'media':
-                            media_results[index] = error_result
-                        else:
-                            thumbnail_results[index] = error_result
+                media_results = list(executor.map(lambda m: self.downloader_media(tdir, m.media), medias))
+                thumbnail_results = list(executor.map(lambda m: self.downloader_media(tdir, m.thumb) if getattr(m, 'thumb', None) else {'success': False}, medias))
     
                 successful_medias = []
                 opened_files = []
