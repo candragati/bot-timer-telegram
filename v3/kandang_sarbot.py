@@ -1,3 +1,4 @@
+from telegram.utils.helpers import escape_html
 from config import Config
 import subprocess
 import time
@@ -38,7 +39,7 @@ def send_telegram_message(message):
     send_url = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
     data = {
         'chat_id': BOT_CHAT_ID,
-        'text': message,
+        'text': escape_html(message),
         'parse_mode': 'HTML'
     }
     response = requests.post(send_url, data=data)
