@@ -39,8 +39,8 @@ def send_telegram_message(message):
     send_url = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
     data = {
         'chat_id': BOT_CHAT_ID,
-        'text': escape_html(message),
-        'parse_mode': 'HTML'
+        'text': escape_markdown(message),
+        'parse_mode': 'Markdown'
     }
     response = requests.post(send_url, data=data)
     if response.status_code != 200:
