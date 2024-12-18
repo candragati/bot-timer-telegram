@@ -141,7 +141,7 @@ def monitor_script():
                         
                         _, stderr = process.communicate()
                         error_message = f"Script error (code {exit_code}):\n{stderr.decode()}"
-                        send_telegram_message(f"Bot Error!\n<pre>{error_message}</pre>")
+                        send_telegram_message(f"Bot Error!\n```\n{error_message}\n```")
                         
                         print(f"Script keluar dengan kode {exit_code}. Me-restart...")
                         
