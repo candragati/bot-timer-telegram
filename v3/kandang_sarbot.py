@@ -1,4 +1,4 @@
-from telegram.utils.helpers import escape_html
+from telegram.utils.helpers import escape_markdown
 from config import Config
 import subprocess
 import time
@@ -67,7 +67,7 @@ def backup_and_send():
         send_url = f'https://api.telegram.org/bot{BOT_TOKEN}/sendDocument'
         data = {
             'chat_id': BOT_CHAT_ID,
-            'parse_mode': 'HTML',
+            'parse_mode': 'Markdown',
             'caption': f"{now}\n{end_time}\n\n{duration_seconds} detik"
         }
         files = {'document': file_data}
@@ -110,13 +110,13 @@ def monitor_script():
                         check=True
                     )
                     output = pull_result.stdout.strip()
-                    message = f"Bot Berhasil Dimulai Ulang dengan Pull Terbaru!\nOutput:\n<pre>{output}</pre>"
+                    message = f"Bot Berhasil Dimulai Ulang dengan Pull Terbaru!\nOutput:\n```\n{output}\n```"
                     send_telegram_message(message)
                     print("Git pull berhasil.")
                     
                 except subprocess.CalledProcessError as e:
                     print(f"Gagal melakukan git pull: {e}")
-                    message = f"Bot Berhasil Dimulai Ulang namun gagal melakukan git Pull Terbaru!\nError: <pre>{e}</pre>"
+                    message = f"Bot Berhasil Dimulai Ulang namun gagal melakukan git Pull Terbaru!\nError: {e}"
                     send_telegram_message(message)
 
                 # Jalankan script
@@ -182,7 +182,7 @@ def monitor_script():
         except Exception as e:
             error_message = f"Monitor error: {str(e)}"
             print(error_message)
-            send_telegram_message(f"Monitor Error!\n<pre>{error_message}</pre>")
+            send_telegram_message(f"Monitor Error!\n{error_message}")
             
             # Cleanup jika terjadi error
             if process:
