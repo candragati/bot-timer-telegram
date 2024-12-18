@@ -39,7 +39,7 @@ def send_telegram_message(message):
     send_url = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
     data = {
         'chat_id': BOT_CHAT_ID,
-        'text': escape_markdown(message),
+        'text': message,
         'parse_mode': 'Markdown'
     }
     response = requests.post(send_url, data=data)
@@ -117,7 +117,7 @@ def monitor_script():
                 except subprocess.CalledProcessError as e:
                     print(f"Gagal melakukan git pull: {e}")
                     message = f"Bot Berhasil Dimulai Ulang namun gagal melakukan git Pull Terbaru!\nError: {e}"
-                    send_telegram_message(message)
+                    send_telegram_message(escape_markdown(message))
 
                 # Jalankan script
                 process = subprocess.Popen(
@@ -141,7 +141,7 @@ def monitor_script():
                         
                         _, stderr = process.communicate()
                         error_message = f"Script error (code {exit_code}):\n{stderr.decode()}"
-                        send_telegram_message(f"Bot Error!\n```\n{error_message}\n```")
+                        send_telegram_message(f"Bot Error!\n{escape_markdown(error_message)}")
                         
                         print(f"Script keluar dengan kode {exit_code}. Me-restart...")
                         
@@ -182,7 +182,7 @@ def monitor_script():
         except Exception as e:
             error_message = f"Monitor error: {str(e)}"
             print(error_message)
-            send_telegram_message(f"Monitor Error!\n{error_message}")
+            send_telegram_message(f"Monitor Error!\n{escape_markdown(error_message)}")
             
             # Cleanup jika terjadi error
             if process:
