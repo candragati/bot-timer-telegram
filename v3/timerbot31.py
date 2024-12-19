@@ -1414,7 +1414,7 @@ class bot_timer():
         tanggal = now.strftime("%d%m%Y-%H%M%S")
         namaFile= f"sarbot{tanggal}.tar.gz"
         tar     = tarfile.open(namaFile, "w:gz")
-        chatId  = -1001337729941
+        chatId  = Config.BOT_CHAT_ID
 
         for root, dirs, files in os.walk(os.getcwd()):
             for name in files:
