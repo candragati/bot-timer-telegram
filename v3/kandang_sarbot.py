@@ -35,7 +35,9 @@ def write_log_entry(text):
         file.writelines(lines)
 
 def send_telegram_message(message):
-    """Mengirim pesan ke Telegram melalui bot."""
+    """
+    Mengirim pesan ke Telegram melalui bot.
+    """
     send_url = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
     data = {
         'chat_id': BOT_CHAT_ID,
@@ -45,7 +47,7 @@ def send_telegram_message(message):
     response = requests.post(send_url, data=data)
     if response.status_code != 200:
         print(f"Gagal mengirim pesan: {response.status_code}, {response.text}")
-        
+
 def backup_and_send():
     now = datetime.datetime.now()
     timestamp = now.strftime("%d%m%Y-%H%M%S")
@@ -55,10 +57,11 @@ def backup_and_send():
     with tarfile.open(backup_filename, "w:gz") as tar:
         for root, dirs, files in os.walk(os.getcwd()):
             for name in files:
+                # Jika folder 'database' adalah sebuah direktori,
+                # pertimbangkan menyesuaikan logika ini.
                 if name.endswith(".py") or name == 'database':
                     tar.add(os.path.join(root, name))
 
-    # Menghitung durasi proses backup
     end_time = datetime.datetime.now()
     duration_seconds = int((end_time - now).total_seconds())
 
@@ -74,7 +77,11 @@ def backup_and_send():
 
         response = requests.post(send_url, data=data, files=files)
         if response.status_code != 200:
-            print(f"Gagal mengirim dokumen: {response.status_code}, {response.text}")
+            error_msg = f"Gagal mengirim dokumen: {response.status_code}, {response.text}"
+            print(error_msg)
+            send_telegram_message(escape_markdown(error_msg))
+        else:
+            print(f"Backup {backup_filename} berhasil dikirim.")
 
 def schedule_backup():
     while True:
@@ -104,19 +111,24 @@ def monitor_script():
                 try:
                     pull_result = subprocess.run(
                         ['git', 'pull', 'origin', 'master'],
-                        cwd=script_dir, 
-                        capture_output=True, 
-                        text=True, 
+                        cwd=script_dir,
+                        capture_output=True,
+                        text=True,
                         check=True
                     )
                     output = pull_result.stdout.strip()
-                    message = f"Bot Berhasil Dimulai Ulang dengan Pull Terbaru!\nOutput:\n```\n{output}\n```"
+                    message = (
+                        "Bot Berhasil Dimulai Ulang dengan Pull Terbaru!\n"
+                        f"Output:\n```\n{output}\n```"
+                    )
                     send_telegram_message(message)
                     print("Git pull berhasil.")
-                    
                 except subprocess.CalledProcessError as e:
                     print(f"Gagal melakukan git pull: {e}")
-                    message = f"Bot Berhasil Dimulai Ulang namun gagal melakukan git Pull Terbaru!\nError: {e}"
+                    message = (
+                        "Bot Berhasil Dimulai Ulang namun gagal melakukan git Pull Terbaru!\n"
+                        f"Error: {e}"
+                    )
                     send_telegram_message(escape_markdown(message))
 
                 # Jalankan script
@@ -131,87 +143,91 @@ def monitor_script():
             # Monitor process yang sedang berjalan
             try:
                 exit_code = process.poll()  # Cek status tanpa blocking
-                
                 if exit_code is not None:  # Process berhenti
                     if exit_code != 0:  # Error terjadi
                         restart_count += 1
                         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         log_text = f"[{timestamp}] Restart ke {restart_count}"
                         write_log_entry(log_text)
-                        
-                        _, stderr = process.communicate()
-                        error_message = f"Script error (code {exit_code}):\n{stderr.decode()}"
-                        send_telegram_message(f"Bot Error!\n{escape_markdown(error_message)}")
-                        
+
+                        _, stderr_data = process.communicate()
+                        error_message = (
+                            f"Script error (code {exit_code}):\n"
+                            f"{stderr_data.decode()}"
+                        )
+                        send_telegram_message(
+                            f"Bot Error!\n{escape_markdown(error_message)}"
+                        )
                         print(f"Script keluar dengan kode {exit_code}. Me-restart...")
-                        
+
                         if restart_count >= max_restarts:
-                            cooldown_message = f"Terlalu banyak restart ({restart_count}). Cooling down for {cooldown_time/60} minutes..."
+                            cooldown_message = (
+                                f"Terlalu banyak restart ({restart_count}). "
+                                f"Cooling down for {cooldown_time/60} minutes..."
+                            )
                             print(cooldown_message)
                             send_telegram_message(cooldown_message)
                             time.sleep(cooldown_time)
                             restart_count = 0
-                        
+
                         # Cleanup dan reset process
                         try:
                             os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-                        except (ProcessLookupError, OSError) as e:
-                            print(f"Error killing process: {e}")
+                        except (ProcessLookupError, OSError) as exc:
+                            print(f"Error killing process: {exc}")
                         process = None
                         time.sleep(2)
-                        
-                    else:  # Script berhenti normal
+                    else:
                         print("Script berhenti normal, me-restart...")
                         process = None
                         restart_count = 0
                         time.sleep(2)
-                
-                else:  # Process masih berjalan
-                    time.sleep(2)  # Tunggu sebentar sebelum cek lagi
-                    
+                else:
+                    time.sleep(2)
+
             except KeyboardInterrupt:
                 print("\nDiterima KeyboardInterrupt. Menghentikan script...")
                 if process:
                     try:
                         os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-                        process.wait(timeout=5)  # Tunggu process berhenti
-                    except (ProcessLookupError, OSError, subprocess.TimeoutExpired) as e:
-                        print(f"Error during cleanup: {e}")
+                        process.wait(timeout=5)
+                    except (ProcessLookupError, OSError, subprocess.TimeoutExpired) as exc:
+                        print(f"Error during cleanup: {exc}")
                 break
 
         except Exception as e:
             error_message = f"Monitor error: {str(e)}"
             print(error_message)
             send_telegram_message(f"Monitor Error!\n{escape_markdown(error_message)}")
-            
+
             # Cleanup jika terjadi error
             if process:
                 try:
                     os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-                except (ProcessLookupError, OSError) as e:
-                    print(f"Error killing process during error handling: {e}")
+                except (ProcessLookupError, OSError) as exc:
+                    print(f"Error killing process during error handling: {exc}")
                 process = None
             time.sleep(5)
-            
+
 def main():
     # Mulai fungsi monitor_script dan schedule_backup dalam thread terpisah
     monitor_thread = threading.Thread(target=monitor_script, daemon=True)
     backup_thread = threading.Thread(target=schedule_backup, daemon=True)
-    
+
     try:
         monitor_thread.start()
         backup_thread.start()
-        
+
         # Tunggu threads
         monitor_thread.join()
         backup_thread.join()
-        
+
     except KeyboardInterrupt:
         print("\nReceived KeyboardInterrupt in main thread. Exiting...")
     except Exception as e:
         print(f"Error in main thread: {e}")
     finally:
         print("Cleanup complete. Exiting...")
-        
+
 if __name__ == "__main__":
     main()
