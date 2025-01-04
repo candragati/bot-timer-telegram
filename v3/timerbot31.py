@@ -671,7 +671,7 @@ class bot_timer():
                                 if sosmed == 'api/thread':
                                     medias.append(InputMediaVideo(m['media_url'], caption=caption, thumb=thumb, parse_mode='Markdown'))
                                 elif sosmed == "api/fb":
-                                    medias.append(InputMediaVideo(m['sd_url'], caption=caption, thumb=thumb, parse_mode='Markdown'))
+                                    medias.append(InputMediaVideo(m.get('hd_url') or m.get('sd_url'), caption=caption, thumb=thumb, parse_mode='Markdown'))
                                 else:
                                     medias.append(InputMediaVideo(m['url'], caption=caption, thumb=thumb, parse_mode='Markdown'))
                         except Exception as e:
