@@ -691,7 +691,7 @@ class bot_timer():
                     logger.error(f"[{datetime.datetime.now()}] Failed to send media: {str(e)}")
                     update.message.reply_text("Failed to send media")
             if message.split() < 2:
-                await message.delete()
+                update.message.delete()
         else:
             error_msg = req.get('msg') or "gagal"
             logger.error(f"[{datetime.datetime.now()}] API request failed with message: {error_msg}")
