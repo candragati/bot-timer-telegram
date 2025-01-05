@@ -689,9 +689,9 @@ class bot_timer():
                     self.reply_downloaded_media_chunk(bot, chat_id, medias)
                 except Exception as e:
                     logger.error(f"[{datetime.datetime.now()}] Failed to send media: {str(e)}")
-                    update.message.reply_text("Failed to send media")
-            if len(message.split()) < 2:
-                update.message.delete()
+                    return update.message.reply_text("Failed to send media")
+                if len(message.split()) < 2:
+                    update.message.delete()
         else:
             error_msg = req.get('msg') or "gagal"
             logger.error(f"[{datetime.datetime.now()}] API request failed with message: {error_msg}")
