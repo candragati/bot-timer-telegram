@@ -694,8 +694,7 @@ class bot_timer():
                     with TemporaryDirectory() as tdir:
                         merg_name = f"{tdir}/output_{update.message.message_id}.mp4"
                         audio_path = self.downloader_media(tdir, req['music'][0])['file']
-                        slide_video = self.create_slideshow_ffmpeg_in_background(dir, medias, audio_path, merg_name)
-                        slide_video.join()
+                        self.create_slideshow_ffmpeg(dir, medias, audio_path, merg_name)
                         update.message.reply_video(merg_name)
                 if len(message.split()) < 2:
                     update.message.delete()
