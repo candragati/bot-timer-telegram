@@ -690,7 +690,7 @@ class bot_timer():
                 except Exception as e:
                     logger.error(f"[{datetime.datetime.now()}] Failed to send media: {str(e)}")
                     return update.message.reply_text("Failed to send media")
-                if sosmed == 'api/tiktok' and not req.get('video'):
+                if sosmed == 'api/tiktok' and not req.get('video') and req['music']:
                     with TemporaryDirectory() as tdir:
                         merg_name = f"{tdir}/output_{update.message.message_id}.mp4"
                         audio_path = self.downloader_media(tdir, req['music'][0])['file']
