@@ -768,8 +768,8 @@ class bot_timer():
     
         else:
             with open(concat_file, "w") as f:
-                for i, img in enumerate(image_paths):
-                    f.write(f"file '{os.path.abspath(img)}'\n")
+                for img in image_paths:
+                    f.write(f"file '{os.path.abspath(img['file'])}'\n")
                     f.write(f"duration {duration_per_image}\n")
                 f.write(f"file '{os.path.abspath(image_paths[-1])}'\n")
     
