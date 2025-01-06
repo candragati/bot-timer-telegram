@@ -690,6 +690,13 @@ class bot_timer():
                 except Exception as e:
                     logger.error(f"[{datetime.datetime.now()}] Failed to send media: {str(e)}")
                     return update.message.reply_text("Failed to send media")
+                if sosmed == 'api/tiktok' and not req.get('video'):
+                    with TemporaryDirectory() as tdir:
+                        merg_name = f"{tdir}/output_{update.message.message_id}.mp4"
+                        audio_path = self.downloader_media(tdir, req['music'][0])['file']
+                        slide_video = self.create_slideshow_ffmpeg_in_background(dir, medias, audio_path, merg_name)
+                        slide_video.join()
+                        update.message.reply_video(merg_name)
                 if len(message.split()) < 2:
                     update.message.delete()
         else:
@@ -703,7 +710,150 @@ class bot_timer():
         for i in range(0, len(successful_medias), CHUNK_SIZE):
             chunk = successful_medias[i:i + CHUNK_SIZE]
             bot.send_media_group(chat_id=chat_id, media=chunk)
+
+    def create_slideshow_ffmpeg(
+        self,
+        dir,
+        image_paths,
+        audio_path,
+        output_path,
+        duration_per_image=3,
+        threads=32
+    ):
+        concat_file = f"{dir}/images.txt"
+        slideshow_video = f"{dir}/slideshow_temp.mp4"
+        temp_audio = f"{dir}/audio_temp.aac"
+
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            image_paths = list(executor.map(lambda m: self.downloader_media(tdir, m.media), image_paths))
             
+        cmd_probe_audio = [
+            "ffprobe", 
+            "-hide_banner", "-loglevel", "error",
+            "-v", "error",
+            "-show_entries", "format=duration",
+            "-of", "default=noprint_wrappers=1:nokey=1",
+            audio_path
+        ]
+        result = subprocess.run(cmd_probe_audio, capture_output=True, text=True, check=True)
+        audio_duration = float(result.stdout.strip())
+        
+        if len(image_paths) == 1:
+            single_image = os.path.abspath(image_paths[0]['file'])
+            cmd_single = [
+                "ffmpeg", "-y",
+                "-hide_banner", "-loglevel", "error",
+                "-threads", str(threads),
+                "-loop", "1", 
+                "-i", single_image,
+                "-t", str(audio_duration),
+                "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+                "-pix_fmt", "yuv420p",
+                "-c:v", "libx264",
+                slideshow_video
+            ]
+            subprocess.run(cmd_single, check=True)
+    
+            cmd_copy_audio = [
+                "ffmpeg", "-y",
+                "-hide_banner", "-loglevel", "error",
+                "-threads", str(threads),
+                "-i", audio_path,
+                "-c:a", "aac",
+                temp_audio
+            ]
+            subprocess.run(cmd_copy_audio, check=True)
+    
+        else:
+            with open(concat_file, "w") as f:
+                for i, img in enumerate(image_paths):
+                    f.write(f"file '{os.path.abspath(img['file'])}'\n")
+                    if i < len(image_paths) - 1:
+                        f.write(f"duration {duration_per_image}\n")
+    
+            cmd_slideshow = [
+                "ffmpeg", "-y",
+                "-hide_banner",        
+                "-loglevel", "error",  
+                "-threads", str(threads),
+                "-f", "concat", "-safe", "0",
+                "-i", concat_file,
+                "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+                "-pix_fmt", "yuv420p",
+                "-c:v", "libx264",
+                slideshow_video
+            ]
+            subprocess.run(cmd_slideshow, check=True)
+    
+            cmd_probe_slideshow = [
+                "ffprobe", 
+                "-hide_banner", "-loglevel", "error",
+                "-v", "error",
+                "-show_entries", "format=duration",
+                "-of", "default=noprint_wrappers=1:nokey=1",
+                slideshow_video
+            ]
+            result = subprocess.run(cmd_probe_slideshow, capture_output=True, text=True, check=True)
+            slideshow_duration = float(result.stdout.strip())
+    
+            if audio_duration < slideshow_duration:
+                cmd_loop_audio = [
+                    "ffmpeg", "-y",
+                    "-hide_banner", "-loglevel", "error",
+                    "-threads", str(threads),
+                    "-stream_loop", "-1",
+                    "-i", audio_path,
+                    "-t", str(slideshow_duration),
+                    "-c:a", "aac",
+                    temp_audio
+                ]
+                subprocess.run(cmd_loop_audio, check=True)
+            else:
+                cmd_trim_audio = [
+                    "ffmpeg", "-y",
+                    "-hide_banner", "-loglevel", "error",
+                    "-threads", str(threads),
+                    "-i", audio_path,
+                    "-t", str(slideshow_duration),
+                    "-c:a", "aac",
+                    temp_audio
+                ]
+                subprocess.run(cmd_trim_audio, check=True)
+    
+            os.remove(concat_file)
+    
+        cmd_combine = [
+            "ffmpeg", "-y",
+            "-hide_banner", "-loglevel", "error",
+            "-threads", str(threads),
+            "-i", slideshow_video,
+            "-i", temp_audio,
+            "-map", "0:v:0",
+            "-map", "1:a:0",
+            "-c:v", "copy",
+            "-c:a", "aac",
+            "-shortest",
+            output_path
+        ]
+        subprocess.run(cmd_combine, check=True)
+
+    def create_slideshow_ffmpeg_in_background(
+        self,
+        dir,
+        image_paths,
+        audio_path,
+        output_path,
+        duration_per_image=3,
+        threads=32
+    ):
+        t = threading.Thread(
+            target=self.create_slideshow_ffmpeg,
+            args=(dir, image_paths, audio_path, output_path, duration_per_image, threads),
+            daemon=True
+        )
+        t.start()
+        return t
+    
     def downloader_media(self, temp_dir, media_url, ext=None):
         try:
             response = requests.get(media_url, stream=True)
