@@ -694,7 +694,7 @@ class bot_timer():
                     with TemporaryDirectory() as tdir:
                         merg_name = f"{tdir}/output_{update.message.message_id}.mp4"
                         audio_path = self.downloader_media(tdir, req['music'][0])['file']
-                        self.create_slideshow_ffmpeg(dir, medias, audio_path, merg_name)
+                        self.create_slideshow_ffmpeg(tdir, medias, audio_path, merg_name)
                         update.message.reply_video(merg_name)
                 if len(message.split()) < 2:
                     update.message.delete()
@@ -725,7 +725,7 @@ class bot_timer():
 
         with ThreadPoolExecutor(max_workers=5) as executor:
             image_paths = list(executor.map(lambda m: self.downloader_media(dir, m.media), image_paths))
-            
+        print(image_paths)
         cmd_probe_audio = [
             "ffprobe", 
             "-hide_banner", "-loglevel", "error",
