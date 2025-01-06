@@ -655,7 +655,7 @@ class bot_timer():
                 
                 if media_results:
                     for i, m in enumerate(media_results):
-                        caption = _caption(caption = f"{args}\n{req.get('caption', '')}") if i == total_media_res - 1 else 
+                        caption = _caption(caption = f"{args}\n{req.get('caption', '')}") if i == total_media_res - 1 else None
                         try:
                             if sosmed == "api/tiktok":
                                 medias.append(InputMediaPhoto(m, caption=caption, parse_mode='Markdown'))
