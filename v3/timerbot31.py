@@ -769,9 +769,9 @@ class bot_timer():
         else:
             with open(concat_file, "w") as f:
                 for i, img in enumerate(image_paths):
-                    f.write(f"file '{os.path.abspath(img['file'])}'\n")
-                    if i < len(image_paths) - 1:
-                        f.write(f"duration {duration_per_image}\n")
+                    f.write(f"file '{os.path.abspath(img)}'\n")
+                    f.write(f"duration {duration_per_image}\n")
+                f.write(f"file '{os.path.abspath(image_paths[-1])}'\n")
     
             cmd_slideshow = [
                 "ffmpeg", "-y",
@@ -834,7 +834,6 @@ class bot_timer():
             "-map", "1:a:0",
             "-c:v", "copy",
             "-c:a", "aac",
-            "-shortest",
             output_path
         ]
         subprocess.run(cmd_combine, check=True)
