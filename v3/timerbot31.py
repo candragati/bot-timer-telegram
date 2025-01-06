@@ -648,7 +648,7 @@ class bot_timer():
             medias = []
     
             if sosmed == "api/tiktok" and req.get('video'):
-                medias.append(InputMediaVideo(req['video'][-1], caption=_caption(req.get('caption')), thumb=req.get('thumbnail'), parse_mode='Markdown'))
+                medias.append(InputMediaVideo(req['video'][-1], caption=_caption(caption = f"{args}\n{req.get('caption', '')}"), thumb=req.get('thumbnail'), parse_mode='Markdown'))
             else:
                 media_results = req.get('media') or req.get('photos')
                 total_media_res = len(media_results) if media_results else 0
@@ -698,7 +698,7 @@ class bot_timer():
                         # slide = self.create_slideshow_ffmpeg_in_background(tdir, medias, audio_path, merg_name)
                         # slide.join()
                         with open(merg_name, "rb") as slide_photo:
-                            update.message.reply_video(slide_photo)
+                            update.message.reply_video(slide_photo, caption=args)
                 if len(message.split()) < 2:
                     update.message.delete()
         else:
