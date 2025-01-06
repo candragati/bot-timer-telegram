@@ -725,7 +725,7 @@ class bot_timer():
         temp_audio = f"{dir}/audio_temp.aac"
 
         with ThreadPoolExecutor(max_workers=5) as executor:
-            image_paths = list(executor.map(lambda m: self.downloader_media(tdir, m.media), image_paths))
+            image_paths = list(executor.map(lambda m: self.downloader_media(dir, m.media), image_paths))
             
         cmd_probe_audio = [
             "ffprobe", 
