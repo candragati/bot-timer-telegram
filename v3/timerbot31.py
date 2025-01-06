@@ -692,7 +692,7 @@ class bot_timer():
                     return update.message.reply_text("Failed to send media")
                 if sosmed == 'api/tiktok' and not req.get('video') and req['music']:
                     with TemporaryDirectory() as tdir:
-                        merg_name = f"{tdir}/output_{update.message.message_id}.mp4"
+                        merg_name = f"{tdir}/tiktok_merged_{update.message.message_id}.mp4"
                         audio_path = self.downloader_media(tdir, req['music'][0])['file']
                         self.create_slideshow_ffmpeg(tdir, medias, audio_path, merg_name)
                         # slide = self.create_slideshow_ffmpeg_in_background(tdir, medias, audio_path, merg_name)
@@ -772,12 +772,21 @@ class bot_timer():
             subprocess.run(cmd_copy_audio, check=True)
     
         else:
+            total_duration_concat = 0
             with open(concat_file, "w") as f:
-                for img in image_paths:
+                tot_img = len(image_paths)
+                for i, img in enumerate(image_paths):
                     f.write(f"file '{os.path.abspath(img['file'])}'\n")
-                    f.write(f"duration {duration_per_image}\n")
-                f.write(f"file '{os.path.abspath(image_paths[-1]['file'])}'\n")
-    
+                    if i == tot_img - 1:
+                        if audio_duration < total_duration_concat + 3:
+                            f.write(f"duration {duration_per_image}\n")
+                        else:
+                            f.write(f"duration {audio_duration - total_duration_concat - 3}\n")
+                    else:
+                        f.write(f"duration {duration_per_image}\n")
+                        total_duration_concat += duration_per_image
+                f.write(f"file '{os.path.abspath(image_paths[-1])}'\n")
+            
             cmd_slideshow = [
                 "ffmpeg", "-noautorotate", "-y",
                 "-hide_banner",        
