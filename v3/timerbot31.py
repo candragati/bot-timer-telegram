@@ -631,12 +631,11 @@ class bot_timer():
         link = f"{arsip}{sosmed}{endpoint}"
                 
         def _caption(caption):
-            if caption and len(caption) >= 1024:
+            caption = f"{args}\n{caption}"
+            if len(caption) >= 1024:
                 read_more = '...'
                 caption = caption[:1024 - len(read_more)] + read_more if len(caption) > 1024 else caption
-            if caption:
-                caption = escape_markdown(caption)
-            return caption
+            return escape_markdown(caption).strip()
             
         try:
             req = requests.get(link).json()
