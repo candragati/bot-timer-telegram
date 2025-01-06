@@ -743,13 +743,18 @@ class bot_timer():
         if len(image_paths) == 1:
             single_image = os.path.abspath(image_paths[0]['file'])
             cmd_single = [
-                "ffmpeg", "-y",
+                "ffmpeg", "-noautorotate", "-y",
                 "-hide_banner", "-loglevel", "error",
                 "-threads", str(threads),
                 "-loop", "1", 
                 "-i", single_image,
                 "-t", str(audio_duration),
-                "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+                "-vf",(
+                    "scale="
+                    "'if(gt(a,0.5625),720,-2)':"  # 0.5625 = 720/1280 
+                    "'if(gt(a,0.5625),-2,1280)',"
+                    "pad=720:1280:(ow-iw)/2:(oh-ih)/2:black"
+                ),
                 "-pix_fmt", "yuv420p",
                 "-c:v", "libx264",
                 slideshow_video
@@ -774,13 +779,18 @@ class bot_timer():
                 f.write(f"file '{os.path.abspath(image_paths[-1]['file'])}'\n")
     
             cmd_slideshow = [
-                "ffmpeg", "-y",
+                "ffmpeg", "-noautorotate", "-y",
                 "-hide_banner",        
                 "-loglevel", "error",  
                 "-threads", str(threads),
                 "-f", "concat", "-safe", "0",
                 "-i", concat_file,
-                "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+                "-vf",(
+                    "scale="
+                    "'if(gt(a,0.5625),720,-2)':"  # 0.5625 = 720/1280 
+                    "'if(gt(a,0.5625),-2,1280)',"
+                    "pad=720:1280:(ow-iw)/2:(oh-ih)/2:black"
+                ),
                 "-pix_fmt", "yuv420p",
                 "-c:v", "libx264",
                 slideshow_video
