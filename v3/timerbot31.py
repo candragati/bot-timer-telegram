@@ -689,7 +689,7 @@ class bot_timer():
                     self.reply_downloaded_media_chunk(bot, chat_id, medias)
                 except Exception as e:
                     logger.error(f"[{datetime.datetime.now()}] Failed to send media: {str(e)}")
-                    return update.message.reply_text("Failed to send media")
+                    return update.message.reply_text(f"Failed to send media: {str(e)}")
                 if sosmed == 'api/tiktok' and not req.get('video') and req['music']:
                     with TemporaryDirectory() as tdir:
                         merg_name = f"{tdir}/tiktok_merged_{update.message.message_id}.mp4"
