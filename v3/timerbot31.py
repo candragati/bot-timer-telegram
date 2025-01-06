@@ -631,11 +631,12 @@ class bot_timer():
         link = f"{arsip}{sosmed}{endpoint}"
                 
         def _caption(caption):
-            caption = f"{args}\n{caption}"
-            if len(caption) >= 1024:
+            if caption and len(caption) + len(args) >= 1024:
                 read_more = '...'
                 caption = caption[:1024 - len(read_more)] + read_more if len(caption) > 1024 else caption
-            return escape_markdown(caption).strip()
+            if caption:
+                caption = escape_markdown(caption)
+            return caption.strip()
             
         try:
             req = requests.get(link).json()
@@ -654,7 +655,7 @@ class bot_timer():
                 
                 if media_results:
                     for i, m in enumerate(media_results):
-                        caption = _caption(req['caption'] if i == total_media_res - 1 else None)
+                        caption = _caption(caption = f"{args}\n{req.get('caption', '')}" if i == total_media_res - 1 else None)
                         try:
                             if sosmed == "api/tiktok":
                                 medias.append(InputMediaPhoto(m, caption=caption, parse_mode='Markdown'))
