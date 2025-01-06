@@ -771,7 +771,7 @@ class bot_timer():
                 for img in image_paths:
                     f.write(f"file '{os.path.abspath(img['file'])}'\n")
                     f.write(f"duration {duration_per_image}\n")
-                f.write(f"file '{os.path.abspath(image_paths[-1])}'\n")
+                f.write(f"file '{os.path.abspath(image_paths[-1]['file'])}'\n")
     
             cmd_slideshow = [
                 "ffmpeg", "-y",
