@@ -701,7 +701,8 @@ class bot_timer():
                         with open(merg_name, "rb") as slide_photo:
                             update.message.reply_video(slide_photo, caption=args)
                 if len(message.split()) < 2:
-                    update.message.delete()
+                    try: update.message.delete()
+                    except Exception: pass
         else:
             error_msg = req.get('msg') or "gagal"
             logger.error(f"[{datetime.datetime.now()}] API request failed with message: {error_msg}")
