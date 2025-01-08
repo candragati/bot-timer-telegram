@@ -699,7 +699,7 @@ class bot_timer():
                         # slide = self.create_slideshow_ffmpeg_in_background(tdir, medias, audio_path, merg_name)
                         # slide.join()
                         with open(merg_name, "rb") as slide_photo:
-                            update.message.reply_video(slide_photo, caption=args)
+                            bot.send_video(chat_id=chat_id, video=slide_photo, caption=args)
                 if len(message.split()) < 2:
                     try: update.message.delete()
                     except Exception: pass
