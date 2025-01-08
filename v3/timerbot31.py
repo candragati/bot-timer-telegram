@@ -602,11 +602,11 @@ class bot_timer():
         args = re.search(r'(https?://[^\s]+)', message)
         if args == None:
             return
-        args = args.group()
-        parsed = urlparse(args)
-        hostname = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+        parsed = urlparse(args.group())
+        args = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+        hostname = parsed.hostname
         
-        if hostname == 'twitter.com' or hostname == 'x.com':
+        if 'twitter.com' in hostname or 'x.com' in hostname:
             sosmed = "api/twit"
         elif ('facebook' in hostname) or ('fb' in hostname):
             sosmed = "api/fb"
@@ -614,7 +614,7 @@ class bot_timer():
             sosmed = "api/thread"
         elif 'instagram' in hostname:
             sosmed = "api/ig"
-        elif hostname in ('tiktok.com', 'vt.tiktok.com', 'vm.tiktok.com'):
+        elif hostname in ('www.tiktok.com', 'tiktok.com', 'vt.tiktok.com', 'vm.tiktok.com'):
             sosmed = "api/tiktok"
         else:                
             return
