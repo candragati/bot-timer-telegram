@@ -597,7 +597,7 @@ class bot_timer():
     
     def cmedia(self, update, context):
         if not update.effective_message: return
-        message = update.effective_message.text
+        message = update.effective_message.text or update.effective_message.caption
         
         args1 = re.search(r'(https?://[^\s]+)', message)
         if args1 == None:
