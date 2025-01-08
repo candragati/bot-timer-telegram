@@ -599,10 +599,10 @@ class bot_timer():
         if not update.effective_message: return
         message = update.effective_message.text
         
-        args = re.search(r'(https?://[^\s]+)', message)
-        if args == None:
+        args1 = re.search(r'(https?://[^\s]+)', message)
+        if args1 == None:
             return
-        parsed = urlparse(args.group())
+        parsed = urlparse(args1.group())
         args = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
         hostname = parsed.hostname
         
@@ -628,7 +628,7 @@ class bot_timer():
         bot = context.bot    
         chat_id = update.message["chat"]["id"]
     
-        endpoint = f"?url={args}"
+        endpoint = f"?url={args1.group()}"
         link = f"{arsip}{sosmed}{endpoint}"
                 
         def _caption(caption):
