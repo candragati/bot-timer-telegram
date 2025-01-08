@@ -1,5 +1,5 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackContext #test
-from telegram.error import BadRequest
+from telegram.error import BadRequest, RetryAfter
 from telegram import MessageEntity
 from telegram import ParseMode, Update, Bot, Message 
 from telegram.utils.helpers import escape_markdown
@@ -706,16 +706,21 @@ class bot_timer():
             error_msg = req.get('msg') or "gagal"
             logger.error(f"[{datetime.datetime.now()}] API request failed with message: {error_msg}")
             update.message.reply_text(error_msg)
-
+            
     @staticmethod
     def send_media_chunk(bot, chat_id, successful_medias):
         CHUNK_SIZE = 10
         total_med = len(successful_medias)
         for i in range(0, total_med, CHUNK_SIZE):
             chunk = successful_medias[i:i + CHUNK_SIZE]
-            bot.send_media_group(chat_id=chat_id, media=chunk)
+            try:
+               bot.send_media_group(chat_id=chat_id, media=chunk)
+            except RetryAfter as e:
+                time.sleep(e.retry_after)
+                bot.send_media_group(chat_id=chat_id, media=chunk)
+                
             if total_med > 10:
-               time.sleep(3)
+               time.sleep(5)
 
     def create_slideshow_ffmpeg(
         self,
