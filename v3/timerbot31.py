@@ -720,7 +720,7 @@ class bot_timer():
                 time.sleep(e.retry_after)
                 bot.send_media_group(chat_id=chat_id, media=chunk)
                 
-            if total_med > 10:
+            if total_med > 10 and i + CHUNK_SIZE < total_med:
                time.sleep(5)
 
     def create_slideshow_ffmpeg(
