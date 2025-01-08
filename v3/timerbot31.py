@@ -713,7 +713,7 @@ class bot_timer():
         for i in range(0, len(successful_medias), CHUNK_SIZE):
             chunk = successful_medias[i:i + CHUNK_SIZE]
             bot.send_media_group(chat_id=chat_id, media=chunk)
-            time.sleep(3)
+            if i>0: time.sleep(3)
 
     def create_slideshow_ffmpeg(
         self,
