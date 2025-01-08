@@ -715,11 +715,12 @@ class bot_timer():
         for i in range(0, total_med, CHUNK_SIZE):
             chunk = successful_medias[i:i + CHUNK_SIZE]
             try:
-               bot.send_media_group(chat_id=chat_id, media=chunk)
+               bot.send_media_group(chat_id=chat_id, media=chunk, write_timeout=120)
             except RetryAfter as e:
                 time.sleep(e.retry_after)
                 bot.send_media_group(chat_id=chat_id, media=chunk)
-                
+            except TimeoutError:
+                bot.send_media_group(chat_id=chat_id, media=chunk)
             if total_med > CHUNK_SIZE and i + CHUNK_SIZE < total_med:
                time.sleep(5)
 
