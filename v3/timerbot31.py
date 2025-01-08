@@ -603,7 +603,8 @@ class bot_timer():
         if args == None:
             return
         args = args.group()
-        hostname = urlparse(args).hostname
+        parsed = urlparse(args)
+        hostname = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
         
         if hostname == 'twitter.com' or hostname == 'x.com':
             sosmed = "api/twit"
