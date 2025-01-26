@@ -640,7 +640,7 @@ class bot_timer():
             return caption
             
         try:
-            req = requests.get(link).json()
+            req = requests.get(link, headers={'User-Agent': 'Mozilla'}).json()
         except Exception as e:
             logger.error(f"[{datetime.datetime.now()}] API request failed: {str(e)}")
             return update.message.reply_text(f"Failed to fetch media")
