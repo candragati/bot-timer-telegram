@@ -650,7 +650,7 @@ class bot_timer():
         if req.get('success'):
             medias = []
 
-            if sosmed == "api/capcut" and req.get('video'):
+            if sosmed == "api/capcut":
                 medias.append(InputMediaVideo(req['highest_video'], caption=_caption(caption = f"{args}\n{req.get('title', '')}"), thumb=req.get('cover_url'), parse_mode='Markdown'))
             elif sosmed == "api/tiktok" and req.get('video'):
                 medias.append(InputMediaVideo(req['video'][-1], caption=_caption(caption = f"{args}\n{req.get('caption', '')}"), thumb=req.get('thumbnail'), parse_mode='Markdown'))
