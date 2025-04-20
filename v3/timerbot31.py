@@ -40,7 +40,7 @@ import requests
 load_dotenv()
 
 pathDB = "database"
-SUDO = [582005141, 377596941]
+SUDO = [582005141, 377596941, 926561006]
 RESTART_FILE = '/tmp/bot_restart_info.json'
 
 os.makedirs('logs', exist_ok=True)
@@ -614,6 +614,8 @@ class bot_timer():
             sosmed = "api/thread"
         elif 'instagram' in hostname:
             sosmed = "api/ig"
+        elif 'capcut' in hostname:
+            sosmed = "api/capcut"
         elif hostname in ('www.tiktok.com', 'tiktok.com', 'vt.tiktok.com', 'vm.tiktok.com'):
             sosmed = "api/tiktok"
         else:                
@@ -647,8 +649,10 @@ class bot_timer():
     
         if req.get('success'):
             medias = []
-    
-            if sosmed == "api/tiktok" and req.get('video'):
+
+            if sosmed == "api/capcut" and req.get('video'):
+                medias.append(InputMediaVideo(req['highest_video'], caption=_caption(caption = f"{args}\n{req.get('title', '')}"), thumb=req.get('cover_url'), parse_mode='Markdown'))
+            elif sosmed == "api/tiktok" and req.get('video'):
                 medias.append(InputMediaVideo(req['video'][-1], caption=_caption(caption = f"{args}\n{req.get('caption', '')}"), thumb=req.get('thumbnail'), parse_mode='Markdown'))
             else:
                 media_results = req.get('media') or req.get('photos')
