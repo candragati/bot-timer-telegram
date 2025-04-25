@@ -616,6 +616,8 @@ class bot_timer():
             sosmed = "api/ig"
         elif 'capcut' in hostname:
             sosmed = "api/capcut"
+        elif 'reddit' in hostname:
+            sosmed = "api/reddit"
         elif hostname in ('www.tiktok.com', 'tiktok.com', 'vt.tiktok.com', 'vm.tiktok.com'):
             sosmed = "api/tiktok"
         else:                
