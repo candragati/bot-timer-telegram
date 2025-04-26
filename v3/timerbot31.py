@@ -693,10 +693,13 @@ class bot_timer():
                 try:
                     self.send_media_chunk(bot, chat_id, medias)
                 except BadRequest:
-                    self.reply_downloaded_media_chunk(bot, chat_id, medias)
+                    cek = self.reply_downloaded_media_chunk(bot, chat_id, medias)
+                    if not cek:
+                        return
                 except Exception as e:
                     logger.error(f"[{datetime.datetime.now()}] Failed to send media: {str(e)}")
                     return update.message.reply_text(f"Failed to send media: {str(e)}")
+                
                 if sosmed == 'api/tiktok' and not req.get('video') and req['music']:
                     with TemporaryDirectory() as tdir:
                         merg_name = f"{tdir}/tiktok_merged_{update.message.message_id}.mp4"
@@ -997,10 +1000,12 @@ class bot_timer():
             except Exception as e:
                 logger.error(f"[{datetime.datetime.now()}] Failed to send media: {str(e)}")
                 bot.send_message(chat_id, f"Failed to send media\n'{str(e)}'\n" + '\n'.join([x for x in collect_links]) if collect_links else '')
+                return False
             finally:
                 for file in opened_files:
                     file.close()
-    
+            return True
+            
     def get_log(self, update, context):
         user_id = update.message.from_user.id
         if user_id not in SUDO:
