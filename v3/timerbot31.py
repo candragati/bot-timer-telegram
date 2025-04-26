@@ -954,11 +954,13 @@ class bot_timer():
             with ThreadPoolExecutor(max_workers=5) as executor:
                 media_results = list(executor.map(lambda m: self.downloader_media(tdir, m.media), medias))
                 thumbnail_results = list(executor.map(lambda m: self.downloader_media(tdir, m.thumb) if getattr(m, 'thumb', None) else {'success': False}, medias))
-    
+
+                collect_links = []
                 successful_medias = []
                 opened_files = []
                 for media, media_result, thumb_result in zip(medias, media_results, thumbnail_results):
                     if media_result['success']:
+                        collect_links.append(media_result['file'])
                         f = open(media_result['file'], 'rb')
                         opened_files.append(f)
                         caption = getattr(media, 'caption', None)
@@ -994,7 +996,7 @@ class bot_timer():
                 self.send_media_chunk(bot, chat_id, successful_medias)
             except Exception as e:
                 logger.error(f"[{datetime.datetime.now()}] Failed to send media: {str(e)}")
-                bot.send_message(chat_id, f"Failed to send media\n" + '\n'.join([x.media for x in successful_medias]))
+                bot.send_message(chat_id, f"Failed to send media\n" + '\n'.join([x for x in collect_links]) if collect_links else '')
             finally:
                 for file in opened_files:
                     file.close()
