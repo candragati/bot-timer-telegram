@@ -960,7 +960,7 @@ class bot_timer():
                 opened_files = []
                 for media, media_result, thumb_result in zip(medias, media_results, thumbnail_results):
                     if media_result['success']:
-                        collect_links.append(media_result['file'])
+                        collect_links.append(media.media)
                         f = open(media_result['file'], 'rb')
                         opened_files.append(f)
                         caption = getattr(media, 'caption', None)
