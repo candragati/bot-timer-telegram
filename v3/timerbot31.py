@@ -994,7 +994,7 @@ class bot_timer():
                 self.send_media_chunk(bot, chat_id, successful_medias)
             except Exception as e:
                 logger.error(f"[{datetime.datetime.now()}] Failed to send media: {str(e)}")
-                bot.send_message(chat_id, "Failed to send media")
+                bot.send_message(chat_id, f"Failed to send media\n" + '\n'.join([x.media for x in successful_medias]))
             finally:
                 for file in opened_files:
                     file.close()
