@@ -709,7 +709,7 @@ class bot_timer():
                         # slide = self.create_slideshow_ffmpeg_in_background(tdir, medias, audio_path, merg_name)
                         # slide.join()
                         with open(merg_name, "rb") as slide_photo:
-                            bot.send_video(chat_id=chat_id, video=slide_photo, caption=args, reply_to_message=message_id)
+                            bot.send_video(chat_id=chat_id, video=slide_photo, caption=args, reply_to_message_id=message_id)
                 if len(message.split()) < 2:
                     try: update.message.delete()
                     except Exception: pass
@@ -725,12 +725,12 @@ class bot_timer():
         for i in range(0, total_med, CHUNK_SIZE):
             chunk = successful_medias[i:i + CHUNK_SIZE]
             try:
-               bot.send_media_group(chat_id=chat_id, media=chunk, write_timeout=60, reply_to_message=message_id)
+               bot.send_media_group(chat_id=chat_id, media=chunk, write_timeout=60, reply_to_message_id=message_id)
             except RetryAfter as e:
                 time.sleep(e.retry_after)
-                bot.send_media_group(chat_id=chat_id, media=chunk, reply_to_message=message_id)
+                bot.send_media_group(chat_id=chat_id, media=chunk, reply_to_message_id=message_id)
             except TimeoutError:
-                bot.send_media_group(chat_id=chat_id, media=chunk, reply_to_message=message_id)
+                bot.send_media_group(chat_id=chat_id, media=chunk, reply_to_message_id=message_id)
             if total_med > CHUNK_SIZE and i + CHUNK_SIZE < total_med:
                time.sleep(5)
 
