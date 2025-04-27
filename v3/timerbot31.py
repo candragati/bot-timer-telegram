@@ -631,6 +631,7 @@ class bot_timer():
 
         bot = context.bot    
         chat_id = update.message["chat"]["id"]
+        message_id = update.message.message_id
     
         endpoint = f"?url={args1.group()}"
         link = f"{arsip}{sosmed}{endpoint}"
@@ -691,9 +692,9 @@ class bot_timer():
                 update.message.reply_text(caption)
             else:                    
                 try:
-                    self.send_media_chunk(bot, chat_id, medias)
+                    self.send_media_chunk(bot, chat_id, medias, message_id)
                 except BadRequest:
-                    cek = self.reply_downloaded_media_chunk(bot, chat_id, medias)
+                    cek = self.reply_downloaded_media_chunk(bot, chat_id, medias, message_id)
                     if not cek:
                         return
                 except Exception as e:
@@ -702,13 +703,13 @@ class bot_timer():
                 
                 if sosmed == 'api/tiktok' and not req.get('video') and req['music']:
                     with TemporaryDirectory() as tdir:
-                        merg_name = f"{tdir}/tiktok_merged_{update.message.message_id}.mp4"
+                        merg_name = f"{tdir}/tiktok_merged_{message_id}.mp4"
                         audio_path = self.downloader_media(tdir, req['music'][0])['file']
                         self.create_slideshow_ffmpeg(tdir, medias, audio_path, merg_name)
                         # slide = self.create_slideshow_ffmpeg_in_background(tdir, medias, audio_path, merg_name)
                         # slide.join()
                         with open(merg_name, "rb") as slide_photo:
-                            bot.send_video(chat_id=chat_id, video=slide_photo, caption=args)
+                            bot.send_video(chat_id=chat_id, video=slide_photo, caption=args, reply_to_message=message_id)
                 if len(message.split()) < 2:
                     try: update.message.delete()
                     except Exception: pass
@@ -718,18 +719,18 @@ class bot_timer():
             update.message.reply_text(error_msg)
             
     @staticmethod
-    def send_media_chunk(bot, chat_id, successful_medias):
+    def send_media_chunk(bot, chat_id, successful_medias, message_id):
         CHUNK_SIZE = 10
         total_med = len(successful_medias)
         for i in range(0, total_med, CHUNK_SIZE):
             chunk = successful_medias[i:i + CHUNK_SIZE]
             try:
-               bot.send_media_group(chat_id=chat_id, media=chunk, write_timeout=60)
+               bot.send_media_group(chat_id=chat_id, media=chunk, write_timeout=60, reply_to_message=message_id)
             except RetryAfter as e:
                 time.sleep(e.retry_after)
-                bot.send_media_group(chat_id=chat_id, media=chunk)
+                bot.send_media_group(chat_id=chat_id, media=chunk, reply_to_message=message_id)
             except TimeoutError:
-                bot.send_media_group(chat_id=chat_id, media=chunk)
+                bot.send_media_group(chat_id=chat_id, media=chunk, reply_to_message=message_id)
             if total_med > CHUNK_SIZE and i + CHUNK_SIZE < total_med:
                time.sleep(5)
 
@@ -952,7 +953,7 @@ class bot_timer():
             print(f"HEIC Conversion error: {str(e)}")
             return None
             
-    def reply_downloaded_media_chunk(self, bot, chat_id, medias):
+    def reply_downloaded_media_chunk(self, bot, chat_id, medias, message_id):
         with TemporaryDirectory() as tdir:
             with ThreadPoolExecutor(max_workers=5) as executor:
                 media_results = list(executor.map(lambda m: self.downloader_media(tdir, m.media), medias))
@@ -996,7 +997,7 @@ class bot_timer():
                         successful_medias.append(media_obj)
 
             try:
-                self.send_media_chunk(bot, chat_id, successful_medias)
+                self.send_media_chunk(bot, chat_id, successful_medias, message_id)
             except Exception as e:
                 logger.error(f"[{datetime.datetime.now()}] Failed to send media: {str(e)}")
                 bot.send_message(chat_id, f"Failed to send media\n'{str(e)}'\n" + '\n'.join([x for x in collect_links]) if collect_links else '')
