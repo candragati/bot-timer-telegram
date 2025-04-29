@@ -599,7 +599,7 @@ class bot_timer():
         if not update.effective_message: return
         message = update.effective_message.text or update.effective_message.caption
         
-        args1 = re.search(r'(https?://[^\s]+)', message)
+        args1 = re.search(r'(https?://[^\s]+)', message + ' ' + + ' ' + ' '.join(x.url for x in update.effective_message.entities if x.type=='text_link'))
         if args1 == None:
             return
         parsed = urlparse(args1.group())
