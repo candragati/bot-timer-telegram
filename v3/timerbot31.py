@@ -161,6 +161,7 @@ class bot_timer():
         dp.add_handler(CommandHandler("corstat",        kawalCorona.corGraph, pass_args = True))
         dp.add_handler(CommandHandler("lupaUmur",        asl.lupaUmur))
         dp.add_handler(CommandHandler("setUmur",        asl.setUmur, pass_args = True))
+        dp.add_handler(CommandHandler("spam",               self.spam))
         
         dp.add_handler(MessageHandler(Filters.status_update.new_chat_members, asl.asl))
         dp.add_handler(MessageHandler(Filters.entity(MessageEntity.MENTION) | Filters.entity(MessageEntity.TEXT_MENTION) | Filters.reply ,afk.reply_afk),group = 1)
@@ -169,10 +170,93 @@ class bot_timer():
         dp.add_handler(MessageHandler(~Filters.command, afk.sudah_nongol), group = 4)
         dp.add_handler(MessageHandler(Filters.text, asl.check_age),group = 5)
         dp.add_handler(MessageHandler(Filters.text, self.cmedia),group = 6)
+        dp.add_handler(MessageHandler(Filters.text, self.cekspam),group = 7)
         self.check_restart_message()
         updater.start_polling()
         updater.idle()
 
+    def proses_spam(self,teks):
+        unicode_count = 0
+        normal_count = 0
+        for char in teks:
+            if '\u0400' <= char <= '\u04FF': 
+                unicode_count += 1                
+            elif char.isascii():
+                normal_count += 1
+            else:
+                pass
+
+        if unicode_count > normal_count:
+            hasil = 1
+        else:
+            hasil = 0
+        return hasil
+
+
+    def cekspam(self,update,context):
+        bot         = Bot(token = Config.TOKEN)
+        em          = update.effective_message.to_dict()
+        teks        = em['text']
+        sender      = em['from']['first_name']
+        sender_id   = em['from']['id']
+        chat_id     = em['chat']['id']       
+        message_id  = update.effective_message.message_id
+        hasil = self.proses_spam(teks)
+        if hasil:
+            try:
+                bot.kick_chat_member(chat_id, sender_id)
+                pesan = ("banned [%s](tg://user?id=%s)"%(sender,sender_id))
+                bot.send_message(text = pesan,chat_id = chat_id,parse_mode=ParseMode.MARKDOWN)
+                bot.delete_message(chat_id = chat_id, message_id =  message_id)                    
+                update.message.reply_text(
+                    "member sudah dikubur...",
+                    parse_mode='Markdown'
+                )
+            except:
+                pesan = (f"ane gagal banned orang ini [{sender}](tg://user?id={sender_id})")
+                bot.send_sticker(chat_id, 'CAACAgUAAxkBAAIVY18FFska2MmU5E4nPNco6m0RTRQhAALaAAM_5Bom20PZpUJeLM8aBA', reply_to_message_id=message_id) 
+                bot.send_message(text = pesan,chat_id = chat_id,parse_mode=ParseMode.MARKDOWN, reply_to_message_id=message_id)
+
+        
+    def spam(self, update, context):
+        bot         = Bot(token = Config.TOKEN)
+        em          = update.message.to_dict()  
+        pprint.pprint(em)
+        message_id  = update.message.message_id
+        chat_id     = em['chat']['id']
+        teks        = em['reply_to_message']['text']
+        sender      = em['reply_to_message']['from']['first_name']
+        sender_id   = em['reply_to_message']['from']['id']
+        reply_id    = em['reply_to_message']['message_id']
+        # ce          = em['reply_to_message']['entities']
+        # ce_count    = sum(1 for e in ce if e.get("type") == "custom_emoji")
+        # print("Jumlah custom_emoji:", custom_emoji_count)
+        hasil = self.proses_spam(teks)
+        if hasil:
+            try:
+                bot.kick_chat_member(chat_id, sender_id)
+                pesan = ("banned [%s](tg://user?id=%s)"%(sender,sender_id))
+                bot.send_message(text = pesan,chat_id = chat_id,parse_mode=ParseMode.MARKDOWN)
+                update.message.reply_text(
+                    "member sudah dikubur...",
+                    parse_mode='Markdown'
+                )
+                bot.delete_message(chat_id = chat_id, message_id =  reply_id)                    
+            except:
+                pesan = (f"ane gagal banned orang ini [{sender}](tg://user?id={sender_id})")
+                bot.send_sticker(chat_id, 'CAACAgUAAxkBAAIVY18FFska2MmU5E4nPNco6m0RTRQhAALaAAM_5Bom20PZpUJeLM8aBA', reply_to_message_id=message_id)
+                bot.send_message(text = pesan,chat_id = chat_id,parse_mode=ParseMode.MARKDOWN, reply_to_message_id=message_id)
+
+        else:
+            update.message.reply_text(
+                "Bukan spam kayaknya. Skip...",
+                parse_mode='Markdown'
+            )
+
+
+        
+        
+        
     def check_restart_message(self):
         try:
             if os.path.exists(RESTART_FILE):
