@@ -221,7 +221,6 @@ class bot_timer():
     def spam(self, update, context):
         bot         = Bot(token = Config.TOKEN)
         em          = update.message.to_dict()  
-        pprint.pprint(em)
         message_id  = update.message.message_id
         chat_id     = em['chat']['id']
         teks        = em['reply_to_message']['text']
