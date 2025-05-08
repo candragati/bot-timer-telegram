@@ -205,13 +205,8 @@ class bot_timer():
         if hasil:
             try:
                 bot.kick_chat_member(chat_id, sender_id)
-                pesan = ("banned [%s](tg://user?id=%s)"%(sender,sender_id))
-                bot.send_message(text = pesan,chat_id = chat_id,parse_mode=ParseMode.MARKDOWN)
                 bot.delete_message(chat_id = chat_id, message_id =  message_id)                    
-                update.message.reply_text(
-                    "member sudah dikubur...",
-                    parse_mode='Markdown'
-                )
+                
             except:
                 pesan = (f"ane gagal banned orang ini [{sender}](tg://user?id={sender_id})")
                 bot.send_sticker(chat_id, 'CAACAgUAAxkBAAIVY18FFska2MmU5E4nPNco6m0RTRQhAALaAAM_5Bom20PZpUJeLM8aBA', reply_to_message_id=message_id) 
@@ -236,10 +231,7 @@ class bot_timer():
                 bot.kick_chat_member(chat_id, sender_id)
                 pesan = ("banned [%s](tg://user?id=%s)"%(sender,sender_id))
                 bot.send_message(text = pesan,chat_id = chat_id,parse_mode=ParseMode.MARKDOWN)
-                update.message.reply_text(
-                    "member sudah dikubur...",
-                    parse_mode='Markdown'
-                )
+                
                 bot.delete_message(chat_id = chat_id, message_id =  reply_id)                    
             except:
                 pesan = (f"ane gagal banned orang ini [{sender}](tg://user?id={sender_id})")
