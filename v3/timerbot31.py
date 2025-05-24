@@ -199,14 +199,21 @@ class bot_timer():
         teks        = em['text']
         sender      = em['from']['first_name']
         sender_id   = em['from']['id']
-        chat_id     = em['chat']['id']       
+        chat_id     = em['chat']['id']    
+        ce          = em['entities']        
+        ce_count    = sum(1 for e in ce if e.get("type") == "custom_emoji")   
         message_id  = update.effective_message.message_id
-        hasil = self.proses_spam(teks)
-        if hasil:
+        hasil       = self.proses_spam(teks)
+        if hasil or ce_count > 5:
             try:
                 bot.kick_chat_member(chat_id, sender_id)
+                pesan = ("banned [%s](tg://user?id=%s)"%(sender,sender_id))
+                bot.send_message(text = pesan,chat_id = chat_id,parse_mode=ParseMode.MARKDOWN)
                 bot.delete_message(chat_id = chat_id, message_id =  message_id)                    
-                
+                update.message.reply_text(
+                    "member sudah dikubur...",
+                    parse_mode='Markdown'
+                )
             except:
                 pesan = (f"ane gagal banned orang ini [{sender}](tg://user?id={sender_id})")
                 bot.send_sticker(chat_id, 'CAACAgUAAxkBAAIVY18FFska2MmU5E4nPNco6m0RTRQhAALaAAM_5Bom20PZpUJeLM8aBA', reply_to_message_id=message_id) 
@@ -222,16 +229,18 @@ class bot_timer():
         sender      = em['reply_to_message']['from']['first_name']
         sender_id   = em['reply_to_message']['from']['id']
         reply_id    = em['reply_to_message']['message_id']
-        # ce          = em['reply_to_message']['entities']
-        # ce_count    = sum(1 for e in ce if e.get("type") == "custom_emoji")
-        # print("Jumlah custom_emoji:", custom_emoji_count)
-        hasil = self.proses_spam(teks)
-        if hasil:
+        ce          = em['reply_to_message']['entities']
+        ce_count    = sum(1 for e in ce if e.get("type") == "custom_emoji")                
+        hasil       = self.proses_spam(teks)
+        if hasil or ce_count > 5:
             try:
                 bot.kick_chat_member(chat_id, sender_id)
                 pesan = ("banned [%s](tg://user?id=%s)"%(sender,sender_id))
                 bot.send_message(text = pesan,chat_id = chat_id,parse_mode=ParseMode.MARKDOWN)
-                
+                update.message.reply_text(
+                    "member sudah dikubur...",
+                    parse_mode='Markdown'
+                )
                 bot.delete_message(chat_id = chat_id, message_id =  reply_id)                    
             except:
                 pesan = (f"ane gagal banned orang ini [{sender}](tg://user?id={sender_id})")
@@ -256,7 +265,7 @@ class bot_timer():
                     chat_id = data.get('cid')
                     if chat_id:
                         bot = Bot(token = Config.TOKEN)
-                        text = f"{data['msg']}\n✅ Bot berhasil direstart!"
+                        text = f"{data['msg']}\n? Bot berhasil direstart!"
                         try:
                             bot.edit_message_text(
                                 chat_id=chat_id,
@@ -302,7 +311,7 @@ class bot_timer():
             user_id = update.message.from_user.id
             if user_id not in SUDO:
                 update.message.reply_text(
-                    "⚠️ You don't have permission to use this command.",
+                    "?? You don't have permission to use this command.",
                     parse_mode='Markdown'
                 )
                 return
@@ -572,7 +581,7 @@ class bot_timer():
             user_id = update.message.from_user.id
             if user_id not in SUDO:
                 update.message.reply_text(
-                    "⚠️ You don't have permission to use this command.",
+                    "?? You don't have permission to use this command.",
                     parse_mode='Markdown'
                 )
                 return
@@ -595,7 +604,7 @@ class bot_timer():
             ]
             if any(pattern in code.lower() for pattern in dangerous_patterns):
                 update.message.reply_text(
-                    "⚠️ Operation not permitted for security reasons.",
+                    "?? Operation not permitted for security reasons.",
                     parse_mode='Markdown'
                 )
                 return
@@ -1085,7 +1094,7 @@ class bot_timer():
     def get_log(self, update, context):
         user_id = update.message.from_user.id
         if user_id not in SUDO:
-            return update.message.reply_text("⚠️ You don't have permission to access logs.")
+            return update.message.reply_text("?? You don't have permission to access logs.")
     
         if not context.args:
             return update.message.reply_text(
@@ -1108,7 +1117,7 @@ class bot_timer():
     
     
                 if not os.path.abspath(full_path).startswith(os.path.abspath('logs')):
-                    return update.message.reply_text("⚠️ Invalid file path")
+                    return update.message.reply_text("?? Invalid file path")
     
                 with open(full_path, 'w') as file:
                     file.truncate(0)
@@ -1276,16 +1285,16 @@ class bot_timer():
     def restart_pull(self, update, context):
         user_id = update.message.from_user.id
         if user_id not in SUDO:
-            update.message.reply_text("❌ Anda tidak memiliki akses untuk menggunakan perintah ini.")
+            update.message.reply_text("? Anda tidak memiliki akses untuk menggunakan perintah ini.")
             return
     
         try:
-            message = update.message.reply_text("🔄 Memeriksa pembaruan dari GitHub...")
+            message = update.message.reply_text("?? Memeriksa pembaruan dari GitHub...")
             
             try:
                 subprocess.check_output(['git', 'fetch'], stderr=subprocess.STDOUT, text=True)
             except subprocess.CalledProcessError as e:
-                message.edit_text(f"❌ Gagal fetch dari remote:\n```\n{e.output}```", parse_mode='Markdown')
+                message.edit_text(f"? Gagal fetch dari remote:\n```\n{e.output}```", parse_mode='Markdown')
                 return
     
             # try:
@@ -1295,7 +1304,7 @@ class bot_timer():
             #         text=True
             #     ).strip()
             # except subprocess.CalledProcessError as e:
-            #     message.edit_text(f"❌ Gagal mendapatkan current branch:\n```\n{e.output}```", parse_mode='Markdown')
+            #     message.edit_text(f"? Gagal mendapatkan current branch:\n```\n{e.output}```", parse_mode='Markdown')
             #     return
             current_branch = 'master'
     
@@ -1317,11 +1326,11 @@ class bot_timer():
                 ).strip()
                 
                 if not diff_output:
-                    message.edit_text("✅ Tidak ada pembaruan yang tersedia.")
+                    message.edit_text("? Tidak ada pembaruan yang tersedia.")
                     return
                     
                 changed_files = diff_output.split('\n')
-                message.edit_text("🔍 Memeriksa file yang diperbarui...")
+                message.edit_text("?? Memeriksa file yang diperbarui...")
                 
                 for file in changed_files:
                     if file.endswith('.py'):
@@ -1335,30 +1344,30 @@ class bot_timer():
                             is_safe, error_msg = check_code_safety(remote_content, file)
                             if not is_safe:
                                 try:
-                                    message.edit_text(f"❌ Error terdeteksi di `{file}`:\n{error_msg}", parse_mode='Markdown')
+                                    message.edit_text(f"? Error terdeteksi di `{file}`:\n{error_msg}", parse_mode='Markdown')
                                 except BadRequest:
-                                    message.edit_text(f"❌ Error terdeteksi di `{file}`:\n{escape_markdown(error_msg)}", parse_mode='Markdown')
+                                    message.edit_text(f"? Error terdeteksi di `{file}`:\n{escape_markdown(error_msg)}", parse_mode='Markdown')
                                 return
                                 
                         except subprocess.CalledProcessError as e:                            
                             try:
                                 error_text = (
-                                    f"❌ Error saat memeriksa file `{file}`:\n"
+                                    f"? Error saat memeriksa file `{file}`:\n"
                                     f"```\n{e.output}```"
                                 )
                                 message.edit_text(error_text, parse_mode='Markdown')
                             except BadRequest:
                                 error_text = (
-                                    f"❌ Error saat memeriksa file `{file}`:\n"
+                                    f"? Error saat memeriksa file `{file}`:\n"
                                     f"```\n{escape_markdown(e.output)}```"
                                 )
                                 message.edit_text(error_text, parse_mode='Markdown')
                             return
                             
-                message.edit_text("✅ Pemeriksaan sintaks berhasil.\n🔄 Mengambil pembaruan...")
+                message.edit_text("? Pemeriksaan sintaks berhasil.\n?? Mengambil pembaruan...")
                 
             except subprocess.CalledProcessError as e:
-                message.edit_text(f"❌ Gagal memeriksa perubahan:\n```\n{e.output}```", parse_mode='Markdown')
+                message.edit_text(f"? Gagal memeriksa perubahan:\n```\n{e.output}```", parse_mode='Markdown')
                 return
     
             status_result = subprocess.run(['git', 'status', '--porcelain'], 
@@ -1366,7 +1375,7 @@ class bot_timer():
                                          text=True)
             
             if status_result.stdout.strip():
-                message.edit_text("📝 Ditemukan perubahan lokal, mencoba auto-stash...")
+                message.edit_text("?? Ditemukan perubahan lokal, mencoba auto-stash...")
                 
                 stash_result = subprocess.run(
                     ['git', 'stash', 'save', f"Auto stash before pull at {datetime.datetime.now()}"], 
@@ -1376,12 +1385,12 @@ class bot_timer():
                 
                 if stash_result.returncode != 0:
                     message.edit_text(
-                        f"❌ Gagal melakukan auto-stash:\n```\n{stash_result.stderr}```", 
+                        f"? Gagal melakukan auto-stash:\n```\n{stash_result.stderr}```", 
                         parse_mode='Markdown'
                     )
                     return
                 
-                message.edit_text("✅ Berhasil menyimpan perubahan lokal dengan stash")
+                message.edit_text("? Berhasil menyimpan perubahan lokal dengan stash")
     
             pull_result = subprocess.run(['git', 'pull', 'origin', current_branch], 
                                        capture_output=True, 
@@ -1389,7 +1398,7 @@ class bot_timer():
             
             if pull_result.returncode != 0:
                 message.edit_text(
-                    f"❌ Gagal melakukan git pull:\n```\n{pull_result.stderr}```", 
+                    f"? Gagal melakukan git pull:\n```\n{pull_result.stderr}```", 
                     parse_mode='Markdown'
                 )
                 return
@@ -1399,14 +1408,14 @@ class bot_timer():
                                          capture_output=True, 
                                          text=True)
                 if stash_pop.returncode != 0:
-                    message.edit_text("⚠️ Berhasil pull tapi gagal mengembalikan perubahan lokal. Silakan cek git stash list.")
+                    message.edit_text("?? Berhasil pull tapi gagal mengembalikan perubahan lokal. Silakan cek git stash list.")
                     return
                     
-            prev_msg = f"✅ Pembaruan berhasil!\nBranch: `{current_branch}`\n📝 Git pull output:\n```\n{escape_markdown(pull_result.stdout)}\n```"
+            prev_msg = f"? Pembaruan berhasil!\nBranch: `{current_branch}`\n?? Git pull output:\n```\n{escape_markdown(pull_result.stdout)}\n```"
             
             with open(RESTART_FILE, 'w') as f:
                 json.dump({'cid': message.chat.id, 'message_id': message.message_id, 'msg': prev_msg}, f)
-            prev_msg += "\n🔄 Memulai ulang bot..."
+            prev_msg += "\n?? Memulai ulang bot..."
             message.edit_text(
                 prev_msg,
                 parse_mode='Markdown'
@@ -1419,7 +1428,7 @@ class bot_timer():
                 os.remove(RESTART_FILE)
             error_traceback = traceback.format_exc()
             error_message = (
-                f"❌ Terjadi kesalahan saat pembaruan/restart:\n"
+                f"? Terjadi kesalahan saat pembaruan/restart:\n"
                 f"Error type: `{type(e).__name__}`\n"
                 f"Error message: `{str(e)}`\n"
                 f"Traceback:\n```\n{error_traceback}```"
@@ -1432,16 +1441,16 @@ class bot_timer():
                     f.write(error_message)
                 
                 short_message = (
-                    f"❌ Terjadi kesalahan saat pembaruan/restart:\n"
+                    f"? Terjadi kesalahan saat pembaruan/restart:\n"
                     f"Error type: `{type(e).__name__}`\n"
-                    f"Error message: `{str(e)}`\n👇🏿 File Full Error 👇🏿"
+                    f"Error message: `{str(e)}`\n???? File Full Error ????"
                 )
                 update.message.reply_text(short_message, parse_mode='Markdown')
                 with open(error_file, 'rb') as f:
                     update.message.reply_document(
                         document=f,
                         filename=f"error_{timestamp}.txt",
-                        caption="📁 Log detail error"
+                        caption="?? Log detail error"
                     )
             else:
                 update.message.reply_text(error_message, parse_mode='Markdown')
