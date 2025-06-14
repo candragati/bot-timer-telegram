@@ -338,7 +338,7 @@ class bot_timer():
                 if success:
                     _, reloaded_modules = self.extract_and_reload_modules(output, update.message.reply_text)
                     if reloaded_modules:
-                        update.message.reply_text(escape_markdown(f"Reloaded modules: {', '.join(reloaded_modules)}"))
+                        msg.edit_text(escape_markdown(f"Reloaded modules: {', '.join(reloaded_modules)}"))
                 else:
                     msg.edit_text(
                         f"**Installation failed!**\n\n```\n{output}```",
