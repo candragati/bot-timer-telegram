@@ -661,7 +661,7 @@ class bot_timer():
             if code.startswith("pip install"):
                 msg = msg.edit_text("**Installing module...**")
                 if stdout:
-                    _, reloaded_modules = extract_and_reload_modules(output, update.message.reply_text)
+                    _, reloaded_modules = extract_and_reload_modules(stdout, update.message.reply_text)
                     if reloaded_modules:
                         update.message.reply_text(f"**Reloaded modules:** {', '.join(reloaded_modules)}")
                 else:
