@@ -575,7 +575,40 @@ class bot_timer():
             result_str = ""
             
         return stdout, stderr, result_str
-    
+
+    def extract_and_reload_modules(result_stdout, reply_func=None):
+        module_names = []
+        output_lines = result_stdout.split('\n')
+        
+        for line in output_lines:
+            # Match "Successfully installed module-name-version"
+            match = re.search(r'Successfully installed ([a-zA-Z0-9_-]+)-[\d.]+', line)
+            if match:
+                module_name = match.group(1).replace('-', '_')  # Convert hyphens to underscores
+                module_names.append(module_name)
+            
+            # Match "Requirement already satisfied: module-name"
+            match = re.search(r'Requirement already satisfied: ([a-zA-Z0-9_-]+)', line)
+            if match:
+                module_name = match.group(1).replace('-', '_')
+                module_names.append(module_name)
+        
+        # Clear import caches
+        importlib.invalidate_caches()
+        
+        # Reload the found modules
+        reloaded_modules = []
+        for module_name in module_names:
+            if module_name in sys.modules:
+                try:
+                    importlib.reload(sys.modules[module_name])
+                    reloaded_modules.append(module_name)
+                except Exception as reload_error:
+                    if reply_func:
+                        reply_func(f"Warning: Could not reload {module_name}: {reload_error}")
+        
+        return module_names, reloaded_modules
+        
     def handle_eval(self, update, context):
         try:
             user_id = update.message.from_user.id
@@ -623,7 +656,17 @@ class bot_timer():
                 output_parts.append(f"**Stderr:**\n```\n{stderr}```")
             if result:
                 output_parts.append(f"**Result:**\n```\n{result}```")
-    
+                
+            if code.startswith("pip install"):
+                msg = msg.edit_text("**Installing module...**")
+                if stdout:
+                    _, reloaded_modules = extract_and_reload_modules(output, update.message.reply_text)
+                    if reloaded_modules:
+                        update.message.reply_text(f"**Reloaded modules:** {', '.join(reloaded_modules)}")
+                else:
+                    msg.edit_text(f"**Installation failed!**\n" + "\n\n".join(output_parts))
+                return
+                
             output_text = "\n\n".join(output_parts) if output_parts else "*(No output)*"
     
             if len(output_text) > 4096:
