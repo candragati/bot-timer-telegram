@@ -336,15 +336,9 @@ class bot_timer():
                 success, output = self.run_command(f"{sys.executable} -m {cmd}")
                 
                 if success:
-                    if stdout:
-                        _, reloaded_modules = extract_and_reload_modules(output, update.message.reply_text)
-                        if reloaded_modules:
-                            update.message.reply_text(f"**Reloaded modules:** {', '.join(reloaded_modules)}", parse_mode='Markdown')
-                    else:
-                        msg.edit_text(
-                            f"**Installation failed!**\n\n```\n{output}```",
-                            parse_mode='Markdown'
-                        )
+                    _, reloaded_modules = extract_and_reload_modules(output, update.message.reply_text)
+                    if reloaded_modules:
+                        update.message.reply_text(f"**Reloaded modules:** {', '.join(reloaded_modules)}", parse_mode='Markdown')
                 else:
                     msg.edit_text(
                         f"**Installation failed!**\n\n```\n{output}```",
