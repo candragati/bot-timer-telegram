@@ -338,7 +338,7 @@ class bot_timer():
                 if success:
                     _, reloaded_modules = self.extract_and_reload_modules(output, update.message.reply_text)
                     if reloaded_modules:
-                        update.message.reply_text(f"**Reloaded modules:** {', '.join(reloaded_modules)}", parse_mode='Markdown')
+                        update.message.reply_text(escape_markdown(f"Reloaded modules: {', '.join(reloaded_modules)}"))
                 else:
                     msg.edit_text(
                         f"**Installation failed!**\n\n```\n{output}```",
@@ -606,7 +606,7 @@ class bot_timer():
                     reloaded_modules.append(module_name)
                 except Exception as reload_error:
                     if reply_func:
-                        reply_func(f"Warning: Could not reload {module_name}: {reload_error}")
+                        reply_func(escape_markdown(f"Warning: Could not reload {module_name}: {reload_error}"))
         
         return module_names, reloaded_modules
         
