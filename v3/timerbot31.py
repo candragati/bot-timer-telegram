@@ -336,7 +336,7 @@ class bot_timer():
                 success, output = self.run_command(f"{sys.executable} -m {cmd}")
                 
                 if success:
-                    _, reloaded_modules = extract_and_reload_modules(output, update.message.reply_text)
+                    _, reloaded_modules = self.extract_and_reload_modules(output, update.message.reply_text)
                     if reloaded_modules:
                         update.message.reply_text(f"**Reloaded modules:** {', '.join(reloaded_modules)}", parse_mode='Markdown')
                 else:
@@ -576,6 +576,7 @@ class bot_timer():
             
         return stdout, stderr, result_str
 
+    @staticmethod
     def extract_and_reload_modules(result_stdout, reply_func=None):
         module_names = []
         output_lines = result_stdout.split('\n')
