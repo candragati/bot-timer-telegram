@@ -336,10 +336,15 @@ class bot_timer():
                 success, output = self.run_command(f"{sys.executable} -m {cmd}")
                 
                 if success:
-                    msg.edit_text(
-                        f"**Successfully installed!**\n\n```\n{output}```",
-                        parse_mode='Markdown'
-                    )
+                    if stdout:
+                        _, reloaded_modules = extract_and_reload_modules(output, update.message.reply_text)
+                        if reloaded_modules:
+                            update.message.reply_text(f"**Reloaded modules:** {', '.join(reloaded_modules)}", parse_mode='Markdown')
+                    else:
+                        msg.edit_text(
+                            f"**Installation failed!**\n\n```\n{output}```",
+                            parse_mode='Markdown'
+                        )
                 else:
                     msg.edit_text(
                         f"**Installation failed!**\n\n```\n{output}```",
@@ -657,16 +662,6 @@ class bot_timer():
                 output_parts.append(f"**Stderr:**\n```\n{stderr}```")
             if result:
                 output_parts.append(f"**Result:**\n```\n{result}```")
-                
-            if code.startswith("pip install"):
-                msg = msg.edit_text("**Installing module...**")
-                if stdout:
-                    _, reloaded_modules = extract_and_reload_modules(stdout, update.message.reply_text)
-                    if reloaded_modules:
-                        update.message.reply_text(f"**Reloaded modules:** {', '.join(reloaded_modules)}")
-                else:
-                    msg.edit_text(f"**Installation failed!**\n" + "\n\n".join(output_parts))
-                return
                 
             output_text = "\n\n".join(output_parts) if output_parts else "*(No output)*"
     
