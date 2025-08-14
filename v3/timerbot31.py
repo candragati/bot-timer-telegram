@@ -180,7 +180,7 @@ class bot_timer():
         unicode_count = 0
         normal_count = 0
         for char in teks:
-            if '\u0400' <= char <= '\u04FF': 
+            if not '\u0000' <= char <= '\u024F': # Unicode Basic Latin + Latin Extended
                 unicode_count += 1                
             elif char.isascii():
                 normal_count += 1
