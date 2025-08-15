@@ -64,8 +64,8 @@ def echo(update,context):
     # bot.send_message(text = bar[0][1],chat_id = chat_id)
 
     # sqlUpdate = "UPDATE media SET thumb_id = ?, image_size = ? WHERE media_id = ?"
-    # cur.execute(sqlUpdate, (thumb_id, image_size, media))
-    # db.commit()
+    # eksekusi(sqlUpdate, (thumb_id, image_size, media))
+    # 
     
 
 
@@ -166,7 +166,7 @@ def smedia(update,context):
     # print (media)
     # print (image_size)
     sqlUpdate = "UPDATE media SET thumb_id = ?, image_size = ?, media_id = ? WHERE media_keyword = ?"
-    cur.execute(sqlUpdate, (thumb_id, image_size, media, keyword))
-    db.commit()
+    eksekusi(sqlUpdate, (thumb_id, image_size, media, keyword))
+    
     update.message.reply_text("media berhasil di simpan dengan keyword %s"%keyword)
     

@@ -30,11 +30,11 @@ def set_me(update,context):
             bar, jum = eksekusi(cek)
             if jum == 0:            
                 sql = "INSERT INTO me (chat_id, chat_type, user_id, user_name, teks) VALUES (?,?,?,?,?)"
-                cur.execute(sql,(chat_id, chat_type, user_id, user_name, teks[1]))
+                eksekusi(sql,(chat_id, chat_type, user_id, user_name, teks[1]))
             else:
                 sql = "UPDATE me SET teks = ? WHERE chat_id = ? AND user_id = ?"
-                cur.execute(sql,(teks[1],chat_id,user_id))
-            db.commit() 
+                eksekusi(sql,(teks[1],chat_id,user_id))
+            
             update.message.reply_text("info anda di perbaharui")
         except Exception as e:
             update.message.reply_text("Gak bisa set info\n%s"%e)

@@ -21,8 +21,8 @@ def reputasi_good(update,context):
                 chat_id = str(update.message["chat"]["id"])
                 chat_type = update.message["chat"]["type"]
                 sql = "INSERT INTO reputasi (tanggal, chat_id, chat_type, user_id, user_name, reputasi_good, alasan, user_id_from, user_name_from) VALUES (?,?,?,?,?,1,?,?,?)"
-                cur.execute(sql,(waktu, chat_id, chat_type, r_user_id, r_user_name, teks[1], from_user_id, from_user_name))
-                db.commit()
+                eksekusi(sql,(waktu, chat_id, chat_type, r_user_id, r_user_name, teks[1], from_user_id, from_user_name))
+                
                 update.message.reply_text("%s dapet reputasi bagus dari %s"%(r_user_name, from_user_name))
             except:
                 update.message.reply_text("Gak bisa simpan reputasi :(")
@@ -48,8 +48,8 @@ def reputasi_bad(update,context):
                 chat_id = str(update.message["chat"]["id"])
                 chat_type = update.message["chat"]["type"]
                 sql = "INSERT INTO reputasi (tanggal, chat_id, chat_type, user_id, user_name, reputasi_bad, alasan, user_id_from, user_name_from) VALUES (?,?,?,?,?,1,?,?,?)"
-                cur.execute(sql,(waktu, chat_id, chat_type, r_user_id, r_user_name, teks[1], from_user_id, from_user_name))
-                db.commit()
+                eksekusi(sql,(waktu, chat_id, chat_type, r_user_id, r_user_name, teks[1], from_user_id, from_user_name))
+                
                 update.message.reply_text("%s dapet reputasi jelek dari %s"%(r_user_name, from_user_name))
             except:
                 update.message.reply_text("Gak bisa simpan reputasi :(")

@@ -117,8 +117,8 @@ def smedia(update,context):
             #     tipe        = "invoice"
 
             cek = "SELECT media_keyword FROM media WHERE chat_id = ? AND media_keyword = ?"
-            cur.execute(cek,(chat_id,keyword))
-            db.commit()
+            eksekusi(cek,(chat_id,keyword))
+            
             jumC =  (len(cur.fetchall()))            
             if jumC >= 1:
                 update.message.reply_text('Double keyword')
@@ -130,8 +130,8 @@ def smedia(update,context):
                 try:
                     lock.acquire(True)
                     sql = "INSERT INTO media (nomor,waktu, chat_id, chat_type, media_tipe, media_keyword, media_id, thumb_id, image_size) VALUES (?,?,?,?,?,?,?,?,?)"
-                    cur.execute(sql,(jum,waktu, chat_id, chat_type, tipe, keyword, media, thumb_id, image_size))
-                    db.commit()
+                    eksekusi(sql,(jum,waktu, chat_id, chat_type, tipe, keyword, media, thumb_id, image_size))
+                    
                 finally:
                     lock.release()
                 update.message.reply_text(str(kamus("media_simpan")%keyword))
@@ -150,8 +150,8 @@ def rmedia(update,context):
     acak.append('%s'%random.choice(mediaRandom))
     
     sql = "SELECT media_tipe, media_id, media_keyword FROM media WHERE chat_id = ? AND nomor = ?"
-    cur.execute(sql,(chat_id,acak[0]))   
-    db.commit()         
+    eksekusi(sql,(chat_id,acak[0]))   
+             
     bar =  (cur.fetchall())
     jum =  (len(bar))
     if jum == 0:
@@ -205,10 +205,7 @@ def media(update,context):
     else:
         keyword = ' '.join(args)
         sql = "SELECT media_tipe, media_id FROM media WHERE chat_id = ? AND media_keyword = ?"
-        cur.execute(sql,(chat_id,keyword))   
-        db.commit()         
-        bar =  (cur.fetchall())
-        jum =  (len(bar))
+        bar, jum = eksekusi(sql,(chat_id,keyword))   
         if jum == 0:
             update.message.reply_text(str(kamus("media_kosong")))
         else:

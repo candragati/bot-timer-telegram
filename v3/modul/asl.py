@@ -45,16 +45,16 @@ def asl(update,context):
                     try:
                         lock.acquire(True)
                         sql         = "INSERT INTO daftar_timer (waktu, chat_id, chat_type, user_id, user_name, pesan, done, sholat, kota) VALUES (?,?,?,?,?,?,?,'','')"
-                        cur.execute(sql,(waktu, chat_id, chat_type, user_id, user_name, pesan, 0))
-                        db.commit()
+                        eksekusi(sql,(waktu, chat_id, chat_type, user_id, user_name, pesan, 0))
+                        
                     finally:
                         lock.release()
 
                     try:
                         lock.acquire(True)
                         sql_new_member         = "INSERT INTO new_members (chat_id, chat_type, user_id, user_name,age,done,waktu) VALUES (?,?,?,?,?,0,?)"
-                        cur.execute(sql_new_member,(chat_id, chat_type, user_id, user_name, 0, '{:%Y-%m-%d}'.format(datetime.datetime.now())))
-                        db.commit()
+                        eksekusi(sql_new_member,(chat_id, chat_type, user_id, user_name, 0, '{:%Y-%m-%d}'.format(datetime.datetime.now())))
+                        
                     finally:
                         lock.release()
                     teks = ("Hei %s! \nASL plz, Or you will be banned in 10 minutes."%(user_name))
@@ -67,16 +67,16 @@ def asl(update,context):
                     try:
                         lock.acquire(True)
                         sql         = "INSERT INTO daftar_timer (waktu, chat_id, chat_type, user_id, user_name, pesan, done, sholat, kota) VALUES (?,?,?,?,?,?,?,'','')"
-                        cur.execute(sql,(waktu, chat_id, chat_type, user_id, user_name, pesan, 0))
-                        db.commit()
+                        eksekusi(sql,(waktu, chat_id, chat_type, user_id, user_name, pesan, 0))
+                        
                     finally:
                         lock.release()
 
                     try:                    
                         lock.acquire(True)
                         sql_new_member         = "INSERT INTO new_members (chat_id, chat_type, user_id, user_name,age,done,waktu) VALUES (?,?,?,?,?,0,?)"
-                        cur.execute(sql_new_member,(chat_id, chat_type, user_id, user_name, 0, '{:%Y-%m-%d}'.format(datetime.datetime.now())))
-                        db.commit()
+                        eksekusi(sql_new_member,(chat_id, chat_type, user_id, user_name, 0, '{:%Y-%m-%d}'.format(datetime.datetime.now())))
+                        
                     finally:
                         lock.release()
                     teks = ("Hallo %s! \nUntuk menghindari spammer, silahkan sebut nama, umur dan lokasi nya ya sebelum 10 menit."%(user_name))
@@ -127,8 +127,8 @@ def check_age(update,context):
                         waktuBerikut = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()+datetime.timedelta(seconds=600,hours=0))
                         teks    = "ASL plz, Or you will be banned in 10 minutes."
                         sql         = "UPDATE daftar_timer SET waktu= ? WHERE chat_id=? AND user_id = ?"
-                        cur.execute(sql,(waktuBerikut, chat_id, user_id))
-                        db.commit()
+                        eksekusi(sql,(waktuBerikut, chat_id, user_id))
+                        
                         rpl_x = update.message.reply_text(teks).to_dict()
                     else:
                         rpl_x = update.message.reply_text("ASL PLS!").to_dict()
@@ -190,8 +190,8 @@ def check_age(update,context):
                         waktuBerikut = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()+datetime.timedelta(seconds=600,hours=0))
                         teks    = "Tulis nama, umur dan lokasi ya sebelum 10 menit"
                         sql         = "UPDATE daftar_timer SET waktu= ? WHERE chat_id=? AND user_id = ?"
-                        cur.execute(sql,(waktuBerikut, chat_id, user_id))
-                        db.commit()
+                        eksekusi(sql,(waktuBerikut, chat_id, user_id))
+                        
                         rpl_x = update.message.reply_text(teks).to_dict()
                     else:
                         rpl_x = update.message.reply_text("Nama, Umur dan lokasinya oy!").to_dict()
@@ -250,16 +250,16 @@ def age_cocok(update,context, del_msg, done=None):
         try:
             lock.acquire(True)
             done = "UPDATE new_members SET done = 1, age = '%s' WHERE chat_id = '%s' AND user_id = '%s'"%(age,chat_id,user_id)                    
-            cur.execute(done)
-            db.commit()
+            eksekusi(done)
+            
         finally:
             lock.release()
 
         try:
             lock.acquire(True)
             done_timer = "DELETE FROM daftar_timer WHERE chat_id = '%s' AND user_id = '%s' AND pesan = '%s'"%(chat_id,user_id,pesan)                    
-            cur.execute(done_timer)
-            db.commit()
+            eksekusi(done_timer)
+            
         finally:
             lock.release()
 
@@ -366,12 +366,12 @@ def setUmur(update,context):
                 bar, jum = eksekusi(sql)
                 if jum == 0:
                     sqlUmur         = "INSERT INTO new_members (chat_id, chat_type, user_id, user_name,age,done,waktu) VALUES (?,?,?,?,?,?,?)"
-                    cur.execute(sqlUmur,(chat_id, chat_type, user_id, user_name, umur, 1, waktu))
-                    db.commit()
+                    eksekusi(sqlUmur,(chat_id, chat_type, user_id, user_name, umur, 1, waktu))
+                    
                 else:
                     sqlUmur = "UPDATE new_members SET done = 1, age = '%s', waktu = '%s' WHERE user_id = '%s'"%(umur,waktu, user_id)                    
-                    cur.execute(sqlUmur)
-                    db.commit()
+                    eksekusi(sqlUmur)
+                    
                 update.message.reply_text("umur anda sudah saya catet untuk dilaporin sewaktu2.")
         except Exception as e:
             update.message.reply_text(e)  

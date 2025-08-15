@@ -37,10 +37,7 @@ def cor(update,context):
         if kode == 1:
             cek = "SELECT area,langganan FROM kawalCoronaSub WHERE chat_id = ? AND area = ?"
             arg = (chat_id,provinsi)
-            cur.execute(cek,arg)
-            db.commit()
-            bar = cur.fetchall()
-            jum = len(bar)
+            bar, jum = eksekusi(cek,arg)            
             if jum ==0:
                 sekarang    = datetime.datetime.now()    
                 berikutnya  = sekarang+datetime.timedelta(seconds = detik, hours=0)
@@ -48,8 +45,7 @@ def cor(update,context):
                 berikutnya  = '{:%Y-%m-%d %H:%M:%S}'.format(berikutnya)
                 sql         = "INSERT INTO kawalCoronaSub (waktu, chat_id,chat_type,area,positif,sembuh,meninggal,langganan,waktu_berikutnya,done) VALUES (?,?,?,?,?,?,?,?,?,?)"
                 arg         = (sekarang,chat_id,chat_type,provinsi,positif,sembuh,meninggal,1,berikutnya,0)
-                cur.execute(sql,arg)
-                db.commit()
+                eksekusi(sql,arg)                
                 tampil.append("Jumlah pasien korona area %s akan di laporkan berkala"%provinsi)
             elif bar[0][1]==0:
                 sekarang    = datetime.datetime.now()    
@@ -58,8 +54,8 @@ def cor(update,context):
                 berikutnya  = '{:%Y-%m-%d %H:%M:%S}'.format(berikutnya)
                 sql         = "UPDATE kawalCoronaSub SET waktu=?, positif=?,sembuh=?,meninggal=?,langganan=?,waktu_berikutnya=?,done=? WHERE chat_id = ? AND area = ?"
                 arg         = (sekarang,positif,sembuh,meninggal,1,berikutnya,0,chat_id,provinsi)
-                cur.execute(sql,arg)
-                db.commit()
+                eksekusi(sql,arg)
+                
                 tampil.append("Jumlah pasien korona area %s akan di laporkan berkala"%provinsi)
             else:
                 tampil.append("Disini sudah berlangganan statistik corona area %s"%provinsi)
@@ -69,15 +65,12 @@ def cor(update,context):
         if kode == 1:
             cek = "SELECT area,langganan FROM kawalCoronaSub WHERE chat_id = ? AND area = ?"
             arg = (chat_id,provinsi)
-            cur.execute(cek,arg)
-            db.commit()
-            bar = cur.fetchall()
-            jum = len(bar)
+            bar, jum = eksekusi(cek,arg)
             if jum !=0 and bar[0][1] ==1:
                 sql = "UPDATE kawalCoronaSub SET langganan = 0 WHERE chat_id = ? AND area = ?"
                 arg = (chat_id,provinsi)
-                cur.execute(sql,arg)
-                db.commit()
+                eksekusi(sql,arg)
+                
                 tampil.append("Anda tidak lagi menerima laporan jumlah pasien korona area %s disini"%provinsi)        
     else:
         provinsi = ' '.join(teks)
@@ -136,8 +129,8 @@ def stat_corona(update,context,args,chat_id = None):
         if chat_id != None:
             sql = "UPDATE kawalCoronaSub SET waktu = ?,positif = ?, sembuh = ?,meninggal = ?,waktu_berikutnya=? WHERE chat_id = ? AND area = ?"
             arg = (sekarang,positif,sembuh,meninggal,berikutnya,chat_id,provinsi)
-            cur.execute(sql,arg)
-            db.commit()
+            eksekusi(sql,arg)
+            
             
 
     except Exception as e:
@@ -161,10 +154,7 @@ def corGraph(update,context,args=None,chat_id = None):
     filename = "%s%s"%(provinsi,chat_id)
     sql = "SELECT positif, sembuh, meninggal,strftime('%Y-%m-%d',tanggal) FROM kawalCorona WHERE chat_id = ? AND area = ? group by strftime('%Y-%m-%d',tanggal)"
     arg = (chat_id,provinsi)
-    cur.execute(sql,arg)    
-    db.commit()
-    bar = cur.fetchall()
-    jum = len(bar)
+    bar, jum = eksekusi(sql,arg)        
     if jum == 0:
         if args == None:
             update.message.reply_text('Saya mau aja nampilin data, tapi datanya justru yang gak ada.')

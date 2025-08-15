@@ -1,55 +1,40 @@
 
 from config import *
-import requests
-
-kategori_en = ["business","entertainment","general","health","science","sports","technology"]
-kategori_id = ["bisnis","hiburan","umum","kesehatan","sains","olahraga","teknologi"]
+import feedparser
 
 def berita(update,context):    
     b =  context.args
+    url = "https://news.google.com/rss"
+    bahasa = ""
+    key = ""
     if len(b) == 0:
-        jenis = "top-headlines?country=id&"
-    else:
-        if b[0].lower()=='top':
-            jenis =  "top-headlines?country=id&"
-        elif b[0].lower()=='semua':
-            jenis = "everything?"
+        bahasa = ""
+    elif len(b) == 1:
+        if b[0].lower()=='id':
+            bahasa =  "?hl=id&gl=ID&ceid=ID:id"  
+        elif b[0].lower() == 'en':
+            bahasa = "?hl=en-ID&gl=ID&ceid=ID:en"
         else:
-            jenis = "top-headlines?country=id&"
-
-    try:
-        idx_cat = b.index('kategori')
-        nama_cat =b[idx_cat+1]    
-        cat = "category=%s&"%kategori_en[kategori_id.index(nama_cat)]
-    except:
-        cat = ""
-
-    try:
-        idx_key = b.index('keyword')
-        key ="q=%s&"%b[idx_key+1]
-    except:
-        key = ""
-
-    url = ("https://newsapi.org/v2/%s%s%sapiKey=%s"%(jenis,cat,key,Config.APINEWS))    
-    data_teknologi = requests.get(url)
-    status = data_teknologi.json()['status']
-    if status == "ok":
-        jum = data_teknologi.json()['totalResults']
-        if jum==0:
-            update.message.reply_markdown("Gak ada berita yang ditemukan")
-        else:        
-            if jum > 5:
-                jum = 5        
-            tampil =''.join('%s - [%s](%s)\n'%(str(i+1),data_teknologi.json()['articles'][i]['title'],data_teknologi.json()['articles'][i]['url']) for i in range(jum))            
-            update.message.reply_markdown(tampil)
+            update.message.reply_markdown("gunakan hanya 'id' dan 'en' saja.")      
+            return
     else:
-        update.message.reply_markdown('Error\n%s'%data_teknologi.json()['code'])
+        if b[0].lower()=='id':
+            bahasa =  "&hl=id&gl=ID&ceid=ID:id"        
+        elif b[0].lower() == 'en':
+            bahasa = "&hl=en-ID&gl=ID&ceid=ID:en"
+        else:
+            updatem.message.reply_markdown("gunakan hanya 'id' dan 'en' saja.")      
+            return
+        key = "/search?q="+"+".join(b[1:])
+    
+    url = f"{url}{key}{bahasa}"    
+    feed = feedparser.parse(url)
+    isiBerita = []
+    for i,entry in enumerate(feed.entries[:10]):
+        link = entry.link
+        title = entry.title
+        isiBerita.append(f"{i+1}. [{title}]({link})\n")
+    tampil = ''.join(isiBerita)
+    update.message.reply_markdown(tampil)
 
-    '''
-    https://newsapi.org/v2/everything?q=bitcoin&from=2019-04-14&sortBy=publishedAt&apiKey=API_KEY
-    https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=API_KEY
-    https://newsapi.org/v2/everything?q=apple&from=2019-05-13&to=2019-05-13&sortBy=popularity&apiKey=API_KEY
-    https://newsapi.org/v2/top-headlines?sources=techcrunch&apiKey=API_KEY
-    https://newsapi.org/v2/everything?domains=wsj.com&apiKey=API_KEY
-    '''
-
+    

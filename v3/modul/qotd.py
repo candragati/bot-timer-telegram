@@ -63,8 +63,8 @@ def qotd(update,context,acak=None):
                     lock.acquire(True)
                     sql = "INSERT INTO qotd (nomor,waktu, chat_id, chat_type, user_id, user_name, quote, hapus) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s')"%(
                     jum,waktu, chat_id, chat_type, user_id, user_name, quote, 0)
-                    cur.execute(sql)
-                    db.commit()
+                    eksekusi(sql)
+                    
                 finally:
                     lock.release()
                 update.message.reply_text(str(kamus("quote_simpan"))%(jum,jum,jum))
@@ -94,8 +94,8 @@ def qotd(update,context,acak=None):
             try:
                 lock.acquire(True)
                 sql_hit = "UPDATE qotd SET hit = hit+1 WHERE chat_id = '%s' AND nomor = '%s'"%(chat_id,bar[0][2])
-                cur.execute(sql_hit)
-                db.commit()
+                eksekusi(sql_hit)
+                
             finally:
                 lock.release()
     else:
@@ -126,8 +126,8 @@ def dqotd(update,context):
             try:
                 lock.acquire(True)
                 sql = ("UPDATE qotd SET hapus = 1 WHERE chat_id = '%s' AND nomor = '%s'"%(chat_id, args[0]))
-                cur.execute(sql)
-                db.commit()                
+                eksekusi(sql)
+                                
             finally:
                 lock.release()
             update.message.reply_text(kamus("dqotd_sukses"))
@@ -210,8 +210,8 @@ def sqotd(update,context):
     else:
         user_name   = str(args[0]).replace('@','')        
         hitung      = "SELECT user_id,nomor,hit,user_name FROM qotd WHERE chat_id = ? AND user_name = ? ORDER BY cast(hit as integer) DESC limit 5"
-        cur.execute(hitung,(chat_id,user_name))
-        db.commit()
+        eksekusi(hitung,(chat_id,user_name))
+        
         bar =  (cur.fetchall())
         jum =  (len(bar))
         if jum == 0:

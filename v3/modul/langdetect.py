@@ -72,13 +72,13 @@ def echo(update,context):
                         bar, jum = eksekusi(cek)
                         if jum == 0:
                             infut = "INSERT INTO blacklist (chat_id, chat_type, user_id, user_name, mute,tanggal) VALUES ('%s','%s','%s','%s',0,'%s')"%(chat_id, chat_type, from_user_id, from_user_name,tanggal)
-                            cur.execute(infut)
-                            db.commit()
+                            eksekusi(infut)
+                            
                             bot.send_message(chat_id,  random.choice(teks), reply_to_message_id=message_id)
                         elif jum != 0 and bar[0][1] < 3:
                             infut = "UPDATE blacklist SET mute = mute+1 WHERE chat_id = '%s' AND user_id = '%s' AND tanggal = '%s'"%(chat_id, from_user_id,tanggal)
-                            cur.execute(infut)
-                            db.commit()
+                            eksekusi(infut)
+                            
                             sisa = 2-bar[0][1]
                             if sisa == 0:
                                 if member.status == 'administrator' or member.status == 'creator':
@@ -109,8 +109,8 @@ def echo(update,context):
                                 mutetime    = datetime.datetime.now()+datetime.timedelta(hours=24)
                                 tanggalmute = sekarang = '{:%Y-%m-%d %H:%M:%S}'.format(mutetime)
                                 infut       = "UPDATE blacklist SET mute_sampe_tanggal = '%s' WHERE chat_id = '%s' AND user_id = '%s' AND tanggal = '%s'"%(tanggalmute,chat_id, from_user_id,tanggal)
-                                cur.execute(infut)
-                                db.commit()
+                                eksekusi(infut)
+                                
                                 b = ChatPermissions(canSendMessages=False, canSendMediaMessages=False, canSendPolls=False, canSendOtherMessages=False, canAddWebPagePreviews=False, canChangeInfo=False, canInviteUsers=False, canPinMessages=False)
                                 bot.restrict_chat_member(chat_id, from_user_id,b, until_date=mutetime, can_send_messages=False)
                                 bot.send_message(chat_id, "Restricted until {}!".format(tanggalmute), reply_to_message_id=message_id) 
@@ -122,12 +122,4 @@ def echo(update,context):
             except:
                 bot.send_message(chat_id,str(traceback.format_exc()), reply_to_message_id=message_id)
     finally:
-        lock.release()        
-    
-    
-    
-        
-        # print (update.message.sticker)
-        # sticker_id = update.message.sticker.file_id
-# dp = Config.dp
-# dp.add_handler(MessageHandler(Filters.text, echo,edited_updates=True))
+        lock.release()

@@ -21,11 +21,11 @@ def set_bio(update,context):
             bar, jum = eksekusi(cek)
             if jum == 0:            
                 sql = "INSERT INTO bio (chat_id, chat_type, user_id, user_name, teks) VALUES (?,?,?,?,?)"
-                cur.execute(sql,(chat_id, chat_type, r_user_id, r_user_name, teks[1]))
+                eksekusi(sql,(chat_id, chat_type, r_user_id, r_user_name, teks[1]))
             else:
                 sql = "UPDATE bio SET teks = ? WHERE chat_id = ? AND user_id = ?"
-                cur.execute(sql,(teks[1],chat_id,r_user_id))
-            db.commit()
+                eksekusi(sql,(teks[1],chat_id,r_user_id))
+            
             update.message.reply_text("Memperbarui bio nya @%s"%r_user_name)
         except:
             update.message.reply_text("Gak bisa simpan bio")

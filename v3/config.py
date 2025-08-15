@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 db          = sqlite3.connect("database", check_same_thread = False)
-cur         = db.cursor()
+
 class Config():
     TOKEN    = os.environ.get('TOKEN', None)
     BOT_ID   = os.environ.get('BOT_ID', None) 
@@ -17,10 +17,16 @@ class Config():
     dp = updater.dispatcher
     
     
-def eksekusi(sql):
-    cur.execute(sql)
+def eksekusi(sql, arg = None):
+    cur         = db.cursor()
+    if arg == None:
+        cur.execute(sql)
+    else:
+        cur.execute(sql, arg)
     lineData = cur.fetchall()
     totData = len(lineData)
+    db.commit()    
+    cur.close()
     return lineData, totData
 
 

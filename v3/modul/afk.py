@@ -24,11 +24,11 @@ def set_afk(update,context):
                 bar, jum = eksekusi(cek)
                 if jum == 0:            
                     sql = "INSERT INTO afk (chat_id, chat_type, user_id, user_name, teks,hapus) VALUES (?,?,?,?,?,0)"
-                    cur.execute(sql,(chat_id, chat_type, user_id, user_name, teks[1]))
+                    eksekusi(sql,(chat_id, chat_type, user_id, user_name, teks[1]))
                 else:
                     sql = "UPDATE afk SET teks = ?, hapus = ? WHERE chat_id = ? AND user_id = ?"
-                    cur.execute(sql,(teks[1],'0',chat_id,user_id))
-                db.commit()
+                    eksekusi(sql,(teks[1],'0',chat_id,user_id))
+                
                 update.message.reply_text("%s sekarang AFK"%user_name)
             except Exception as e:
                 update.message.reply_text("ketik /afk <alasan anda>\n%s"%e)
@@ -71,8 +71,8 @@ def sudah_nongol(update,context):
         try:
             lock.acquire(True)
             sql = "UPDATE afk SET hapus = 1 WHERE chat_id = ? AND user_id = ?"
-            cur.execute(sql, (chat_id, from_user_id))
-            db.commit()
+            eksekusi(sql, (chat_id, from_user_id))
+            
             update.message.reply_sticker(sticker=random.choice(sticker_list))
         finally:
             lock.release()

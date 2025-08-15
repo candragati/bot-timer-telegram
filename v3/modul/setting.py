@@ -18,8 +18,8 @@ def setting(update,context):
             try:
                 if args[1].upper()=='CLEAR':
                     sql = "DELETE FROM setting WHERE chat_id = '%s'"%chat_id                
-                    cur.execute(sql)
-                    db.commit()
+                    eksekusi(sql)
+                    
                     update.message.reply_text("sudah gak ada english day lagi. horee...")
                 else:
                     sql = "SELECT english_day FROM setting WHERE chat_id = '%s'"%chat_id
@@ -29,11 +29,11 @@ def setting(update,context):
                     day_name    = calendar.day_name[index_day]
                     if jum == 0:
                         sql = "INSERT INTO setting (chat_id, chat_type,english_day) VALUES (?,?,?)"
-                        cur.execute(sql,(chat_id,chat_type,english_day))
+                        eksekusi(sql,(chat_id,chat_type,english_day))
                     else:
                         sql = "UPDATE setting SET english_day=? WHERE chat_id = ?"
-                        cur.execute(sql,(english_day, chat_id))
-                    db.commit()
+                        eksekusi(sql,(english_day, chat_id))
+                    
                     update.message.reply_text("english day is set for %s"%day_name)            
             except Exception as e:
                 update.message.reply_text("choose one from %s"%hari)
@@ -41,8 +41,8 @@ def setting(update,context):
             try:
                 if args[1].upper()=='OFF':
                     sql = "UPDATE setting SET asl = 'OFF' WHERE chat_id = '%s'"%chat_id                
-                    cur.execute(sql)
-                    db.commit()
+                    eksekusi(sql)
+                    
                     update.message.reply_text("filter ASL non aktif")
                 elif args[1].upper()=='ON':
                     sql = "SELECT asl FROM setting WHERE chat_id = '%s'"%chat_id
@@ -50,11 +50,11 @@ def setting(update,context):
                     
                     if jum == 0:
                         sql = "INSERT INTO setting (chat_id, chat_type,asl) VALUES (?,?,?)"
-                        cur.execute(sql,(chat_id,chat_type,'ON'))
+                        eksekusi(sql,(chat_id,chat_type,'ON'))
                     else:
                         sql = "UPDATE setting SET asl=? WHERE chat_id = ?"
-                        cur.execute(sql,('ON', chat_id))
-                    db.commit()
+                        eksekusi(sql,('ON', chat_id))
+                    
                     update.message.reply_text("filter ASL aktif")            
                 elif args[1].upper()=='UMUR':
                     sql = "SELECT asl FROM setting WHERE chat_id = '%s'"%chat_id
@@ -62,16 +62,39 @@ def setting(update,context):
                     
                     if jum == 0:
                         sql = "INSERT INTO setting (chat_id, chat_type,asl) VALUES (?,?,?)"
-                        cur.execute(sql,(chat_id,chat_type,'UMUR'))
+                        eksekusi(sql,(chat_id,chat_type,'UMUR'))
                     else:
                         sql = "UPDATE setting SET asl=? WHERE chat_id = ?"
-                        cur.execute(sql,('UMUR', chat_id))
-                    db.commit()
+                        eksekusi(sql,('UMUR', chat_id))
+                    
                     update.message.reply_text("filter ASL dirubah ke bahasa")            
                 else:
                     update.message.reply_text("pilih ON|OFF|UMUR")
             except Exception:
                 update.message.reply_text("pilih ON|OFF|UMUR")
+        elif args[0] == 'spam':
+            try:
+                if args[1].upper()=='OFF':
+                    sql = "UPDATE setting SET spam = 'OFF' WHERE chat_id = '%s'"%chat_id                
+                    eksekusi(sql)
+                    
+                    update.message.reply_text("filter spam non aktif")
+                elif args[1].upper()=='ON':
+                    sql = "SELECT spam FROM setting WHERE chat_id = '%s'"%chat_id
+                    bar, jum = eksekusi(sql)
+                    
+                    if jum == 0:
+                        sql = "INSERT INTO setting (chat_id, chat_type,spam) VALUES (?,?,?)"
+                        eksekusi(sql,(chat_id,chat_type,'ON'))
+                    else:
+                        sql = "UPDATE setting SET spam=? WHERE chat_id = ?"
+                        eksekusi(sql,('ON', chat_id))
+                    
+                    update.message.reply_text("filter spam aktif")            
+                else:
+                    update.message.reply_text("pilih ON|OFF")
+            except Exception:
+                update.message.reply_text("pilih ON|OFF")
 
         else:
             update.message.reply_text("aku gak selalu ngerti kamu mas...")

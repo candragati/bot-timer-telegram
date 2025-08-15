@@ -5,7 +5,7 @@ from telegram import ParseMode, Update, Bot, Message
 from telegram.utils.helpers import escape_markdown
 from telegram import InputMediaPhoto, InputMediaVideo
 from concurrent.futures import ThreadPoolExecutor
-from config import Config, eksekusi, db, cur
+from config import Config, eksekusi
 from modul import me,bio,afk,qotd,langdetect,setting,berita,rekam,asl,bantuan,media, reputasi, kawalCorona
 from modul.kamus import kamus
 from tempfile import TemporaryDirectory
@@ -109,7 +109,6 @@ logger = setup_logging()
 
 class bot_timer():
     def __init__(self):
-        self.koneksiDatabase()
         self.t1 = threading.Thread(target=self.timer)
         self.t1.start()
         updater = Config.updater
@@ -200,25 +199,32 @@ class bot_timer():
         teks        = em['text']
         sender      = em['from']['first_name']
         sender_id   = em['from']['id']
-        chat_id     = em['chat']['id']    
-        ce          = em['entities']        
-        ce_count    = sum(1 for e in ce if e.get("type") == "custom_emoji")   
-        message_id  = update.effective_message.message_id
-        hasil       = self.proses_spam(teks)
-        if hasil or ce_count > 5:
-            try:
-                bot.kick_chat_member(chat_id, sender_id)
-                pesan = ("banned [%s](tg://user?id=%s)"%(sender,sender_id))
-                bot.send_message(text = pesan,chat_id = chat_id,parse_mode=ParseMode.MARKDOWN)
-                bot.delete_message(chat_id = chat_id, message_id =  message_id)                    
-                update.message.reply_text(
-                    "member sudah dikubur...",
-                    parse_mode='Markdown'
-                )
-            except:
-                pesan = (f"ane gagal banned orang ini [{sender}](tg://user?id={sender_id})")
-                bot.send_sticker(chat_id, 'CAACAgUAAxkBAAIVY18FFska2MmU5E4nPNco6m0RTRQhAALaAAM_5Bom20PZpUJeLM8aBA', reply_to_message_id=message_id) 
-                bot.send_message(text = pesan,chat_id = chat_id,parse_mode=ParseMode.MARKDOWN, reply_to_message_id=message_id)
+        chat_id     = em['chat']['id'] 
+
+        cek         = "SELECT spam FROM setting WHERE chat_id = ?"
+        bar, jum    = eksekusi(cek, (chat_id,))
+        if jum == 0:
+            pass
+        else:
+            if bar[0][0]=='ON':   
+                ce          = em['entities']        
+                ce_count    = sum(1 for e in ce if e.get("type") == "custom_emoji")   
+                message_id  = update.effective_message.message_id
+                hasil       = self.proses_spam(teks)
+                if hasil or ce_count > 5:
+                    try:
+                        bot.kick_chat_member(chat_id, sender_id)
+                        pesan = ("banned [%s](tg://user?id=%s)"%(sender,sender_id))
+                        bot.send_message(text = pesan,chat_id = chat_id,parse_mode=ParseMode.MARKDOWN)
+                        bot.delete_message(chat_id = chat_id, message_id =  message_id)                    
+                        update.message.reply_text(
+                            "member sudah dikubur...",
+                            parse_mode='Markdown'
+                        )
+                    except:
+                        pesan = (f"ane gagal banned orang ini [{sender}](tg://user?id={sender_id})")
+                        bot.send_sticker(chat_id, 'CAACAgUAAxkBAAIVY18FFska2MmU5E4nPNco6m0RTRQhAALaAAM_5Bom20PZpUJeLM8aBA', reply_to_message_id=message_id) 
+                        bot.send_message(text = pesan,chat_id = chat_id,parse_mode=ParseMode.MARKDOWN, reply_to_message_id=message_id)
 
         
     def spam(self, update, context):
@@ -1284,8 +1290,7 @@ class bot_timer():
                                     status = ""
                                     sql = "INSERT INTO daftar_timer (waktu, chat_id, chat_type, user_id, user_name, pesan, done, sholat, kota) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s')"%(
                                             waktu, chat_id, chat_type, user_id, user_name, keterangan, 0,sholat,nama)                            
-                                    cur.execute(sql)
-                                    db.commit()
+                                    eksekusi(sql)                                    
                                 else:
                                     status = (kamus("sholat_lewat"))
                                 jadwal.append('%s %s %s'%(v,sholat,status))
@@ -1295,8 +1300,8 @@ class bot_timer():
                             waktu_tahajud = '%s %s:00'%(tanggal,tahajud)
                             sql = "INSERT INTO daftar_timer (waktu, chat_id, chat_type, user_id, user_name, pesan, done, sholat, kota) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s')"%(
                                    waktu_tahajud, chat_id, chat_type, user_id, user_name, "sholat", 0,"tahajud",nama)                            
-                            cur.execute(sql)
-                            db.commit()
+                            eksekusi(sql)
+                            
                         else:
                             status = (kamus("sholat_lewat"))
                         jadwal.append('%s %s %s'%(tahajud,'tahajud',status))
@@ -1543,8 +1548,8 @@ class bot_timer():
             user_name   = update.message.from_user['first_name']
             
             sql         = "INSERT INTO daftar_timer (waktu, chat_id, chat_type, user_id, user_name, pesan, done, sholat, kota) VALUES (?,?,?,?,?,?,?,'','')"
-            cur.execute(sql,(waktu, chat_id, chat_type, user_id, user_name, pesan, 0))
-            db.commit()                
+            eksekusi(sql,(waktu, chat_id, chat_type, user_id, user_name, pesan, 0))
+                            
             update.message.reply_text(kamus("jadwal_set")%(sekarang, waktu))
             # else:
             #     update.message.reply_text('incorrect string')
@@ -1569,8 +1574,8 @@ class bot_timer():
                     if sekarang > waktu:
                         teks    = kamus("sholat_lewat")
                         done    = "UPDATE daftar_timer SET done = 1 WHERE waktu = '%s' and chat_id = '%s' AND user_id = '%s'"%(waktu,chat_id,user_id)
-                        cur.execute(done)
-                        db.commit()
+                        eksekusi(done)
+                        
                     else:
                         teks    = ""
                     cek.append("%s %s %s %s %s"%(waktu, bar[i][1],bar[i][2],bar[i][3], teks))                    
@@ -1603,7 +1608,7 @@ class bot_timer():
             
     def timer_sholat(self,update:Update,context,sql, hari, waktu):
         bot         = Bot(token = Config.TOKEN)
-        bar, jum = self.eksekusi(sql)
+        bar, jum = eksekusi(sql)
         if jum != 0:
             for i in range(jum):
                 # barWaktu       = bar[i][0]
@@ -1643,8 +1648,7 @@ class bot_timer():
                             pesan = ("ane gagal %s - [%s](tg://user?id=%s)"%(barPesan,barUser_name, barUser_id))
                             bot.send_sticker(barChat_id, 'CAACAgUAAxkBAAIVY18FFska2MmU5E4nPNco6m0RTRQhAALaAAM_5Bom20PZpUJeLM8aBA')  # banhammer marie sticker
                             done = "UPDATE new_members SET done = 1, age = '%s' WHERE chat_id = '%s' AND user_id = '%s'"%(0, barChat_id, barUser_id)
-                            self.cur.execute(done)
-                            self.db.commit()
+                            eksekusi(done)                            
                     else:
                         pesan = ("%s - [%s](tg://user?id=%s)"%(barPesan,barUser_name,barUser_id))
                 
@@ -1653,8 +1657,7 @@ class bot_timer():
                 except:
                     bot.send_message(text = pesan,chat_id = barChat_id)
                 done = "UPDATE daftar_timer SET done = 1 WHERE waktu = '%s' and chat_id = '%s'"%(waktu, barChat_id)
-                self.cur.execute(done)
-                self.db.commit()
+                eksekusi(done)
                 del barPesan, barUser_name, barSholat, barKota        
 
     def timer_corona(self,update,context,sql, waktu, sekarang):    
@@ -1673,8 +1676,8 @@ class bot_timer():
                     provinsi    = barCor[i][1]
                     sql_update  = "UPDATE kawalCoronaSub SET waktu_berikutnya=? WHERE chat_id = ? AND area = ? AND langganan = 1"
                     arg_update  = (berikutnya,chat_id,provinsi)
-                    cur.execute(sql_update,arg_update)
-                    db.commit()
+                    eksekusi(sql_update,arg_update)
+                    
                 else:
                     try:                    
                         total_lama  = barCor[i][3]+barCor[i][4]+barCor[i][5]
@@ -1710,8 +1713,7 @@ class bot_timer():
                             sekarang    = '{:%Y-%m-%d %H:%M:%S}'.format(sekarang)
                             sqlStat     = "INSERT INTO kawalCorona (tanggal, chat_id,area,positif,sembuh,meninggal) VALUES (?,?,?,?,?,?)"
                             argStat     = (sekarang,chat_id,provinsi, positif, sembuh, meninggal)
-                            cur.execute(sqlStat, argStat)
-                            db.commit()
+                            eksekusi(sqlStat, argStat)                            
                     except:
                         pass
                 del cek_date
@@ -1741,16 +1743,6 @@ class bot_timer():
         file = open(namaFile,"rb")
         bot.send_document(chatId, file)
 
-    def koneksiDatabase(self):
-        self.db          = sqlite3.connect(pathDB, check_same_thread = False)
-        self.cur         = db.cursor()
-
-    def eksekusi(self, sql):
-        self.cur.execute(sql)
-        self.db.commit()
-        lineData = self.cur.fetchall()
-        totData  = len(lineData)
-        return lineData, totData
 
 
 if __name__ == '__main__':

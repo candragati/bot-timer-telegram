@@ -33,8 +33,8 @@ def baca(update,context):
                 update.message.reply_text("Saya lagi sibuk membaca. Belum disuruh untuk /tulis")
             else:
                 sql_insert = "INSERT INTO rekam (nomor, waktu, chat_id, chat_type, chat_title, judul, baca, tulis,done) VALUES (?,?,?,?,?,?,?,?,?)"
-                cur.execute(sql_insert,(jum+1,sekarang, chat_id, chat_type, chat_title, 0,baca_id, 0,0))
-                db.commit()
+                eksekusi(sql_insert,(jum+1,sekarang, chat_id, chat_type, chat_title, 0,baca_id, 0,0))
+                
                 update.message.reply_text("Mulai membaca...\nsetelah mencapai 100 chat, pencatatan akan dihentikan.")
         except Exception as e:
             update.message.reply_text("Silahkan reply chat yang akan ditandai untuk dibaca\n%s"%e)    
@@ -67,8 +67,8 @@ def tulis(update,context):
             try:
                 lock.acquire(True)
                 sql_tulis = "UPDATE rekam SET tulis = ?, done = 1 WHERE nomor = ? AND chat_id = ?"
-                cur.execute(sql_tulis,(tulis_id, bar[0][0], chat_id))
-                db.commit()            
+                eksekusi(sql_tulis,(tulis_id, bar[0][0], chat_id))
+                            
             finally:
                 lock.release()
             file = open("%s%s.pdf"%(abs(chat_id), bar[0][0]),"rb")
@@ -77,8 +77,8 @@ def tulis(update,context):
         try:
             lock.acquire(True)
             sql_tulis = "UPDATE rekam SET tulis = ?, done = 0 WHERE nomor = ? AND chat_id = ?"
-            cur.execute(sql_tulis,(tulis_id, bar[0][0], chat_id))
-            db.commit()            
+            eksekusi(sql_tulis,(tulis_id, bar[0][0], chat_id))
+                        
         finally:
             lock.release()
         update.message.reply_text("Bingung...\n%s"%e)
@@ -191,14 +191,14 @@ def isi(update,context):
         if jumC == 0:
             if cek_forward == 0:
                 sql_insert  = "INSERT INTO rekam_log (nomor, waktu, chat_id, user_id,username,nama, message_chat, message_media,message_id, reply_to, edited,image_size) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
-                cur.execute(sql_insert,(bar[0][0],date, chat_id, from_user_id,from_user_name, nama, isi,teks_media,message_id,reply_id,0,image_size))
+                eksekusi(sql_insert,(bar[0][0],date, chat_id, from_user_id,from_user_name, nama, isi,teks_media,message_id,reply_id,0,image_size))
             else:
                 sql_insert  = "INSERT INTO rekam_log (nomor, waktu, chat_id, user_id,username,nama, message_chat, message_media,message_id, reply_to, edited,forward_username, forward_name,image_size) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-                cur.execute(sql_insert,(bar[0][0],date, chat_id, from_user_id,from_user_name, nama, isi,teks_media,message_id,reply_id,0,fwd_username, fwd_name,image_size))
+                eksekusi(sql_insert,(bar[0][0],date, chat_id, from_user_id,from_user_name, nama, isi,teks_media,message_id,reply_id,0,fwd_username, fwd_name,image_size))
         else:
             sql_update  = "UPDATE rekam_log SET message_chat=?,edited = 1 WHERE nomor = ? AND chat_id = ? AND message_id = ?"
-            cur.execute(sql_update,(isi, bar[0][0],chat_id, message_id))
-        db.commit()
+            eksekusi(sql_update,(isi, bar[0][0],chat_id, message_id))
+        
 
 def judul(update,context): 
     message         = update.effective_message  # type: Optional[Message]    
@@ -215,8 +215,8 @@ def judul(update,context):
             try:
                 lock.acquire(True)
                 sql_judul = "UPDATE rekam SET judul = ?, author = ?,author_id = ? WHERE nomor = ? AND chat_id = ?"
-                cur.execute(sql_judul,(judul_teks, from_user_name, from_user_id, barD[0][0], chat_id))
-                db.commit()
+                eksekusi(sql_judul,(judul_teks, from_user_name, from_user_id, barD[0][0], chat_id))
+                
             finally:
                 lock.release()
             update.message.reply_text("Judul : %s\nOleh %s"%(judul_teks,from_user_name))
