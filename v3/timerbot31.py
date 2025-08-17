@@ -175,22 +175,49 @@ class bot_timer():
         updater.start_polling()
         updater.idle()
 
+    def remove_urls_no_regex(self,text):
+        result = []
+        i = 0
+        while i < len(text):
+            # cek skema atau www
+            if text[i:i+7].lower() == "http://" or text[i:i+8].lower() == "https://":
+                while i < len(text) and not text[i].isspace():
+                    i += 1
+            elif text[i:i+4].lower() == "www.":
+                while i < len(text) and not text[i].isspace():
+                    i += 1
+            else:
+                # cek pola domain: ada titik dan setidaknya 2 karakter TLD
+                j = i
+                while j < len(text) and not text[j].isspace():
+                    j += 1
+                token = text[i:j]
+                if "." in token and len(token.split(".")[-1]) >= 2:
+                    # dianggap URL → lewati
+                    i = j
+                else:
+                    result.append(text[i])
+                    i += 1
+        return "".join(result)
+
     def proses_spam(self,teks):
+        teks = self.remove_urls_no_regex(teks)        
         unicode_count = 0
         normal_count = 0
         for char in teks:
-            if not '\u0000' <= char <= '\u024F': # Unicode Basic Latin + Latin Extended
-                unicode_count += 1                
-            elif char.isascii():
+            cp = ord(char)  # kodepoint Unicode
+            # Huruf Latin / ASCII
+            if 0x0000 <= cp <= 0x024F:
                 normal_count += 1
+            # Emoji utama
+            elif (0x1F300 <= cp <= 0x1FAFF) or (0x2600 <= cp <= 0x27BF):
+                continue
+            # Modifier emoji / ZWJ
+            elif (0x200D == cp) or (0xFE0E <= cp <= 0xFE0F) or (0x1F3FB <= cp <= 0x1F3FF):
+                continue
             else:
-                pass
-
-        if unicode_count > normal_count:
-            hasil = 1
-        else:
-            hasil = 0
-        return hasil
+                unicode_count += 1
+        return 1 if unicode_count > normal_count else 0
 
 
     def cekspam(self,update,context):
