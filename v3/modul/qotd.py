@@ -210,10 +210,7 @@ def sqotd(update,context):
     else:
         user_name   = str(args[0]).replace('@','')        
         hitung      = "SELECT user_id,nomor,hit,user_name FROM qotd WHERE chat_id = ? AND user_name = ? ORDER BY cast(hit as integer) DESC limit 5"
-        eksekusi(hitung,(chat_id,user_name))
-        
-        bar =  (cur.fetchall())
-        jum =  (len(bar))
+        bar, jum = eksekusi(hitung,(chat_id,user_name))
         if jum == 0:
             teks    = ""
             tampil  = "Silahkan mensyen member disini"

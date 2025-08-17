@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 from modul.kamus import kamus
 import requests
 from telegram import InputMediaPhoto, InputMediaVideo
+import ast
 
 lock = threading.Lock()
 
@@ -99,7 +100,11 @@ def smedia(update,context):
                 image_size  = "0x0"
                 thumb_id    = ""
             elif contact is not None:            
-                media       = contact['vcard']
+                
+                if contact['vcard'] is None:
+                    media = f"{contact}"
+                else:
+                    media       = contact['vcard']
                 tipe        = "contact"
                 image_size  = "0x0"
                 thumb_id    = ""
@@ -117,9 +122,7 @@ def smedia(update,context):
             #     tipe        = "invoice"
 
             cek = "SELECT media_keyword FROM media WHERE chat_id = ? AND media_keyword = ?"
-            eksekusi(cek,(chat_id,keyword))
-            
-            jumC =  (len(cur.fetchall()))            
+            barC, jumC = eksekusi(cek,(chat_id,keyword))
             if jumC >= 1:
                 update.message.reply_text('Double keyword')
             else:
@@ -140,53 +143,65 @@ def smedia(update,context):
 
 def rmedia(update,context):
     bot         = context.bot
-    chat_id     = update.message["chat"]["id"]
+    chat_id     = f"{update.message['chat']['id']}"
     mediaRandom = []
     acak        = []
-    sql         = "SELECT nomor  FROM media WHERE chat_id = '%s'"%chat_id
-    bar, jum    = eksekusi(sql)
+    sql         = "SELECT nomor  FROM media WHERE chat_id = ?"
+    bar, jum    = eksekusi(sql, (chat_id,))
     for i in range(jum):
         mediaRandom.append(bar[i][0])
-    acak.append('%s'%random.choice(mediaRandom))
+    acak.append(f"{random.choice(mediaRandom)}")
     
     sql = "SELECT media_tipe, media_id, media_keyword FROM media WHERE chat_id = ? AND nomor = ?"
-    eksekusi(sql,(chat_id,acak[0]))   
-             
-    bar =  (cur.fetchall())
-    jum =  (len(bar))
+    bar, jum = eksekusi(sql,(chat_id,acak[0]))   
     if jum == 0:
         update.message.reply_text(str(kamus("media_kosong")))
     else:
         # detect media' 
         
         media = {
-        "audio"       : "bot.send_audio",
-        "document"    : "bot.send_document",
-        "animation"   : "bot.send_animation",
-        "photo"       : "bot.send_photo",
-        "sticker"     : "bot.send_sticker",
-        "video"       : "bot.send_video",
-        "voice"       : "bot.send_voice",
-        "video_note"  : "bot.send_video_note",
-        "contact"     : "bot.send_contact",
-        "location"    : "bot.send_location",
-        "venue"       : "bot.send_venue",
-        "invoice"     : "bot.send_invoice",
+            "audio"       : bot.send_audio,
+            "document"    : bot.send_document,
+            "animation"   : bot.send_animation,
+            "photo"       : bot.send_photo,
+            "sticker"     : bot.send_sticker,
+            "video"       : bot.send_video,
+            "voice"       : bot.send_voice,
+            "video_note"  : bot.send_video_note,
+            "contact"     : bot.send_contact,
+            "location"    : bot.send_location,
+            "venue"       : bot.send_venue,
+            "invoice"     : bot.send_invoice,
         }
 
         perintah = media[bar[0][0]]
-        if bar[0][0] == "contact":
-            vcard       = bar[0][1]
-            FN          =  re.findall('FN:(.*)',vcard)
-            PHONE       =  re.findall('MOBILE:(.*)',vcard)
-            media_id    = "phone_number = '%s', first_name = '%s'"%(PHONE[0], FN[0])
+        media_type = bar[0][0]
+        media_value = bar[0][1]
+
+        args = {}
+        if media_type == "contact":
+            try:
+                vcard = ast.literal_eval(media_value)
+                args["phone_number"] = vcard['phone_number']
+                args["first_name"] = vcard['first_name']
+            except: 
+                vcard = media_value               
+                FN = re.findall(r'FN:(.*)', vcard)
+                PHONE = re.findall(r'MOBILE:(.*)', vcard)
+                args["phone_number"] = PHONE[0]
+                args["first_name"] = FN[0]            
         else:
-            media_id    = "'%s'"%bar[0][1]
-        try:
-            m_id        =  update.message["reply_to_message"]["message_id"]
-            exec ("%s('%s',%s,reply_to_message_id=%s)"%(perintah,chat_id,media_id,m_id))
-        except:
-            exec ("%s('%s',%s)"%(perintah,chat_id,media_id))
+            import os
+            if os.path.isfile(media_value):
+                args[media_type] = open(media_value, "rb")
+            else:
+                args[media_type] = media_value
+
+        reply_msg = getattr(update.message, "reply_to_message", None)
+        reply_id = getattr(reply_msg, "message_id", None)
+        if reply_id is not None:
+            args["reply_to_message_id"] = reply_id
+        perintah(chat_id, **args)
 
         if bar[0][2] == 'resign2':            
             bot.leave_chat(chat_id)
@@ -196,8 +211,8 @@ def media(update,context):
     args    = context.args
     chat_id = update.message["chat"]["id"]                    
     
-    cek_done = "SELECT done FROM rekam WHERE chat_id = '%s' AND done = 0"%(chat_id)
-    barD, jumD = eksekusi(cek_done)
+    cek_done = "SELECT done FROM rekam WHERE chat_id = ? AND done = 0"
+    barD, jumD = eksekusi(cek_done, (chat_id,))
     if jumD != 0:
         update.message.reply_text(str(kamus("media_kulgram")))
     elif len(args)==0:
@@ -209,36 +224,48 @@ def media(update,context):
         if jum == 0:
             update.message.reply_text(str(kamus("media_kosong")))
         else:
-            # detect media' 
-            
+            # detect media            
             media = {
-            "audio"       : "bot.send_audio",
-            "document"    : "bot.send_document",
-            "animation"   : "bot.send_animation",
-            "photo"       : "bot.send_photo",
-            "sticker"     : "bot.send_sticker",
-            "video"       : "bot.send_video",
-            "voice"       : "bot.send_voice",
-            "video_note"  : "bot.send_video_note",
-            "contact"     : "bot.send_contact",
-            "location"    : "bot.send_location",
-            "venue"       : "bot.send_venue",
-            "invoice"     : "bot.send_invoice",
+                "audio"       : bot.send_audio,
+                "document"    : bot.send_document,
+                "animation"   : bot.send_animation,
+                "photo"       : bot.send_photo,
+                "sticker"     : bot.send_sticker,
+                "video"       : bot.send_video,
+                "voice"       : bot.send_voice,
+                "video_note"  : bot.send_video_note,
+                "contact"     : bot.send_contact,
+                "location"    : bot.send_location,
+                "venue"       : bot.send_venue,
+                "invoice"     : bot.send_invoice,
             }
 
             perintah = media[bar[0][0]]
-            if bar[0][0] == "contact":
-                vcard       = bar[0][1]
-                FN          =  re.findall('FN:(.*)',vcard)
-                PHONE       =  re.findall('MOBILE:(.*)',vcard)
-                media_id    = "phone_number = '%s', first_name = '%s'"%(PHONE[0], FN[0])
+            media_type = bar[0][0]
+            media_value = bar[0][1]
+
+            args = {}
+
+            if media_type == "contact":
+                try:
+                    vcard = ast.literal_eval(media_value)
+                    args["phone_number"] = vcard['phone_number']
+                    args["first_name"] = vcard['first_name']
+                except: 
+                    vcard = media_value               
+                    FN = re.findall(r'FN:(.*)', vcard)
+                    PHONE = re.findall(r'MOBILE:(.*)', vcard)
+                    args["phone_number"] = PHONE[0]
+                    args["first_name"] = FN[0]
             else:
-                media_id    = "'%s'"%bar[0][1]
-            try:
-                m_id        =  update.message["reply_to_message"]["message_id"]
-                exec ("%s('%s',%s,reply_to_message_id=%s)"%(perintah,chat_id,media_id,m_id))
-            except:
-                exec ("%s('%s',%s)"%(perintah,chat_id,media_id))
+                args[media_type] = media_value
+
+            reply_msg = getattr(update.message, "reply_to_message", None)
+            reply_id = getattr(reply_msg, "message_id", None)
+            if reply_id is not None:
+                args["reply_to_message_id"] = reply_id
+
+            perintah(chat_id, **args)
 
             if keyword == 'resign2':
                 chat        = update.effective_chat
