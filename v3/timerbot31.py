@@ -6,7 +6,7 @@ from telegram.utils.helpers import escape_markdown
 from telegram import InputMediaPhoto, InputMediaVideo
 from concurrent.futures import ThreadPoolExecutor
 from config import Config, eksekusi
-from modul import me,bio,afk,qotd,langdetect,setting,berita,rekam,asl,bantuan,media, reputasi, kawalCorona
+from modul import me,bio,afk,qotd,langdetect,setting,berita,rekam,asl,bantuan,media, reputasi, kawalCorona, nsfw
 from modul.kamus import kamus
 from tempfile import TemporaryDirectory
 from dotenv import load_dotenv
@@ -171,6 +171,7 @@ class bot_timer():
         dp.add_handler(MessageHandler(Filters.text, asl.check_age),group = 5)
         dp.add_handler(MessageHandler(Filters.text, self.cmedia),group = 6)
         dp.add_handler(MessageHandler(Filters.text, self.cekspam),group = 7)
+        dp.add_handler(MessageHandler(Filters.text|Filters.video | Filters.photo | Filters.document | Filters.forwarded , nsfw.cek), group = 8)
         self.check_restart_message()
         updater.start_polling()
         updater.idle()
