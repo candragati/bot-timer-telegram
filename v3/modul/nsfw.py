@@ -44,19 +44,14 @@ def cek(update,context):
     classes = []
     skor = []
     for d in results:
-        hasil += f"{d['class']} {d['score']*100:,.2f}%\n"
-        classes.append(d['class'])
-        skor.append(d['score'])
+        if d['class'] not in ['FACE_FEMALE','FACE_MALE']:
+            hasil += f"{d['class']} {d['score']*100:,.2f}%\n"
+            classes.append(d['class'])
+            skor.append(d['score'])
     
-    if classes and all(c == "FACE_FEMALE" for c in classes):
-        return
-
     unsafe_score = max(skor, default=0)
     skor = round(unsafe_score*100,2)
     if skor > 60:
         message.reply_text(f"Message Deleted! NSFW content found!\n\n{hasil}\ntambahkan #amanmin pada caption kalau yakin ini aman.")
         message.delete()
-    elif 30 <= skor < 60:
-        message.reply_text(f"⚠️Warning!\n\n{hasil}")
-    else:
-        pass
+    
