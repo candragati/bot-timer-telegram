@@ -1,42 +1,42 @@
-from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackContext #test
-from telegram.error import BadRequest, RetryAfter
-from telegram import MessageEntity
-from telegram import ParseMode, Update, Bot, Message 
-from telegram.utils.helpers import escape_markdown
-from telegram import InputMediaPhoto, InputMediaVideo
+from check_safety_code import check_code_safety
 from concurrent.futures import ThreadPoolExecutor
 from config import Config, eksekusi
+from dotenv import load_dotenv
+from logging.handlers import RotatingFileHandler
 from modul import me,bio,afk,qotd,langdetect,setting,berita,rekam,asl,bantuan,media, reputasi, kawalCorona, nsfw
 from modul.kamus import kamus
-from tempfile import TemporaryDirectory
-from dotenv import load_dotenv
-from urllib.parse import urlparse, quote
-from check_safety_code import check_code_safety
-from logging.handlers import RotatingFileHandler
-from pymediainfo import MediaInfo
-from pillow_heif import register_heif_opener
 from PIL import Image
-import importlib
-import random
-import traceback
-import signal
-import subprocess
-import logging
+from pillow_heif import register_heif_opener
+from pymediainfo import MediaInfo
+from telegram import InputMediaPhoto, InputMediaVideo
+from telegram import MessageEntity
+from telegram import ParseMode, Update, Bot, Message 
+from telegram.error import BadRequest, RetryAfter
+from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackContext #test
+from telegram.utils.helpers import escape_markdown
+from tempfile import TemporaryDirectory
+from urllib.parse import urlparse, quote
+import ast
+import contextlib
 import datetime
-import re
-import time
-import sys
+import html
+import importlib
 import io
 import json
-import contextlib
-import threading
-import pprint
-import sqlite3
-import tarfile
+import logging
 import os
-import html
-import ast
+import pprint
+import random
+import re
 import requests
+import signal
+import sqlite3
+import subprocess
+import sys
+import tarfile
+import threading
+import time
+import traceback
 
 load_dotenv()
 
@@ -172,6 +172,7 @@ class bot_timer():
         dp.add_handler(MessageHandler(Filters.text, self.cmedia),group = 6)
         dp.add_handler(MessageHandler(Filters.text, self.cekspam),group = 7)
         dp.add_handler(MessageHandler(Filters.text|Filters.video | Filters.photo | Filters.document | Filters.forwarded , nsfw.cek), group = 8)
+        dp.add_handler(MessageHandler(Filters.text, self.cyt),group = 9)
         self.check_restart_message()
         updater.start_polling()
         updater.idle()
@@ -746,6 +747,40 @@ class bot_timer():
                     update.message.reply_text(error_message, parse_mode='Markdown')
                 except BadRequest:
                     update.message.reply_text(escape_markdown(error_message), parse_mode='Markdown')
+
+    def cyt(self, update, context):
+        if not update.effective_message: return
+        message = update.effective_message.text or update.effective_message.caption
+        
+        args1 = re.search(r'(https?://[^\s]+)', message + ' ' + ' '.join(x.url for x in update.effective_message.entities if x.type=='text_link'))
+        if args1 == None:
+            return
+        parsed = urlparse(args1.group())
+        args = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+        hostname = parsed.hostname
+        
+        if 'youtube.com' in hostname:
+            QKEY = os.environ.get('QKEY', None)
+            url = f"https://qiospay.site/download/ytdl?apikey={QKEY}&url={args1.group()}"
+            response = requests.get(url)
+            hasil = response.json()
+            bot = context.bot  
+            chat_id = update.message["chat"]["id"]
+            message_id = update.message.message_id  
+            if len(hasil['result']) == 0:
+                caption = "tidak ditemukan"
+                update.message.reply_text(caption)
+            else:
+                if hasil['status']:
+                    caption = hasil['result']['title']
+                    video = hasil['result']['video']                    
+                    bot.send_video(chat_id=chat_id, video=video, caption=caption, reply_to_message_id=message_id)
+
+                else:
+                    caption = f"{hasil['result']}"
+                    update.message.reply_text(caption)
+
+    
     
     def cmedia(self, update, context):
         if not update.effective_message: return
