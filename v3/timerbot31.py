@@ -418,7 +418,7 @@ class bot_timer():
                 parse_mode='Markdown'
             )       
 
-    def capture_output(self, code, update):
+    def capture_output(self, code, update, context):
         stdout_buf = io.StringIO()
         stderr_buf = io.StringIO()
         result = None
@@ -499,6 +499,7 @@ class bot_timer():
             
         self.local_vars.update({
             'update': update,
+            'context': context,
             'msg': update.effective_message, 
             'rm': update.effective_message.reply_to_message,
             'chat': update.effective_chat,
@@ -683,7 +684,7 @@ class bot_timer():
                 parse_mode='Markdown'
             )
     
-            stdout, stderr, result = self.capture_output(code, update)
+            stdout, stderr, result = self.capture_output(code, update, context)
     
             output_parts = []
             if stdout:
@@ -1810,3 +1811,4 @@ class bot_timer():
 
 if __name__ == '__main__':
     bot_timer()
+
