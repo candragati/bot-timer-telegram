@@ -46,6 +46,7 @@ RESTART_FILE = '/tmp/bot_restart_info.json'
 
 os.makedirs('logs', exist_ok=True)
 
+
 def setup_logging():    
     handlers = []
     
@@ -1811,4 +1812,5 @@ class bot_timer():
 
 if __name__ == '__main__':
     bot_timer()
+
 
