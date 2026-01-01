@@ -54,8 +54,8 @@ def cek(update,context):
         skor = round(unsafe_score*100,2)
         if skor > 50:
             try:
-                message.delete()
                 message.reply_text(f"Message Deleted! NSFW content found!\n\n{hasil}\ntambahkan #amanmin pada caption kalau yakin ini aman.")
+                message.delete()
             except Exception:
                 message.reply_text(f"{hasil}tapi saya gak bisa delete.")
 
