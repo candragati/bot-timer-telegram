@@ -2,6 +2,18 @@
 from config import *
 import calendar
 
+def upsert_setting(chat_id, chat_type, field, value):
+    sql = f"SELECT {field} FROM setting WHERE chat_id = ?"
+    _, jum = eksekusi(sql, (chat_id,))
+
+    if jum == 0:
+        sql = f"INSERT INTO setting (chat_id, chat_type, {field}) VALUES (?,?,?)"
+        eksekusi(sql, (chat_id, chat_type, value))
+    else:
+        sql = f"UPDATE setting SET {field}=? WHERE chat_id=?"
+        eksekusi(sql, (value, chat_id))
+
+
 def setting(update,context):
     bot         = context.bot
     args        = context.args
@@ -9,21 +21,22 @@ def setting(update,context):
     chat_type   = update.message["chat"]["type"]
     chat        = update.effective_chat
     user_id     = update.message.from_user.id
-    user_member = chat.get_member(user_id)
-    if user_member.status == 'administrator' or user_member.status == 'creator':
-        if len(args)==0:
+    status = chat.get_member(user_id).status
+    cmd         = args[0].lower()
+    if status in ('administrator','creator'):
+        if not args:
             update.message.reply_text("setting apa pak?")
-        elif args[0]=='en':
+        elif cmd=='en':
             hari = list(calendar.day_abbr)
             try:
                 if args[1].upper()=='CLEAR':
-                    sql = "DELETE FROM setting WHERE chat_id = '%s'"%chat_id                
-                    eksekusi(sql)
+                    sql = "UPDATE setting SET english_day = null WHERE chat_id = ?"
+                    eksekusi(sql,(chat_id,))
                     
                     update.message.reply_text("sudah gak ada english day lagi. horee...")
                 else:
-                    sql = "SELECT english_day FROM setting WHERE chat_id = '%s'"%chat_id
-                    bar, jum = eksekusi(sql)
+                    sql = "SELECT english_day FROM setting WHERE chat_id = ?"
+                    bar, jum = eksekusi(sql, (chat_id,))
                     english_day = args[1].title()
                     index_day   = hari.index(english_day)
                     day_name    = calendar.day_name[index_day]
@@ -34,67 +47,31 @@ def setting(update,context):
                         sql = "UPDATE setting SET english_day=? WHERE chat_id = ?"
                         eksekusi(sql,(english_day, chat_id))
                     
-                    update.message.reply_text("english day is set for %s"%day_name)            
+                    update.message.reply_text(f"english day is set for {day_name}")            
             except Exception as e:
-                update.message.reply_text("choose one from %s"%hari)
-        elif args[0]=='asl':
-            try:
-                if args[1].upper()=='OFF':
-                    sql = "UPDATE setting SET asl = 'OFF' WHERE chat_id = '%s'"%chat_id                
-                    eksekusi(sql)
-                    
-                    update.message.reply_text("filter ASL non aktif")
-                elif args[1].upper()=='ON':
-                    sql = "SELECT asl FROM setting WHERE chat_id = '%s'"%chat_id
-                    bar, jum = eksekusi(sql)
-                    
-                    if jum == 0:
-                        sql = "INSERT INTO setting (chat_id, chat_type,asl) VALUES (?,?,?)"
-                        eksekusi(sql,(chat_id,chat_type,'ON'))
-                    else:
-                        sql = "UPDATE setting SET asl=? WHERE chat_id = ?"
-                        eksekusi(sql,('ON', chat_id))
-                    
-                    update.message.reply_text("filter ASL aktif")            
-                elif args[1].upper()=='UMUR':
-                    sql = "SELECT asl FROM setting WHERE chat_id = '%s'"%chat_id
-                    bar, jum = eksekusi(sql)
-                    
-                    if jum == 0:
-                        sql = "INSERT INTO setting (chat_id, chat_type,asl) VALUES (?,?,?)"
-                        eksekusi(sql,(chat_id,chat_type,'UMUR'))
-                    else:
-                        sql = "UPDATE setting SET asl=? WHERE chat_id = ?"
-                        eksekusi(sql,('UMUR', chat_id))
-                    
-                    update.message.reply_text("filter ASL dirubah ke bahasa")            
-                else:
-                    update.message.reply_text("pilih ON|OFF|UMUR")
-            except Exception:
+                update.message.reply_text(f"choose one from {hari}")
+        elif cmd in ('asl', 'spam', 'nsfw'):
+            if len(args) < 2:
                 update.message.reply_text("pilih ON|OFF|UMUR")
-        elif args[0] == 'spam':
-            try:
-                if args[1].upper()=='OFF':
-                    sql = "UPDATE setting SET spam = 'OFF' WHERE chat_id = '%s'"%chat_id                
-                    eksekusi(sql)
-                    
-                    update.message.reply_text("filter spam non aktif")
-                elif args[1].upper()=='ON':
-                    sql = "SELECT spam FROM setting WHERE chat_id = '%s'"%chat_id
-                    bar, jum = eksekusi(sql)
-                    
-                    if jum == 0:
-                        sql = "INSERT INTO setting (chat_id, chat_type,spam) VALUES (?,?,?)"
-                        eksekusi(sql,(chat_id,chat_type,'ON'))
-                    else:
-                        sql = "UPDATE setting SET spam=? WHERE chat_id = ?"
-                        eksekusi(sql,('ON', chat_id))
-                    
-                    update.message.reply_text("filter spam aktif")            
-                else:
-                    update.message.reply_text("pilih ON|OFF")
-            except Exception:
-                update.message.reply_text("pilih ON|OFF")
+                return
+
+            value = args[1].upper()
+
+            valid = {
+                'asl':  ('ON', 'OFF', 'UMUR'),
+                'spam': ('ON', 'OFF'),
+                'nsfw': ('ON', 'OFF'),
+            }
+
+            if value not in valid[cmd]:
+                update.message.reply_text("pilih " + "|".join(valid[cmd]))
+                return
+
+            upsert_setting(chat_id, chat_type, cmd, value)
+
+            status = "aktif" if value != 'OFF' else "non aktif"
+            update.message.reply_text(f"filter {cmd} {status}")
+
 
         else:
             update.message.reply_text("aku gak selalu ngerti kamu mas...")
